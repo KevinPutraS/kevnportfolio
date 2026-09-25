@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import type { Project, ProjectCategory, PaginatedProjects, CategoryCount } from '@/types/project'
+import type { ProjectCategoryFilter } from '@/config/site'
 
 const PAGE_SIZE = 12
 
@@ -10,7 +11,7 @@ export async function getProjects({
   published = true,
 }: {
   page?: number
-  category?: ProjectCategory
+  category?: ProjectCategoryFilter
   featured?: boolean
   published?: boolean
 } = {}): Promise<PaginatedProjects> {
