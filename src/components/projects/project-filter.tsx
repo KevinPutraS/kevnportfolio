@@ -1,7 +1,7 @@
 'use client'
 
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
-import { projectCategories, type ProjectCategory } from '@/config/site'
+import { projectCategories, type ProjectCategoryFilter } from '@/config/site'
 import { categoryLabels } from '@/types/category'
 import { classNames } from '@/lib/utils/helpers'
 
@@ -10,9 +10,9 @@ export function ProjectFilter() {
   const router = useRouter()
   const pathname = usePathname()
 
-  const currentCategory = (searchParams.get('category') as ProjectCategory) || 'all'
+  const currentCategory = (searchParams.get('category') as ProjectCategoryFilter) || 'all'
 
-  const handleCategoryChange = (category: ProjectCategory) => {
+  const handleCategoryChange = (category: ProjectCategoryFilter) => {
     const params = new URLSearchParams(searchParams.toString())
     if (category === 'all') {
       params.delete('category')

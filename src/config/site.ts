@@ -32,6 +32,7 @@ export const projectCategories = [
 ] as const
 
 export type ProjectCategory = typeof projectCategories[number]['value']
+export type ProjectCategoryFilter = ProjectCategory | 'all'
 
 export const interests = [
   {
