@@ -11,9 +11,10 @@ interface ProjectCardProps {
   project: Project
   variant?: 'default' | 'featured' | 'compact'
   className?: string
+  style?: React.CSSProperties
 }
 
-export function ProjectCard({ project, variant = 'default', className }: ProjectCardProps) {
+export function ProjectCard({ project, variant = 'default', className, style }: ProjectCardProps) {
   const categoryInfo = categoryColors[project.category] || categoryColors.other
   const technologies = project.technologies || []
 
@@ -53,7 +54,7 @@ export function ProjectCard({ project, variant = 'default', className }: Project
   }
 
   return (
-    <article className={classNames('card-hover group', variant === 'featured' && 'h-full flex flex-col', className)}>
+    <article className={classNames('card-hover group', variant === 'featured' && 'h-full flex flex-col', className)} style={style}>
       {project.thumbnail_url && (
         <Link href={`/projects/${project.slug}`} className="relative aspect-video overflow-hidden" aria-label={`View ${project.title}`}>
           <Image
