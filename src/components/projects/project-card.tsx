@@ -1,9 +1,8 @@
 import Link from 'next/link'
 import { ArrowUpRight } from 'lucide-react'
 import { categoryLabels, type ProjectCategory } from '@/config/site'
-import { formatProjectDate } from '@/lib/utils/helpers'
+import { formatProjectDate, classNames } from '@/lib/utils/helpers'
 import type { Project } from '@/types/project'
-import { classNames } from '@/lib/utils/helpers'
 import { ProjectThumbnail } from './project-thumbnail'
 
 /**
@@ -29,12 +28,16 @@ export function ProjectCard({
   priority,
 }: ProjectCardProps) {
   const isFeature = variant === 'feature'
+  const isCompact = variant === 'compact'
+  const technologies = project.technologies ?? []
+  const visibleTechnologies = technologies.slice(0, isFeature ? 6 : isCompact ? 3 : 4)
+  const overflowCount = technologies.length - visibleTechnologies.length
 
   return (
     <article className={classNames('group relative', className)}>
       <Link
         href={`/projects/${project.slug}`}
-        className="block h-full focus-visible:outline-none"
+        className="flex h-full flex-col focus-visible:outline-none"
         // Stretch the link over the whole tile so the entire card is clickable,
         // while keeping a single tab stop and a single accessible name.
         aria-label={`${project.title} — view project`}
@@ -43,92 +46,87 @@ export function ProjectCard({
           src={project.thumbnail_url}
           alt={`${project.title} preview`}
           className={classNames(
-            'border border-[rgb(var(--border-subtle))] transition-colors duration-300',
-            isFeature ? 'aspect-[16/10]' : variant === 'compact' ? 'aspect-[16/9]' : 'aspect-[4/3]',
-            'group-hover:border-[rgb(var(--border))]'
+            'border border-[rgb(var(--border-subtle))] transition-colors duration-300 group-hover:border-[rgb(var(--border))]',
+            isFeature ? 'aspect-[16/10]' : isCompact ? 'aspect-[16/9]' : 'aspect-[4/3]'
           )}
           priority={priority}
           sizes={
             isFeature
               ? '(min-width: 1024px) 66vw, 100vw'
-              : variant === 'compact'
+              : isCompact
                 ? '(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw'
                 : '(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw'
           }
         />
 
-        <div className={classNames(isFeature ? 'pt-6' : 'pt-5')}>
-          <div className="flex items-center gap-3">
-            {index !== undefined && (
-              <span className="font-mono text-[0.6875rem] text-[rgb(var(--text-muted))]">
-                {String(index + 1).padStart(2, '0')}
-              </span>
-            )}
-            <span className="caption text-[rgb(var(--accent))]">
-              {categoryLabels[project.category as ProjectCategory] ?? project.category}
+        {/*
+          Metadata row. The rule is the hover target: it wipes in from the left
+          on hover so the card reacts without recolouring the title or adding
+          another box. `flex-1` keeps the date hard right on every card width.
+        */}
+        <div className="mt-5 flex items-center gap-3 border-t border-[rgb(var(--border-subtle))] pt-4">
+          {index !== undefined && (
+            <span className="index-marker transition-colors duration-150 group-hover:text-[rgb(var(--accent))]">
+              {String(index + 1).padStart(2, '0')}
             </span>
-            {project.project_date && (
-              <>
-                <span aria-hidden="true" className="h-px flex-1 bg-[rgb(var(--border-subtle))]" />
-                <time
-                  dateTime={project.project_date}
-                  className="font-mono text-[0.6875rem] text-[rgb(var(--text-muted))]"
-                >
-                  {formatProjectDate(project.project_date)}
-                </time>
-              </>
-            )}
-          </div>
+          )}
+          <span className="caption text-[rgb(var(--text-muted))]">
+            {categoryLabels[project.category as ProjectCategory] ?? project.category}
+          </span>
+          {project.project_date && (
+            <time
+              dateTime={project.project_date}
+              className="ml-auto shrink-0 font-mono text-[0.6875rem] tabular-nums text-[rgb(var(--text-muted))]"
+            >
+              {formatProjectDate(project.project_date)}
+            </time>
+          )}
+        </div>
 
+        <div className="mt-3 flex items-start justify-between gap-4">
           <h3
             className={classNames(
-              'mt-3 font-display font-bold leading-tight tracking-tight transition-colors duration-200',
-              'text-[rgb(var(--text-primary))] group-hover:text-[rgb(var(--accent))]',
-              isFeature ? 'text-2xl sm:text-3xl' : 'text-lg'
+              'font-display font-bold leading-[1.15] tracking-[-0.025em] text-[rgb(var(--text-primary))]',
+              isFeature ? 'text-2xl sm:text-3xl' : isCompact ? 'text-base' : 'text-lg'
             )}
           >
             <span className="absolute inset-0" aria-hidden="true" />
             {project.title}
           </h3>
 
-          {!isFeature && (
-            <p className="mt-2 line-clamp-2 text-sm text-[rgb(var(--text-secondary))]">
-              {project.short_description}
-            </p>
-          )}
-
-          {isFeature && (
-            <p className="mt-3 max-w-xl text-[rgb(var(--text-secondary))]">
-              {project.short_description}
-            </p>
-          )}
-
-          {project.technologies && project.technologies.length > 0 && (
-            <ul className="mt-4 flex flex-wrap gap-1.5">
-              {project.technologies.slice(0, isFeature ? 6 : 4).map((technology) => (
-                <li
-                  key={technology}
-                  className="border border-[rgb(var(--border-subtle))] px-2 py-0.5 font-mono text-[0.6875rem] text-[rgb(var(--text-muted))]"
-                >
-                  {technology}
-                </li>
-              ))}
-              {!isFeature && project.technologies.length > 4 && (
-                <li className="px-1 py-0.5 font-mono text-[0.6875rem] text-[rgb(var(--text-muted))]">
-                  +{project.technologies.length - 4}
-                </li>
-              )}
-            </ul>
-          )}
-
-          <span className="mt-5 inline-flex items-center gap-1 text-sm text-[rgb(var(--text-muted))] transition-colors group-hover:text-[rgb(var(--accent))]">
-            View project
-            <ArrowUpRight
-              className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-              aria-hidden="true"
-            />
+          {/*
+            Replaces the old always-visible "View project" line. The affordance
+            is now a mark in the corner that appears on hover, which removes a
+            row of repeated text from every tile.
+          */}
+          <span
+            aria-hidden="true"
+            className="mt-0.5 hidden shrink-0 -translate-x-1 text-[rgb(var(--accent))] opacity-0 transition-[opacity,transform] duration-200 group-hover:translate-x-0 group-hover:opacity-100 sm:block"
+          >
+            <ArrowUpRight className="h-4 w-4" />
           </span>
         </div>
+
+        <p
+          className={classNames(
+            'text-pretty text-[rgb(var(--text-secondary))]',
+            isFeature ? 'mt-3 max-w-xl' : isCompact ? 'mt-2 line-clamp-2 text-sm' : 'mt-2 line-clamp-2 text-sm'
+          )}
+        >
+          {project.short_description}
+        </p>
+
+        {/*
+          Technologies as a running mono list. Chips were the single most
+          "dashboard" element in the old card; a comma-separated line carries
+          the same information and reads as part of the typography.
+        */}
+        {visibleTechnologies.length > 0 && (
+          <p className="mt-auto pt-4 font-mono text-[0.6875rem] leading-relaxed text-[rgb(var(--text-muted))]">
+            {visibleTechnologies.join(' · ')}
+            {overflowCount > 0 && <span> · +{overflowCount}</span>}
+          </p>
+        )}
       </Link>
     </article>
   )

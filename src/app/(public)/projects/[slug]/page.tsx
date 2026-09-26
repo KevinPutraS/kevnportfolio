@@ -33,8 +33,11 @@ interface ProjectPageProps {
  * The homepage keeps its 60s ISR window: it never calls `notFound()`, so it has
  * no equivalent downside. The archive's skeleton lives in an in-page `<Suspense>`
  * rather than a segment `loading.tsx` for the same reason.
+ *
+ * No route segment config is declared here on purpose. This is a dynamic segment
+ * with no `generateStaticParams`, which Next renders on demand by default —
+ * declaring `revalidate` is what would introduce the HTTP 200 problem above.
  */
-export const dynamic = 'force-dynamic'
 
 /**
  * `getProjectBySlug` already filters on `published = true`, so an unpublished
@@ -43,11 +46,24 @@ export const dynamic = 'force-dynamic'
 export async function generateMetadata({ params }: ProjectPageProps): Promise<Metadata> {
   const project = await getProjectBySlug(params.slug)
 
+  /*
+   * `notFound()` is deliberately NOT called here.
+   *
+   * Throwing from `generateMetadata` is not a supported way to produce a 404 in
+   * the App Router: the metadata resolver runs outside the render tree that the
+   * not-found boundary wraps, so the throw unwinds before the boundary is
+   * resolved and the response is served as a bare 404 with an empty `<body>` —
+   * right status, no page, no navigation.
+   *
+   * So metadata resolution degrades quietly and the page body stays the single
+   * authority on the status code. The project is not found either way; what
+   * changes is whether the visitor gets the 404 page or a blank screen.
+   */
   if (!project) {
-    // Raised here as well as in the page body so no metadata is ever generated
-    // for a project that does not exist. The page-level `notFound()` is what
-    // actually decides the HTTP status; see the note on `dynamic` below.
-    notFound()
+    return {
+      title: 'Project not found',
+      robots: { index: false, follow: false },
+    }
   }
 
   const description = project.short_description
@@ -87,31 +103,41 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
   return (
     <article>
       {/* ---- Header ------------------------------------------------------ */}
-      <header className="border-b border-[rgb(var(--border-subtle))]">
-        <div className="container-custom py-12 sm:py-16 lg:py-20">
-          <Link
-            href="/projects"
-            className="group inline-flex items-center gap-2 font-mono text-xs text-[rgb(var(--text-muted))] transition-colors hover:text-[rgb(var(--accent))]"
-          >
-            <ArrowLeft
-              className="h-3.5 w-3.5 transition-transform duration-200 group-hover:-translate-x-1"
-              aria-hidden="true"
-            />
-            All projects
-          </Link>
+      <header>
+        <div className="container-custom">
+          <div className="flex items-center justify-between gap-6 border-b border-[rgb(var(--border-subtle))] py-4">
+            <Link
+              href="/projects"
+              className="group inline-flex items-center gap-2 font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-[rgb(var(--text-muted))] transition-colors duration-150 hover:text-[rgb(var(--text-primary))]"
+            >
+              <ArrowLeft
+                className="h-3.5 w-3.5 transition-transform duration-200 group-hover:-translate-x-1"
+                aria-hidden="true"
+              />
+              All projects
+            </Link>
 
-          <div className="mt-10 grid gap-8 lg:grid-cols-12">
-            <div className="lg:col-span-8">
+            <p className="caption hidden text-[rgb(var(--text-muted))] sm:block">
+              Case study
+            </p>
+          </div>
+
+          {/*
+            Title set against a metadata rail rather than stacked under it. The
+            rail is a border-left column so it reads as a caption, not a card.
+          */}
+          <div className="grid gap-x-10 gap-y-10 py-14 sm:py-20 lg:grid-cols-12 lg:py-24">
+            <div className="lg:col-span-7">
               <div className="flex flex-wrap items-center gap-3">
-                <span className="caption text-[rgb(var(--accent))]">
+                <span className="caption text-[rgb(var(--text-muted))]">
                   {categoryLabels[project.category] ?? project.category}
                 </span>
                 {project.project_date && (
                   <>
-                    <span aria-hidden="true" className="h-px w-8 bg-[rgb(var(--border))]" />
+                    <span aria-hidden="true" className="h-3 w-px bg-[rgb(var(--border-subtle))]" />
                     <time
                       dateTime={project.project_date}
-                      className="font-mono text-[0.6875rem] text-[rgb(var(--text-muted))]"
+                      className="font-mono text-[0.6875rem] tabular-nums text-[rgb(var(--text-muted))]"
                     >
                       {formatProjectDate(project.project_date)}
                     </time>
@@ -119,17 +145,17 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
                 )}
               </div>
 
-              <h1 className="heading-1 mt-5 break-words">{project.title}</h1>
+              <h1 className="heading-1 mt-6 max-w-[16ch] text-balance">{project.title}</h1>
 
-              <p className="body mt-6 max-w-2xl text-[rgb(var(--text-secondary))]">
+              <p className="body-lg mt-8 max-w-2xl text-pretty text-[rgb(var(--text-secondary))]">
                 {project.short_description}
               </p>
 
               {hasLinks && (
-                <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
                   {/* Both buttons are omitted entirely when the URL is absent. */}
                   {project.project_url && (
-                    <ButtonLink href={project.project_url} external size="md" className="w-full sm:w-auto">
+                    <ButtonLink href={project.project_url} external size="lg" className="w-full sm:w-auto">
                       Visit project
                     </ButtonLink>
                   )}
@@ -138,6 +164,7 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
                       href={project.repository_url}
                       external
                       variant="secondary"
+                      size="lg"
                       className="w-full sm:w-auto"
                     >
                       View repository
@@ -148,17 +175,17 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
             </div>
 
             {technologies.length > 0 && (
-              <aside className="lg:col-span-4">
-                <p className="eyebrow">Built with</p>
-                <ul className="mt-4 space-y-2">
+              <aside className="lg:col-span-4 lg:col-start-9">
+                <p className="meta-label">Built with</p>
+                <ul className="mt-4 flex flex-wrap gap-x-3 gap-y-2 lg:block">
                   {technologies.map((technology) => (
                     <li
                       key={technology}
-                      className="flex items-center gap-3 border-b border-[rgb(var(--border-subtle))] py-2 text-sm text-[rgb(var(--text-secondary))]"
+                      className="border-t border-[rgb(var(--border-subtle))] py-2.5 text-sm text-[rgb(var(--text-secondary))] lg:flex lg:items-baseline lg:gap-3"
                     >
                       <span
                         aria-hidden="true"
-                        className="h-1 w-1 shrink-0 bg-[rgb(var(--accent))]"
+                        className="hidden h-1 w-1 shrink-0 bg-[rgb(var(--accent))] lg:block"
                       />
                       {technology}
                     </li>
@@ -172,12 +199,13 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
 
       {/* ---- Hero image -------------------------------------------------- */}
       {project.thumbnail_url && (
-        <div className="container-custom mt-12 sm:mt-16">
+        <div className="container-custom">
           <ProjectThumbnail
             src={project.thumbnail_url}
             alt={`${project.title} preview`}
             className="aspect-[16/9] border border-[rgb(var(--border-subtle))]"
             priority
+            zoom={false}
             sizes="(min-width: 1280px) 1200px, 100vw"
           />
         </div>
@@ -185,12 +213,12 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
 
       {/* ---- Body -------------------------------------------------------- */}
       {hasDescription && (
-        <section className="container-custom py-16 sm:py-20">
-          <div className="grid gap-10 lg:grid-cols-12">
+        <section className="container-custom">
+          <div className="grid gap-x-10 gap-y-6 py-16 sm:py-20 lg:grid-cols-12">
             <div className="lg:col-span-3">
               <p className="eyebrow">Overview</p>
             </div>
-            <div className="prose-block max-w-2xl lg:col-span-8">
+            <div className="prose-block max-w-2xl text-pretty lg:col-span-8 lg:col-start-5">
               {project.description?.split('\n\n').map((paragraph, index) => (
                 <p key={index}>{paragraph}</p>
               ))}
@@ -201,13 +229,14 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
 
       {/* ---- Gallery ----------------------------------------------------- */}
       {gallery.length > 0 && (
-        <section className="border-t border-[rgb(var(--border-subtle))] py-16 sm:py-20">
+        <section className="rule-top">
           <div className="container-custom">
-            <div className="grid gap-10 lg:grid-cols-12">
+            <div className="grid gap-x-10 gap-y-8 py-16 sm:py-20 lg:grid-cols-12">
               <div className="lg:col-span-3">
                 <p className="eyebrow">Gallery</p>
-                <p className="mt-3 font-mono text-xs text-[rgb(var(--text-muted))]">
-                  {gallery.length} {gallery.length === 1 ? 'image' : 'images'}
+                <p className="mt-3 font-mono text-[0.6875rem] tabular-nums text-[rgb(var(--text-muted))]">
+                  {String(gallery.length).padStart(2, '0')}{' '}
+                  {gallery.length === 1 ? 'image' : 'images'}
                 </p>
               </div>
               <div className="lg:col-span-9">
@@ -219,28 +248,37 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
       )}
 
       {/* ---- Footer nav -------------------------------------------------- */}
-      <section className="border-t border-[rgb(var(--border-subtle))] py-12 sm:py-16">
-        <div className="container-custom flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-          <Link
-            href="/projects"
-            className="group inline-flex items-center gap-2 text-sm text-[rgb(var(--text-secondary))] transition-colors hover:text-[rgb(var(--text-primary))]"
-          >
-            <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" aria-hidden="true" />
-            Back to all projects
-          </Link>
-
-          {project.repository_url && (
-            <a
-              href={project.repository_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group inline-flex items-center gap-2 font-mono text-xs text-[rgb(var(--text-muted))] transition-colors hover:text-[rgb(var(--accent))]"
+      <section className="rule-top">
+        <div className="container-custom">
+          <div className="flex flex-col gap-6 py-12 sm:flex-row sm:items-center sm:justify-between sm:py-16">
+            <Link
+              href="/projects"
+              className="group inline-flex items-center gap-2 font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-[rgb(var(--text-muted))] transition-colors duration-150 hover:text-[rgb(var(--text-primary))]"
             >
-              <GitBranch className="h-3.5 w-3.5" aria-hidden="true" />
-              Source
-              <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
-            </a>
-          )}
+              <ArrowLeft
+                className="h-3.5 w-3.5 transition-transform duration-200 group-hover:-translate-x-1"
+                aria-hidden="true"
+              />
+              Back to all projects
+            </Link>
+
+            {project.repository_url && (
+              <a
+                href={project.repository_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group inline-flex items-center gap-2 font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-[rgb(var(--text-muted))] transition-colors duration-150 hover:text-[rgb(var(--text-primary))]"
+              >
+                <GitBranch className="h-3.5 w-3.5" aria-hidden="true" />
+                Source
+                <ArrowUpRight
+                  className="h-3 w-3 text-[rgb(var(--text-muted))] transition-colors duration-150 group-hover:text-[rgb(var(--accent))]"
+                  aria-hidden="true"
+                />
+                <span className="sr-only">(opens in a new tab)</span>
+              </a>
+            )}
+          </div>
         </div>
       </section>
 

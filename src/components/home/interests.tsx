@@ -1,54 +1,52 @@
-import { ArrowUpRight, Cpu, FlaskConical, Globe, Network, Palette } from 'lucide-react'
 import { interests } from '@/config/site'
 
 /**
- * Areas of interest. Framed as exploration rather than expertise: no years,
- * no proficiency levels, no claims of specialisation.
+ * Areas of interest.
+ *
+ * Framed as exploration, not expertise: no proficiency bars, no years, no
+ * claims of specialisation.
+ *
+ * Typographic rather than an icon grid. A grid of bordered tiles with a coloured
+ * icon in each corner is the most recognisable "skills section" layout, and it
+ * competes with the projects above it. Numbers, hairlines and a wide measure do
+ * the same job quietly, and the fifth item deliberately breaks the two-column
+ * rhythm so the block does not read as a table.
  */
-const ICONS = {
-  globe: Globe,
-  cpu: Cpu,
-  network: Network,
-  palette: Palette,
-  flask: FlaskConical,
-} as const
-
 export function Interests() {
   return (
-    <section className="section border-t border-[rgb(var(--border-subtle))]">
+    <section className="rhythm-xl rule-top">
       <div className="container-custom">
-        <div className="grid gap-10 lg:grid-cols-12">
-          <div className="lg:col-span-4">
+        <div className="grid gap-x-10 gap-y-12 lg:grid-cols-12">
+          <div className="lg:col-span-3">
             <p className="eyebrow">What draws me in</p>
-            <h2 className="heading-2 mt-4 text-balance">Areas of interest</h2>
-            <p className="mt-6 max-w-sm text-[rgb(var(--text-secondary))]">
-              There is no single lane here. These are the areas I keep circling back to — some with
-              more depth than others, all of them still in progress.
-            </p>
           </div>
 
-          <ul className="grid gap-px border border-[rgb(var(--border-subtle))] bg-[rgb(var(--border-subtle))] sm:grid-cols-2 lg:col-span-8">
-            {interests.map((interest) => {
-              const Icon = ICONS[interest.icon as keyof typeof ICONS] ?? Globe
-              return (
+          <div className="lg:col-span-9">
+            <h2 className="heading-2 max-w-[20ch] text-balance">
+              No single lane. Just things worth a long look.
+            </h2>
+
+            <ul className="mt-12 grid gap-x-10 gap-y-10 sm:grid-cols-2">
+              {interests.map((interest, index) => (
                 <li
                   key={interest.title}
-                  className="group bg-[rgb(var(--background))] p-6 transition-colors duration-200 hover:bg-[rgb(var(--surface))] sm:p-8"
+                  className={
+                    index === interests.length - 1 ? 'sm:col-span-2' : undefined
+                  }
                 >
-                  <Icon
-                    className="h-5 w-5 text-[rgb(var(--accent))]"
-                    aria-hidden="true"
-                  />
-                  <h3 className="mt-5 font-display text-lg font-semibold tracking-tight">
-                    {interest.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-[rgb(var(--text-secondary))]">
+                  <div className="flex items-baseline gap-4 border-t border-[rgb(var(--border-subtle))] pt-4">
+                    <span className="index-marker">{String(index + 1).padStart(2, '0')}</span>
+                    <h3 className="flex-1 font-display text-lg font-semibold tracking-[-0.02em] text-[rgb(var(--text-primary))]">
+                      {interest.title}
+                    </h3>
+                  </div>
+                  <p className="mt-3 text-pretty text-[rgb(var(--text-secondary))] sm:pl-9">
                     {interest.description}
                   </p>
                 </li>
-              )
-            })}
-          </ul>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
     </section>

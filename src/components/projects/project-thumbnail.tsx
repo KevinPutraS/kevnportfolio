@@ -15,14 +15,22 @@ export function ProjectThumbnail({
   className,
   sizes = '(min-width: 1280px) 40vw, (min-width: 768px) 50vw, 100vw',
   priority,
+  zoom = true,
 }: {
   src: string | null | undefined
   alt: string
   className?: string
   sizes?: string
   priority?: boolean
+  /**
+   * Adds the hover scale. Driven by an enclosing `.group`, so a parent card
+   * opts in by wrapping this in `group`; pass `false` for standalone images
+   * such as the case-study hero, where a hover zoom would be meaningless.
+   */
+  zoom?: boolean
 }) {
   const hasImage = typeof src === 'string' && src.length > 0
+  const imageClass = zoom ? 'image-zoom object-cover' : 'object-cover'
 
   return (
     <div className={classNames('relative overflow-hidden bg-[rgb(var(--surface-elevated))]', className)}>
@@ -33,7 +41,7 @@ export function ProjectThumbnail({
           fill
           sizes={sizes}
           priority={priority}
-          className="object-cover"
+          className={imageClass}
           onError={(event) => {
             // Swap to the bundled placeholder instead of showing a broken frame.
             const img = event.currentTarget
@@ -48,7 +56,7 @@ export function ProjectThumbnail({
           alt=""
           fill
           sizes={sizes}
-          className="object-cover"
+          className={imageClass}
         />
       )}
     </div>

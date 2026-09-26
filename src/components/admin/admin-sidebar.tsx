@@ -1,5 +1,5 @@
 import { AdminHeader } from './admin-header'
-import { AdminBrand, AdminNavLinks, SignOutForm } from './admin-navigation'
+import { AdminBrand, AdminNavLinks, SignOutForm, ViewSiteLink } from './admin-navigation'
 
 /** Persistent desktop sidebar. Hidden below `md`, where AdminHeader takes over. */
 export function AdminSidebar({ email }: { email: string | null }) {
@@ -19,6 +19,7 @@ export function AdminSidebar({ email }: { email: string | null }) {
             {email}
           </p>
         )}
+        <ViewSiteLink />
         <SignOutForm />
       </div>
     </aside>

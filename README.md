@@ -223,15 +223,20 @@ To load them on a hosted project, paste the seed into **SQL Editor** and run it.
     │   ├── (public)/               # navbar + footer live here
     │   │   ├── layout.tsx
     │   │   ├── page.tsx            # /
+    │   │   ├── not-found.tsx       # keeps the public shell
+    │   │   ├── error.tsx
     │   │   ├── projects/
     │   │   │   ├── page.tsx
-    │   │   │   └── [slug]/page.tsx
+    │   │   │   └── [slug]/
+    │   │   │       ├── page.tsx
+    │   │   │       └── not-found.tsx  # project-specific 404
     │   │   ├── about/page.tsx
     │   │   └── contact/page.tsx
     │   ├── admin/
     │   │   ├── login/page.tsx      # outside the guard, on purpose
     │   │   └── (protected)/        # guard + shell, redirect-safe
     │   │       ├── layout.tsx
+    │   │       ├── loading.tsx
     │   │       ├── page.tsx
     │   │       └── projects/
     │   │           ├── page.tsx
@@ -242,12 +247,20 @@ To load them on a hosted project, paste the seed into **SQL Editor** and run it.
     │   │   ├── auth/signin, signout
     │   │   ├── contact/
     │   │   └── upload/
-    │   ├── not-found.tsx, error.tsx, loading.tsx
+    │   ├── not-found.tsx           # root, self-contained (no shell)
+    │   ├── error.tsx
     │   └── robots.ts, sitemap.ts
     ├── components/
-    │   ├── ui/                     # button, input, select, modal, …
-    │   ├── layout/                 # navbar, mobile-menu, footer
-    │   ├── home/ projects/ about/ contact/ admin/
+    │   ├── ui/                     # button, button-link, arrow-link, input,
+    │   │                           # select, modal, field, empty-state, …
+    │   ├── layout/                 # navbar, mobile-menu, footer, skip-link
+    │   ├── home/                   # hero, intro, featured-projects, interests,
+    │   │                           # currently-exploring, about-preview, contact-cta
+    │   ├── projects/               # project-card, project-grid, project-filter,
+    │   │                           # project-thumbnail, related-projects, gallery
+    │   ├── contact/                # contact-form
+    │   └── admin/                  # sidebar, header, navigation, table, form,
+    │                               # image-uploader, login-form
     ├── config/site.ts              # all site content, nav, categories
     ├── lib/
     │   ├── api/admin-guard.ts      # auth guard + validation helpers
@@ -256,9 +269,9 @@ To load them on a hosted project, paste the seed into **SQL Editor** and run it.
     │   ├── hooks/use-focus-trap.ts
     │   ├── storage/                # images.ts (server) + image-types.ts (client-safe)
     │   ├── supabase/               # server, public, client, config
-    │   ├── utils/                  # helpers, rate-limit, validation
+    │   ├── utils/                  # helpers, rate-limit
     │   └── validation/             # project.ts, contact.ts
-    ├── styles/globals.css          # design tokens
+    ├── styles/globals.css          # design tokens + component classes
     └── types/
 ```
 
@@ -287,47 +300,112 @@ archive's skeleton is therefore an in-page `<Suspense>` inside
 route-level boundary for `projects/[slug]`. The CMS keeps a normal
 `loading.tsx`, because no admin route calls `notFound()`.
 
-Verified: `/projects/does-not-exist` → **404**, not 200.
+`projects/[slug]` declares no route segment config at all: a dynamic segment with
+no `generateStaticParams` is rendered on demand, which is what the comment in
+that file asks for.
+
+**Where does `notFound()` resolve?** There are three boundaries, and the
+difference is deliberate:
+
+| File | Used for | Chrome |
+| --- | --- | --- |
+| `app/not-found.tsx` | Unmatched routes anywhere, including `/admin/*` | None — self-contained, so it cannot depend on a layout that may itself be broken |
+| `app/(public)/not-found.tsx` | 404s raised inside public pages | Full navbar and footer |
+| `app/(public)/projects/[slug]/not-found.tsx` | Unknown project slug | Full shell, plus project-specific copy and a "Browse projects" CTA |
+
+**`notFound()` is never called from `generateMetadata`.** The metadata resolver
+runs outside the render tree the not-found boundary wraps, so a throw there
+unwinds before the boundary resolves and the visitor gets a bare 404 with an
+empty `<body>`. Metadata resolution therefore degrades quietly to
+`robots: noindex` and the page body stays the single authority on the status.
+
+Verified: `/projects/does-not-exist` → **404** with the project-specific page in
+the response.
 
 ---
 
 ## Design system
 
-Dark editorial direction: near-black base, hairline borders, square-cornered
-panels, one accent, and a type scale that does the heavy lifting.
+Dark editorial direction: near-black base, hairline borders, square geometry, one
+accent, and typography that does the heavy lifting. The reference is a print
+index or a magazine spread, not a dashboard.
 
 All tokens are CSS custom properties in `src/styles/globals.css`:
 
 | Token | Value | Use |
 | --- | --- | --- |
-| `--background` | `#08090D` | Page background |
-| `--surface` | `#101117` | Panels |
-| `--surface-elevated` | `#191A22` | Inputs, raised surfaces |
-| `--border-subtle` | `#21222B` | Hairlines |
-| `--border` | `#343540` | Emphasis borders |
-| `--text-primary` | `#F6F7F9` | Headings |
-| `--text-secondary` | `#A0A2AD` | Body |
-| `--text-muted` | `#70727E` | Meta |
-| `--accent` | `#D6F26A` | The single accent |
+| `--background` | `rgb(8 9 12)` | Page background |
+| `--surface` | `rgb(17 18 24)` | Panels |
+| `--surface-elevated` | `rgb(26 27 35)` | Inputs, raised surfaces |
+| `--border-subtle` | `rgb(28 29 37)` | Hairlines |
+| `--border` | `rgb(46 47 57)` | Emphasis borders |
+| `--text-primary` | `rgb(243 242 238)` | Headings (warm off-white) |
+| `--text-secondary` | `rgb(154 153 149)` | Body |
+| `--text-muted` | `rgb(108 107 104)` | Meta |
+| `--accent` | `rgb(214 242 106)` | The single accent |
+| `--accent-contrast` | `rgb(8 9 12)` | Text on accent |
+| `--radius` | `0px` | Everything stays square |
+
+**Type scale is fluid, not stepped.** A stepped scale only has the correct size at
+the breakpoints it declares, so between 768px and 1280px the display type either
+jumps or sits too small. `clamp()` interpolates continuously:
+
+| Token | Value |
+| --- | --- |
+| `--text-display` | `clamp(2.75rem, 10.5vw, 8.5rem)` |
+| `--text-h1` | `clamp(2.25rem, 6.4vw, 5.25rem)` |
+| `--text-h2` | `clamp(1.75rem, 3.7vw, 3.125rem)` |
+| `--text-h3` | `clamp(1.375rem, 2.2vw, 1.875rem)` |
+| `--text-h4` | `clamp(1.125rem, 1.4vw, 1.375rem)` |
+| `--text-lead` | `clamp(1.0625rem, 1.35vw, 1.375rem)` |
+| `--text-meta` | `0.6875rem` |
+
+The hero runs full container width, so the longest display line
+("Building things.", 16 characters) lands at roughly 8.1em and fits on one line
+from about 640px up. The `clamp()` floor is 2.75rem because at 320px anything
+larger makes the longest single word ("Exploring") exceed the 280px content box.
+
+**Spacing rhythm is a sequence, not a value.** `--rhythm-xl`, `--rhythm-lg`,
+`--rhythm-md` and `--rhythm-sm` are composed large → medium → small → large.
+Repeating one vertical padding everywhere is the clearest "template" signal there
+is; alternating the rhythm is what gives the page pacing.
 
 Typography: **Space Grotesk** for display, **Inter** for body, system mono for
 labels and metadata.
 
-Reusable classes: `heading-1`…`heading-4`, `body`, `body-sm`, `eyebrow`,
-`caption`, `prose-block`, `input`, `textarea`, `label`, `field-error`,
-`card`, `card-hover`, `badge-*`, `link`, `rule`, `grid-backdrop`,
-`animate-*`, `stagger-1`…`6`.
+Reusable classes (56 in total, all in `@layer components`):
+
+- Type: `display-1`, `heading-1`…`heading-4`, `body`, `body-lg`, `body-sm`,
+  `eyebrow`, `caption`, `meta-label`, `prose-block`
+- Layout: `container-custom`, `section`, `section-sm`, `rhythm-*`, `rule`,
+  `rule-top`, `index-marker`, `page-depth`
+- Surfaces: `card`, `card-hover`, `image-zoom`, `badge-*`
+- Forms: `input`, `textarea`, `label`, `field-hint`, `field-error`
+- Motion: `animate-fade-in`, `animate-scale-in`, `animate-slide-up`,
+  `animate-slide-down`, `stagger-1`…`stagger-6`, `arrow-shift`,
+  `transition-quick`, `transition-smooth`
+- Helpers: `link`, `link-underline`, `text-balance`, `text-pretty`,
+  `scrollbar-hide`
 
 Design constraints observed:
 
 - **One accent colour.** `success` / `warning` / `error` exist only for state,
   never decoration. Category badges are all neutral, not a rainbow.
-- **Square corners** on cards and panels — the editorial contrast to the rounded
-  card look of a typical template.
+- **Square corners everywhere** (`--radius: 0px`) — the editorial contrast to the
+  rounded card look of a typical template. Buttons are square, not pills.
+- **Accent discipline:** the accent is an annotation colour. It marks the
+  *current* thing (active nav item, active filter, the one live status) and
+  nothing else.
+- **Asymmetry on purpose:** the project grid alternates 7/5 column spans, the
+  hero pairs a full-bleed masthead with a narrow index rail, and the About
+  preview inverts to a lighter band. Nothing is centred by default.
 - **Restrained motion:** entrance fades and short slides only, no floating
-  loops. All of it collapses under `prefers-reduced-motion`.
-- Buttons are square-cornered, not pills; hover states are colour shifts, not
-  gradients or glows.
+  loops. A single easing curve and two durations. All of it collapses under
+  `prefers-reduced-motion`.
+- **No glassmorphism.** Panels are solid fills separated by hairlines.
+- **Two motion strengths, not one:** a filled accent button and an `ArrowLink`
+  (a label with a rule that grows underneath) so a page with two equal-priority
+  actions does not turn into two competing boxes.
 
 ---
 
@@ -514,6 +592,40 @@ Covers typecheck, lint and the production build. Beyond that:
 - [ ] `robots.txt` disallows `/admin` and `/api/`
 - [ ] `sitemap.xml` lists every published project
 - [ ] No secret appears in the client bundle (`NEXT_PUBLIC_*` only)
+
+### Verified in this environment, without Supabase
+
+Run against `npm run build && npm start`. Everything below was actually
+executed, not assumed.
+
+| Check | Result |
+| --- | --- |
+| `tsc --noEmit` | clean |
+| `next lint` | no warnings or errors |
+| `next build` | 21 routes compiled |
+| `/`, `/projects`, `/projects?category=web`, `/about`, `/contact` | `200` |
+| `/robots.txt`, `/sitemap.xml` | `200` |
+| `/nope`, `/admin/does-not-exist` | `404` |
+| `/projects/does-not-exist` | `404`, project-specific page, `noindex` |
+| `/api/admin/projects`, `/api/admin/projects/list` | `503` (no Supabase configured) |
+| `POST /api/contact` valid | `202` with `delivered: false` and a real message |
+| `POST /api/contact` invalid | `400` with per-field errors |
+| `POST /api/contact` honeypot filled | `400` `company: "Spam detected"` |
+| Secret scan of `src/` and `supabase/` | no keys, no `service_role` |
+| Fixed-width overflow scan (`w-[Npx]`, `min-w-[Npx]`) in public components | none |
+| Custom classes emitted in the production CSS bundle | all present |
+
+### Requires external configuration to verify
+
+These cannot be checked without credentials and are listed so the gap is
+explicit rather than implied:
+
+- Sign in, and the full create / edit / delete / publish / feature flow
+- RLS behaviour for a signed-in user who is *not* in `public.admins`
+- Image upload, replacement, preview and orphan cleanup
+- Contact form delivery when a webhook is configured
+- Visual regression at each viewport — there is no browser test suite here, so
+  the responsive checklist above is a manual pass, not an automated one
 
 ---
 

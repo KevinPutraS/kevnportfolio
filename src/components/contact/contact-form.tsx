@@ -87,10 +87,11 @@ export function ContactForm() {
     return (
       <div
         role="status"
-        className="border border-[rgb(var(--success))]/40 bg-[rgb(var(--success))]/5 p-8 text-center"
+        className="border-t-2 border-t-[rgb(var(--success))] bg-[rgb(var(--surface))] p-8"
       >
-        <p className="heading-4">Message received</p>
-        <p className="mt-3 text-[rgb(var(--text-secondary))]">
+        <p className="eyebrow text-[rgb(var(--success))]">Sent</p>
+        <p className="heading-3 mt-4">Message received</p>
+        <p className="mt-3 max-w-md text-pretty text-[rgb(var(--text-secondary))]">
           Thanks for reaching out — I&apos;ll get back to you as soon as I can.
         </p>
         <button
@@ -99,7 +100,7 @@ export function ContactForm() {
             setStatus('idle')
             setFeedback('')
           }}
-          className="mt-6 text-sm text-[rgb(var(--accent))] underline underline-offset-4"
+          className="link-underline mt-8 font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-[rgb(var(--text-secondary))]"
         >
           Send another message
         </button>
@@ -178,13 +179,13 @@ export function ContactForm() {
         {feedback}
       </p>
 
-      <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mt-8 flex flex-col gap-4 border-t border-[rgb(var(--border-subtle))] pt-8 sm:flex-row sm:items-center sm:justify-between">
         <Button type="submit" size="lg" loading={status === 'submitting'} className="w-full sm:w-auto">
           {status === 'submitting' ? 'Sending…' : 'Send message'}
         </Button>
         <p className="text-sm text-[rgb(var(--text-muted))]">
           Or email{' '}
-          <a href={`mailto:${siteConfig.email}`} className="link">
+          <a href={siteConfig.contactEmail} className="link break-all">
             {siteConfig.email}
           </a>
         </p>

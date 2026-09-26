@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Menu, X } from 'lucide-react'
 import { useFocusTrap } from '@/lib/hooks/use-focus-trap'
-import { AdminBrand, AdminNavLinks, SignOutForm } from './admin-navigation'
+import { AdminBrand, AdminNavLinks, SignOutForm, ViewSiteLink } from './admin-navigation'
 
 /**
  * The admin shell header.
@@ -17,7 +17,7 @@ export function AdminHeader({ email }: { email: string | null }) {
   const panelRef = useFocusTrap<HTMLDivElement>(isOpen, close)
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[rgb(var(--border-subtle))] bg-[rgb(var(--background))]/90 backdrop-blur-md md:hidden">
+    <header className="sticky top-0 z-40 border-b border-[rgb(var(--border-subtle))] bg-[rgb(var(--background))] md:hidden">
       <div className="flex h-14 items-center justify-between px-4">
         <p className="font-display text-sm font-bold tracking-tight">Admin</p>
 
@@ -60,6 +60,7 @@ export function AdminHeader({ email }: { email: string | null }) {
               <AdminNavLinks onNavigate={close} />
               <div className="mt-6 border-t border-[rgb(var(--border-subtle))] pt-4">
                 {email && <p className="px-4 pb-2 font-mono text-xs text-[rgb(var(--text-muted))]">{email}</p>}
+                <ViewSiteLink onNavigate={close} />
                 <SignOutForm />
               </div>
             </div>

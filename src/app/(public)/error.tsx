@@ -4,10 +4,13 @@ import { useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 
 /**
- * Route-level error boundary. Catches errors thrown while rendering a page,
- * including failed database requests.
+ * Error boundary for the public route group.
+ *
+ * Scoped to this group so a failed public page keeps the site chrome — the
+ * navbar and footer still render, so the visitor has somewhere to go. The root
+ * `error.tsx` catches everything else and remains self-contained.
  */
-export default function Error({
+export default function PublicError({
   error,
   reset,
 }: {
@@ -16,7 +19,7 @@ export default function Error({
 }) {
   useEffect(() => {
     // Surfaces the failure in the server log with the request digest.
-    console.error('[app] render error:', error.message, error.digest ?? '')
+    console.error('[public] render error:', error.message, error.digest ?? '')
   }, [error])
 
   return (

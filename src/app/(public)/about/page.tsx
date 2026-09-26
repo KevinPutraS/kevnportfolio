@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
+import { ButtonLink } from '@/components/ui/button-link'
+import { ArrowLink } from '@/components/ui/arrow-link'
+import { ExploringList } from '@/components/home/exploring-list'
 import { projectApproach, technologies } from '@/config/site'
-import { currentlyExploring } from '@/config/site'
 
 export const metadata: Metadata = {
   title: 'About',
@@ -10,187 +11,112 @@ export const metadata: Metadata = {
   alternates: { canonical: '/about' },
 }
 
+/**
+ * About.
+ *
+ * Not a résumé. Every section answers one question and nothing is repeated from
+ * a CV: what I build, what I am exploring, what I have used, what I am doing
+ * now, and how I work. No employment, clients, dates or credentials appear
+ * because none are known.
+ *
+ * Structure note: the label column alternates between three and four of the
+ * twelve columns and the vertical rhythm steps large → small → large. A page
+ * that repeats one grid and one padding value five times reads as a template
+ * no matter how good the type is.
+ */
+
+const motivations = [
+  {
+    title: 'Tools that remove a small annoyance',
+    body: 'A script that saves ten seconds, a page that loads instantly, a CLI flag that makes something readable. Small wins add up.',
+  },
+  {
+    title: 'Things I can see working',
+    body: 'A multiplayer board where two cursors actually sync. A render that responds to input. Visible feedback is what keeps me going.',
+  },
+  {
+    title: 'Experiments with no obvious purpose',
+    body: 'Shaders, generative sketches, small simulations. Pure curiosity, and where most of my ideas start.',
+  },
+  {
+    title: 'Coursework with a real brief',
+    body: 'School and university projects are a useful constraint — someone else sets the scope, and you find out what you can do inside it.',
+  },
+]
+
+const focusAreas = [
+  {
+    title: 'Web & interfaces',
+    body: 'Browser rendering, state management, accessibility, and the endless details that separate a working page from a good one.',
+    level: 'Comfortable',
+  },
+  {
+    title: 'Networking & infrastructure',
+    body: 'How services find each other and keep talking. Servers, protocols, deployment, and enough systems thinking to debug things properly.',
+    level: 'Intermediate',
+  },
+  {
+    title: 'Systems & low-level',
+    body: 'Operating systems, compilers, and what actually happens below the abstraction. Slower going, but it changes how you reason about everything above it.',
+    level: 'Learning',
+  },
+  {
+    title: 'Graphics & generative work',
+    body: 'Shaders, simulation and procedural generation. A side interest that keeps expanding.',
+    level: 'Experimenting',
+  },
+]
+
 export default function AboutPage() {
   return (
     <>
       {/* ---- Intro ------------------------------------------------------- */}
-      <section className="border-b border-[rgb(var(--border-subtle))]">
-        <div className="container-custom py-16 sm:py-20 lg:py-28">
-          <p className="eyebrow">About</p>
-          <h1 className="heading-1 mt-5 max-w-4xl text-balance">
-            I build things to find out how they work.
-          </h1>
+      <section>
+        <div className="container-custom">
+          <div className="grid gap-x-10 gap-y-10 py-14 sm:py-20 lg:grid-cols-12 lg:py-28">
+            <div className="lg:col-span-7">
+              <p className="eyebrow">About</p>
+              <h1 className="heading-1 mt-6 max-w-[14ch] text-balance">
+                I build things to find out how they work.
+              </h1>
+            </div>
 
-          <div className="prose-block mt-10 max-w-2xl text-lg text-[rgb(var(--text-secondary))]">
-            <p>
-              I am a self-directed builder. Most of my knowledge came from picking something
-              specific to make, hitting a wall, and going back to the documentation until the wall
-              disappeared.
-            </p>
-            <p>
-              I deliberately do not label myself with a single role. A year of web work and a month
-              of networking experiments are both just ways of learning how computers fit together,
-              and pretending otherwise would narrow the work for no reason.
-            </p>
+            <div className="prose-block text-pretty lg:col-span-5 lg:self-end">
+              <p>
+                I am a self-directed builder. Most of what I know came from picking something
+                specific to make, hitting a wall, and reading documentation until the wall
+                disappeared.
+              </p>
+              <p>
+                I deliberately do not label myself with a single role. A stretch of web work and a
+                month of networking experiments are both just ways of learning how computers fit
+                together — pretending otherwise would narrow the work for no reason.
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ---- What I like building --------------------------------------- */}
-      <section className="section">
+      {/* ---- What I like building ---------------------------------------- */}
+      <section className="rule-top">
         <div className="container-custom">
-          <div className="grid gap-10 lg:grid-cols-12">
-            <div className="lg:col-span-4">
+          <div className="rhythm-lg grid gap-x-10 gap-y-10 lg:grid-cols-12">
+            <div className="lg:col-span-3">
               <p className="eyebrow">Motivations</p>
-              <h2 className="heading-2 mt-4 text-balance">What I like building</h2>
+              <h2 className="heading-2 mt-5 max-w-[12ch] text-balance">What I like building</h2>
             </div>
 
-            <div className="lg:col-span-8">
-              <ul className="space-y-8">
-                {[
-                  {
-                    title: 'Tools that remove a small annoyance',
-                    body: 'A script that saves ten seconds, a page that loads instantly, a CLI flag that makes something readable. Small wins add up.',
-                  },
-                  {
-                    title: 'Things I can see working',
-                    body: 'A multiplayer board where two cursors actually sync. A render that responds to input. Visible feedback is what keeps me going.',
-                  },
-                  {
-                    title: 'Experiments with no obvious purpose',
-                    body: 'Shaders, generative sketches, small simulations. These are pure curiosity, and they are where most of my ideas start.',
-                  },
-                  {
-                    title: 'Coursework with a real brief',
-                    body: 'School and university projects are a useful constraint — someone else decides the scope, and you find out what you can do inside it.',
-                  },
-                ].map((item, index) => (
-                  <li key={item.title} className="grid gap-3 border-t border-[rgb(var(--border-subtle))] pt-6 sm:grid-cols-[3rem_1fr] sm:gap-6">
-                    <span className="font-mono text-[0.6875rem] text-[rgb(var(--text-muted))]">
-                      {String(index + 1).padStart(2, '0')}
-                    </span>
-                    <div>
-                      <h3 className="heading-4">{item.title}</h3>
-                      <p className="mt-2 max-w-xl text-[rgb(var(--text-secondary))]">{item.body}</p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ---- Areas I'm exploring ----------------------------------------- */}
-      <section className="section border-t border-[rgb(var(--border-subtle))]">
-        <div className="container-custom">
-          <div className="grid gap-10 lg:grid-cols-12">
-            <div className="lg:col-span-4">
-              <p className="eyebrow">Focus</p>
-              <h2 className="heading-2 mt-4 text-balance">Areas I&apos;m exploring</h2>
-            </div>
-
-            <div className="lg:col-span-8">
-              <ul className="grid gap-px border border-[rgb(var(--border-subtle))] bg-[rgb(var(--border-subtle))] sm:grid-cols-2">
-                {[
-                  {
-                    title: 'Web & interfaces',
-                    body: 'The most familiar area: browser rendering, state management, accessibility, and the endless details that separate a working page from a good one.',
-                    level: 'Comfortable',
-                  },
-                  {
-                    title: 'Networking & infrastructure',
-                    body: 'How services find each other and keep talking. Servers, protocols, deployment, and enough systems thinking to debug things properly.',
-                    level: 'Intermediate',
-                  },
-                  {
-                    title: 'Systems & low-level',
-                    body: 'Operating systems, compilers, and what is actually happening below the abstraction. Slower going, but it changes how you reason about everything above it.',
-                    level: 'Learning',
-                  },
-                  {
-                    title: 'Graphics & generative work',
-                    body: 'Shaders, simulation and procedural generation. A side interest that keeps expanding.',
-                    level: 'Experimenting',
-                  },
-                ].map((item) => (
-                  <li
-                    key={item.title}
-                    className="bg-[rgb(var(--background))] p-6 transition-colors duration-200 hover:bg-[rgb(var(--surface))] sm:p-8"
-                  >
-                    <h3 className="heading-4">{item.title}</h3>
-                    <p className="mt-3 text-sm leading-relaxed text-[rgb(var(--text-secondary))]">
-                      {item.body}
-                    </p>
-                    <p className="caption mt-5 text-[rgb(var(--text-muted))]">
-                      <span className="text-[rgb(var(--accent))]">{item.level}</span>
-                    </p>
-                  </li>
-                ))}
-              </ul>
-              <p className="mt-6 text-sm text-[rgb(var(--text-muted))]">
-                These levels are rough self-assessments, not qualifications.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ---- Technologies ------------------------------------------------ */}
-      <section className="section border-t border-[rgb(var(--border-subtle))]">
-        <div className="container-custom">
-          <div className="grid gap-10 lg:grid-cols-12">
-            <div className="lg:col-span-4">
-              <p className="eyebrow">Toolkit</p>
-              <h2 className="heading-2 mt-4 text-balance">Technologies I&apos;ve worked with</h2>
-              <p className="mt-6 max-w-sm text-[rgb(var(--text-secondary))]">
-                Tools I have actually used on something. Not an exhaustive list, and not a ranking.
-              </p>
-            </div>
-
-            <div className="lg:col-span-8">
-              <dl className="grid gap-8 sm:grid-cols-2">
-                {technologies.map((group) => (
-                  <div key={group.group}>
-                    <dt className="eyebrow">{group.group}</dt>
-                    <dd className="mt-4 flex flex-wrap gap-2">
-                      {group.items.map((item) => (
-                        <span
-                          key={item}
-                          className="border border-[rgb(var(--border-subtle))] px-2.5 py-1 font-mono text-xs text-[rgb(var(--text-secondary))]"
-                        >
-                          {item}
-                        </span>
-                      ))}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ---- Currently exploring ----------------------------------------- */}
-      <section className="section border-t border-[rgb(var(--border-subtle))]">
-        <div className="container-custom">
-          <div className="grid gap-10 lg:grid-cols-12">
-            <div className="lg:col-span-4">
-              <p className="eyebrow">Right now</p>
-              <h2 className="heading-2 mt-4 text-balance">Currently exploring</h2>
-            </div>
-            <ul className="lg:col-span-8">
-              {currentlyExploring.map((item, index) => (
+            <ul className="lg:col-span-9">
+              {motivations.map((item, index) => (
                 <li
-                  key={item}
-                  className="flex items-center gap-4 border-t border-[rgb(var(--border-subtle))] py-4 last:border-b"
+                  key={item.title}
+                  className="grid gap-x-10 gap-y-2 border-t border-[rgb(var(--border-subtle))] py-6 last:border-b sm:grid-cols-[3rem_5rem_1fr]"
                 >
-                  <span className="font-mono text-[0.6875rem] text-[rgb(var(--text-muted))]">
-                    {String(index + 1).padStart(2, '0')}
-                  </span>
-                  <span className="font-display text-lg font-medium tracking-tight sm:text-xl">
-                    {item}
-                  </span>
+                  <span className="index-marker">{String(index + 1).padStart(2, '0')}</span>
+                  <h3 className="font-display text-base font-semibold tracking-[-0.02em] text-[rgb(var(--text-primary))] sm:text-lg">
+                    {item.title}
+                  </h3>
+                  <p className="text-pretty text-[rgb(var(--text-secondary))]">{item.body}</p>
                 </li>
               ))}
             </ul>
@@ -198,30 +124,118 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* ---- Approach ---------------------------------------------------- */}
-      <section className="section border-t border-[rgb(var(--border-subtle))]">
+      {/*
+        ---- Areas I'm exploring -------------------------------------------
+        A table, not a tile grid. The depth reading is a right-aligned mono
+        column so the four rows line up on one axis, and the accent is dropped
+        from the level label so it stops competing with the page's real CTAs.
+      */}
+      <section className="rule-top">
         <div className="container-custom">
-          <div className="grid gap-10 lg:grid-cols-12">
-            <div className="lg:col-span-4">
-              <p className="eyebrow">Method</p>
-              <h2 className="heading-2 mt-4 text-balance">My approach to projects</h2>
+          <div className="rhythm-sm grid gap-x-10 gap-y-10 lg:grid-cols-12">
+            <div className="lg:col-span-3">
+              <p className="eyebrow">Focus</p>
             </div>
 
-            <ol className="lg:col-span-8">
+            <div className="lg:col-span-9">
+              <h2 className="heading-2 max-w-[16ch] text-balance">Areas I&apos;m exploring</h2>
+
+              <ul className="mt-10">
+                {focusAreas.map((item) => (
+                  <li
+                    key={item.title}
+                    className="grid gap-x-10 gap-y-2 border-t border-[rgb(var(--border-subtle))] py-5 sm:grid-cols-[14rem_1fr_7rem] sm:items-baseline"
+                  >
+                    <h3 className="font-display text-base font-semibold tracking-[-0.02em] text-[rgb(var(--text-primary))]">
+                      {item.title}
+                    </h3>
+                    <p className="text-pretty text-sm text-[rgb(var(--text-secondary))]">
+                      {item.body}
+                    </p>
+                    <p className="caption text-[rgb(var(--text-muted))] sm:text-right">{item.level}</p>
+                  </li>
+                ))}
+              </ul>
+
+              <p className="mt-5 text-sm text-[rgb(var(--text-muted))]">
+                These readings are rough self-assessments, not qualifications.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/*
+        ---- Technologies -------------------------------------------------
+        Running mono lists instead of chips. A wrapped row of bordered boxes
+        is the most recognisable "skills" component on the web; plain type with
+        a middot reads as part of the page and scans faster.
+      */}
+      <section className="rule-top">
+        <div className="container-custom">
+          <div className="rhythm-lg grid gap-x-10 gap-y-10 lg:grid-cols-12">
+            <div className="lg:col-span-3">
+              <p className="eyebrow">Toolkit</p>
+              <h2 className="heading-2 mt-5 max-w-[12ch] text-balance">
+                Technologies I&apos;ve worked with
+              </h2>
+            </div>
+
+            <dl className="grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:col-span-9">
+              {technologies.map((group) => (
+                <div key={group.group} className="border-t border-[rgb(var(--border-subtle))] pt-4">
+                  <dt className="meta-label">{group.group}</dt>
+                  <dd className="mt-4 font-mono text-sm leading-[1.9] text-[rgb(var(--text-secondary))]">
+                    {group.items.join(' · ')}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+
+            <p className="text-sm text-[rgb(var(--text-muted))] lg:col-span-9 lg:col-start-4">
+              Tools I have actually used on something. Not an exhaustive list, and not a ranking.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ---- Currently exploring ------------------------------------------ */}
+      <section className="rule-top">
+        <div className="container-custom">
+          <div className="rhythm-md grid gap-x-10 gap-y-10 lg:grid-cols-12">
+            <div className="lg:col-span-3">
+              <p className="eyebrow">Right now</p>
+            </div>
+            <div className="lg:col-span-9">
+              <h2 className="heading-2 text-balance">Currently exploring</h2>
+              <ExploringList className="mt-10" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ---- Approach ---------------------------------------------------- */}
+      <section className="rule-top">
+        <div className="container-custom">
+          <div className="rhythm-lg grid gap-x-10 gap-y-10 lg:grid-cols-12">
+            <div className="lg:col-span-3">
+              <p className="eyebrow">Method</p>
+              <h2 className="heading-2 mt-5 max-w-[12ch] text-balance">
+                My approach to projects
+              </h2>
+            </div>
+
+            <ol className="lg:col-span-9">
               {projectApproach.map((item, index) => (
                 <li
                   key={item.title}
-                  className="grid gap-3 border-t border-[rgb(var(--border-subtle))] py-6 last:border-b sm:grid-cols-[3rem_1fr] sm:gap-6"
+                  className="grid gap-x-10 gap-y-2 border-t border-[rgb(var(--border-subtle))] py-6 last:border-b sm:grid-cols-[3rem_5rem_1fr]"
                 >
-                  <span className="font-mono text-[0.6875rem] text-[rgb(var(--text-muted))]">
-                    {String(index + 1).padStart(2, '0')}
-                  </span>
-                  <div>
-                    <h3 className="heading-4">{item.title}</h3>
-                    <p className="mt-2 max-w-xl text-[rgb(var(--text-secondary))]">
-                      {item.description}
-                    </p>
-                  </div>
+                  <span className="index-marker">{String(index + 1).padStart(2, '0')}</span>
+                  <h3 className="font-display text-base font-semibold tracking-[-0.02em] text-[rgb(var(--text-primary))] sm:text-lg">
+                    {item.title}
+                  </h3>
+                  <p className="text-pretty text-[rgb(var(--text-secondary))]">{item.description}</p>
                 </li>
               ))}
             </ol>
@@ -230,22 +244,19 @@ export default function AboutPage() {
       </section>
 
       {/* ---- CTA --------------------------------------------------------- */}
-      <section className="border-t border-[rgb(var(--border-subtle))] py-20 sm:py-24">
+      <section className="rule-top">
         <div className="container-custom">
-          <h2 className="heading-2 max-w-2xl text-balance">Want to see what came out of it?</h2>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Link
-              href="/projects"
-              className="inline-flex h-12 items-center justify-center border border-[rgb(var(--accent))] bg-[rgb(var(--accent))] px-6 text-base font-medium text-[rgb(var(--accent-contrast))] transition-colors hover:bg-[rgb(var(--accent-hover))]"
-            >
-              Browse the projects
-            </Link>
-            <Link
-              href="/contact"
-              className="inline-flex h-12 items-center justify-center border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] px-6 text-base font-medium transition-colors hover:border-[rgb(var(--text-muted))]"
-            >
-              Get in touch
-            </Link>
+          <div className="rhythm-xl flex flex-col gap-10 lg:flex-row lg:items-end lg:justify-between">
+            <h2 className="heading-1 max-w-[18ch] text-balance">
+              Want to see what came out of it?
+            </h2>
+
+            <div className="flex shrink-0 flex-col items-start gap-5">
+              <ButtonLink href="/projects" size="lg">
+                Browse the projects
+              </ButtonLink>
+              <ArrowLink href="/contact">Get in touch</ArrowLink>
+            </div>
           </div>
         </div>
       </section>

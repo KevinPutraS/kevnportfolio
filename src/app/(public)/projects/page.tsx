@@ -51,15 +51,25 @@ export default function ProjectsPage({
 
   return (
     <>
-      <section className="border-b border-[rgb(var(--border-subtle))]">
-        <div className="container-custom py-16 sm:py-20 lg:py-24">
-          <p className="eyebrow">Archive</p>
-          <h1 className="heading-1 mt-5">Projects</h1>
-          <p className="body mt-6 max-w-2xl text-[rgb(var(--text-secondary))]">
-            Everything I have made public so far — applications, experiments, coursework and the
-            occasional thing that was never meant to leave a hard drive. Not everything here is
-            finished.
-          </p>
+      <section>
+        <div className="container-custom">
+          {/*
+            Masthead. Title set against a right-hand column of body copy rather
+            than stacked underneath it — the offset is what makes the archive
+            read as a contents page instead of a page heading.
+          */}
+          <div className="grid gap-10 py-14 sm:py-20 lg:grid-cols-12 lg:gap-8 lg:py-24">
+            <div className="lg:col-span-7">
+              <p className="eyebrow">Archive</p>
+              <h1 className="heading-1 mt-6">Projects.</h1>
+            </div>
+
+            <p className="body-lg text-pretty text-[rgb(var(--text-secondary))] lg:col-span-5 lg:self-end">
+              Everything I have made public so far — applications, experiments, coursework and the
+              occasional thing that was never meant to leave a hard drive. Not all of it is
+              finished.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -109,18 +119,28 @@ async function ArchiveResults({
   const isEmptyByFilter = isFiltered && total === 0
 
   return (
-    <section className="section-sm">
+    <section className="rhythm-lg">
       <div className="container-custom">
-        <ProjectFilter options={filterOptions} active={category} />
+        {/*
+          Filter and result count share one hairline row. Keeping the count on
+          the same line as the filter means the reader can see both what they
+          selected and how much it returned without a second block.
+        */}
+        <div className="flex flex-col gap-4 border-y border-[rgb(var(--border-subtle))] py-5 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
+          <ProjectFilter options={filterOptions} active={category} />
 
-        <p className="mt-6 font-mono text-xs text-[rgb(var(--text-muted))]" aria-live="polite">
-          {total} {total === 1 ? 'project' : 'projects'}
-          {isFiltered ? ` in ${filterOptions.find((o) => o.value === category)?.label}` : ''}
-        </p>
+          <p
+            className="caption shrink-0 text-[rgb(var(--text-muted))]"
+            aria-live="polite"
+          >
+            {String(total).padStart(2, '0')} {total === 1 ? 'project' : 'projects'}
+            {isFiltered ? ` / ${filterOptions.find((o) => o.value === category)?.label}` : ''}
+          </p>
+        </div>
 
         {projects.length > 0 ? (
           <>
-            <ProjectGrid projects={projects} className="mt-12" />
+            <ProjectGrid projects={projects} className="mt-12 sm:mt-16" />
 
             {totalPages > 1 && (
               <nav

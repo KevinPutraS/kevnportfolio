@@ -43,6 +43,12 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>`}</code>
 
   return (
     <div className="min-h-screen bg-[rgb(var(--background))]">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:bg-[rgb(var(--accent))] focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-[rgb(var(--accent-contrast))]"
+      >
+        Skip to content
+      </a>
       <AdminSidebar email={user.email} />
       <div className="md:pl-64">
         <AdminHeader email={user.email} />

@@ -4,38 +4,86 @@
 
 @layer base {
   :root {
-    /* Surfaces — near-black base, two steps up for panels */
-    --background: 8 9 13;
-    --surface: 16 17 23;
-    --surface-elevated: 25 26 34;
-
-    /* Hairlines */
-    --border-subtle: 33 34 43;
-    --border: 52 53 64;
-
-    /* Type */
-    --text-primary: 246 247 249;
-    --text-secondary: 160 162 173;
-    --text-muted: 112 114 126;
-    --text-inverse: 8 9 13;
-
     /*
-     * Single accent for the whole site. A yellow-leaning lime reads as
-     * technical/editorial on near-black and stays legible at small sizes.
-     * Status colours below are reserved for state, never decoration.
+     * ==========================================================================
+     * COLOUR
+     * ==========================================================================
+     * Near-black base with a warm off-white for type. Warmth is what stops a
+     * dark UI reading as cold developer-tool default.
+     *
+     * Accent discipline: 90% neutral, 8% secondary neutral, 2% accent. The
+     * accent is an annotation colour — it marks the *current* thing (active
+     * nav item, active filter, the one live status) and nothing else. If a
+     * design question is ever "should this be the accent?", the answer is no.
      */
-    --accent: 214 242 106;
-    --accent-hover: 226 248 140;
-    --accent-muted: 60 70 26;
-    --accent-contrast: 8 9 13;
+    --background: 8 9 12;
+    --surface: 17 18 24;
+    --surface-elevated: 26 27 35;
 
-    --success: 52 199 89;
-    --warning: 234 179 8;
-    --error: 248 113 113;
+    /* Hairlines. Two weights only: structural separators and emphasis. */
+    --border-subtle: 28 29 37;
+    --border: 46 47 57;
+
+    /* Type. Warm off-white -> neutral -> recessive. */
+    --text-primary: 243 242 238;
+    --text-secondary: 154 153 149;
+    --text-muted: 108 107 104;
+
+    --accent: 214 242 106;
+    --accent-hover: 228 249 145;
+    --accent-contrast: 8 9 12;
+
+    /* Reserved for state only. Never decoration. */
+    --success: 86 194 116;
+    --warning: 226 173 66;
+    --error: 236 118 118;
 
     --font-sans: var(--font-inter), system-ui, -apple-system, 'Segoe UI', sans-serif;
     --font-display: var(--font-grotesk), var(--font-inter), system-ui, sans-serif;
     --font-mono: ui-monospace, 'SFMono-Regular', 'Cascadia Code', Menlo, monospace;
+
+    /* ---- Type scale -----------------------------------------------------
+     * Fluid rather than stepped. A stepped scale only has the right size at
+     * the breakpoints it declares, so between 768px and 1280px the display type
+     * either jumps or sits too small. `clamp()` interpolates continuously,
+     * which is what makes the headline feel deliberate at every width.
+     *
+     * The numbers matter more than they look. The display face is set at a
+     * 10.5vw slope, and the hero runs full container width, so the longest
+     * display line ("Building things.", 16 characters) lands at roughly 8.1em —
+     * which means it fits on ONE line from about 640px up, and breaks to two
+     * lines per statement below that. The `clamp()` minimum is 2.75rem because
+     * at 320px anything larger makes the longest single word ("Exploring")
+     * exceed the 280px content box.
+     */
+    --text-display: clamp(2.75rem, 10.5vw, 8.5rem);
+    --text-h1: clamp(2.25rem, 6.4vw, 5.25rem);
+    --text-h2: clamp(1.75rem, 3.7vw, 3.125rem);
+    --text-h3: clamp(1.375rem, 2.2vw, 1.875rem);
+    --text-h4: clamp(1.125rem, 1.4vw, 1.375rem);
+    --text-lead: clamp(1.0625rem, 1.35vw, 1.375rem);
+    --text-meta: 0.6875rem;
+
+    /* ---- Spacing rhythm -------------------------------------------------
+     * Sections deliberately do NOT share one padding value. Repeating the same
+     * vertical rhythm is the single clearest "template" signal. These four are
+     * composed as a sequence (large, medium, small, large) so the page has
+     * audible pacing instead of a metronome.
+     */
+    --rhythm-xl: clamp(5rem, 11vw, 11.5rem);
+    --rhythm-lg: clamp(4rem, 7.5vw, 8rem);
+    --rhythm-md: clamp(3rem, 5.5vw, 5.5rem);
+    --rhythm-sm: clamp(2rem, 3.5vw, 3.5rem);
+
+    /* Flat, not round. Corners stay square — that is the editorial tell. */
+    --radius: 0px;
+
+    /* One easing curve and one duration scale, so motion feels like one hand
+     * made it. Nothing in the UI is allowed outside 150-500ms. */
+    --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+    --dur-fast: 150ms;
+    --dur: 250ms;
+    --dur-slow: 400ms;
 
     --nav-height: 4rem;
   }
@@ -46,7 +94,6 @@
 
   html {
     scroll-behavior: smooth;
-    /* Anchors must clear the fixed navigation bar. */
     scroll-padding-top: calc(var(--nav-height) + 1rem);
   }
 
@@ -58,7 +105,6 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Long unbroken strings (URLs, slugs) must never create a scrollbar. */
   h1,
   h2,
   h3,
@@ -80,7 +126,7 @@
 
   :focus-visible {
     outline: 2px solid rgb(var(--accent));
-    outline-offset: 2px;
+    outline-offset: 3px;
   }
 
   /* Firefox keeps a dotted ring on :focus-visible; remove it. */
@@ -108,69 +154,162 @@
 }
 
 @layer components {
+  /* ---- Layout ---------------------------------------------------------- */
+
   .container-custom {
-    @apply mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-10;
+    @apply mx-auto w-full max-w-[88rem] px-5 sm:px-8 lg:px-12;
+  }
+
+  /*
+   * Spacing rhythm. `section` / `section-sm` are kept as aliases so the CMS,
+   * which still uses them, is unaffected.
+   */
+  .rhythm-xl {
+    padding-block: var(--rhythm-xl);
+  }
+  .rhythm-lg {
+    padding-block: var(--rhythm-lg);
+  }
+  .rhythm-md {
+    padding-block: var(--rhythm-md);
+  }
+  .rhythm-sm {
+    padding-block: var(--rhythm-sm);
   }
 
   .section {
-    @apply py-20 sm:py-28 lg:py-32;
+    @apply rhythm-lg;
   }
-
   .section-sm {
-    @apply py-14 sm:py-20 lg:py-24;
+    @apply rhythm-md;
   }
 
-  /* ---- Typography scale ---------------------------------------------- */
+  /* Structural separator. One hairline, full bleed of the container. */
+  .rule-top {
+    border-top: 1px solid rgb(var(--border-subtle));
+  }
+
+  /* ---- Background depth ------------------------------------------------
+   * Three layers, each nearly invisible on its own and only apparent
+   * together: a fine grain, a column grid aligned to the container, and a
+   * single soft pool of light behind the top of the page.
+   *
+   * The grain is an inline SVG filter, so it costs no request and no layout
+   * shift. It sits on a fixed overlay at 2.5% opacity — below the threshold
+   * where it flattens contrast, above the threshold where it disappears.
+   */
+  .page-depth {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .page-depth::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity: 0.025;
+  }
+
+  .page-depth::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 100vh;
+    background: radial-gradient(
+      68% 52% at 22% 0%,
+      rgb(var(--surface) / 0.85) 0%,
+      transparent 72%
+    );
+  }
+
+  /* ---- Typography ------------------------------------------------------
+   * Six clearly separated levels. The point is that no two of them are close
+   * enough to be confused, and that metadata is genuinely small rather than
+   * "body but grey".
+   */
+
+  /* Hero only. Line height below 1 so stacked words read as a solid block. */
+  .display-1 {
+    font-family: var(--font-display);
+    font-size: var(--text-display);
+    line-height: 0.86;
+    letter-spacing: -0.045em;
+    font-weight: 700;
+  }
 
   .heading-1 {
-    @apply font-display text-[2.125rem] font-bold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl xl:text-7xl;
+    font-family: var(--font-display);
+    font-size: var(--text-h1);
+    line-height: 1;
+    letter-spacing: -0.035em;
+    font-weight: 700;
   }
 
   .heading-2 {
-    @apply font-display text-3xl font-bold leading-[1.1] tracking-tight sm:text-4xl lg:text-5xl;
+    font-family: var(--font-display);
+    font-size: var(--text-h2);
+    line-height: 1.08;
+    letter-spacing: -0.03em;
+    font-weight: 700;
   }
 
   .heading-3 {
-    @apply font-display text-2xl font-semibold leading-[1.2] tracking-tight sm:text-3xl;
+    font-family: var(--font-display);
+    font-size: var(--text-h3);
+    line-height: 1.18;
+    letter-spacing: -0.02em;
+    font-weight: 600;
   }
 
   .heading-4 {
-    @apply font-display text-lg font-semibold leading-[1.3] tracking-tight sm:text-xl;
+    font-family: var(--font-display);
+    font-size: var(--text-h4);
+    line-height: 1.3;
+    letter-spacing: -0.015em;
+    font-weight: 600;
   }
 
   .body-lg {
-    @apply text-lg leading-relaxed sm:text-xl;
+    font-size: var(--text-lead);
+    line-height: 1.55;
   }
 
   .body {
-    @apply text-base leading-relaxed sm:text-lg;
+    font-size: 1rem;
+    line-height: 1.6;
   }
 
   .body-sm {
-    @apply text-sm leading-relaxed;
+    font-size: 0.875rem;
+    line-height: 1.6;
   }
 
+  /* The line above a section. All-caps mono at a size that stays legible. */
   .eyebrow {
-    @apply font-mono text-[0.6875rem] uppercase tracking-[0.18em] text-[rgb(var(--text-muted))];
+    @apply font-mono text-[0.6875rem] uppercase tracking-[0.2em] text-[rgb(var(--text-muted))];
   }
 
   .caption {
-    @apply font-mono text-[0.6875rem] uppercase leading-normal tracking-[0.14em];
+    @apply font-mono text-[0.6875rem] uppercase leading-normal tracking-[0.16em];
   }
 
   /*
    * Long-form body copy. Replaces the `prose` utility from
-   * @tailwindcss/typography, which was installed but never registered in the
-   * Tailwind config (so those classes silently did nothing).
+   * @tailwindcss/typography, which was never registered in the Tailwind config
+   * (so those classes silently did nothing).
    */
   .prose-block {
     @apply text-[rgb(var(--text-secondary))];
   }
   .prose-block > * + * {
-    @apply mt-5;
+    @apply mt-6;
   }
   .prose-block p {
-    @apply leading-relaxed;
+    @apply leading-[1.7];
   }
   .prose-block ul,
   .prose-block ol {
@@ -186,87 +325,43 @@
     @apply font-semibold text-[rgb(var(--text-primary))];
   }
   .prose-block a {
-    @apply text-[rgb(var(--accent))] underline decoration-[rgb(var(--accent))]/40 underline-offset-4 transition-colors hover:decoration-[rgb(var(--accent))];
+    @apply text-[rgb(var(--text-primary))] underline decoration-[rgb(var(--border))] underline-offset-4 transition-colors hover:decoration-[rgb(var(--accent))];
   }
 
-  /* ---- Form controls -------------------------------------------------- */
+  /* ---- Editorial primitives --------------------------------------------- */
 
-  .input {
-    @apply block w-full rounded-sm bg-[rgb(var(--surface))] px-4 py-2.5 text-[rgb(var(--text-primary))] transition-colors duration-150 placeholder:text-[rgb(var(--text-muted))] disabled:cursor-not-allowed disabled:opacity-60;
-    border: 1px solid rgb(var(--border));
-  }
-  .input:hover:not(:disabled) {
-    border-color: rgb(var(--text-muted));
-  }
-  .input:focus {
-    outline: none;
-    border-color: rgb(var(--accent));
-    box-shadow: 0 0 0 3px rgb(var(--accent) / 0.15);
-  }
-  .input[aria-invalid='true'] {
-    border-color: rgb(var(--error));
-  }
-  .input[aria-invalid='true']:focus {
-    box-shadow: 0 0 0 3px rgb(var(--error) / 0.15);
+  /* The small numeral that opens a list or a section. */
+  .index-marker {
+    @apply font-mono text-[0.6875rem] tabular-nums tracking-[0.12em] text-[rgb(var(--text-muted))];
   }
 
-  .textarea {
-    @apply input min-h-[8rem] resize-y leading-relaxed;
+  /* Label above a metadata group. */
+  .meta-label {
+    @apply font-mono text-[0.625rem] uppercase tracking-[0.18em] text-[rgb(var(--text-muted))];
   }
-
-  .label {
-    @apply mb-2 block text-sm font-medium text-[rgb(var(--text-secondary))];
-  }
-
-  .field-error {
-    @apply mt-1.5 text-sm text-[rgb(var(--error))];
-  }
-
-  .field-hint {
-    @apply mt-1.5 text-sm text-[rgb(var(--text-muted))];
-  }
-
-  /* ---- Surfaces ------------------------------------------------------- */
 
   /*
-   * Editorial panels: square corners and hairline borders rather than soft
-   * rounded cards, so layouts read as a printed grid instead of a dashboard.
+   * A link whose underline is drawn as a rule that grows from the left. Used
+   * for in-content navigation, where a coloured box would be too loud.
    */
-  .card {
-    @apply border border-[rgb(var(--border-subtle))] bg-[rgb(var(--surface))];
+  .link-underline {
+    @apply relative inline-block text-[rgb(var(--text-primary))] transition-colors duration-150;
   }
-
-  .card-hover {
-    @apply card transition-colors duration-200;
+  .link-underline::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -2px;
+    height: 1px;
+    width: 100%;
+    background-color: rgb(var(--border));
+    transition: background-color var(--dur) var(--ease);
   }
-  .card-hover:hover {
-    border-color: rgb(var(--border));
+  .link-underline:hover {
+    color: rgb(var(--accent));
   }
-
-  /* ---- Badges & links ------------------------------------------------- */
-
-  .badge {
-    @apply inline-flex items-center gap-1.5 border px-2.5 py-0.5 font-mono text-[0.6875rem] uppercase tracking-[0.12em];
-  }
-
-  .badge-primary {
-    @apply badge border-[rgb(var(--accent))]/30 bg-[rgb(var(--accent))]/10 text-[rgb(var(--accent))];
-  }
-
-  .badge-secondary {
-    @apply badge border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] text-[rgb(var(--text-secondary))];
-  }
-
-  .badge-success {
-    @apply badge border-[rgb(var(--success))]/30 bg-[rgb(var(--success))]/10 text-[rgb(var(--success))];
-  }
-
-  .badge-warning {
-    @apply badge border-[rgb(var(--warning))]/30 bg-[rgb(var(--warning))]/10 text-[rgb(var(--warning))];
-  }
-
-  .badge-error {
-    @apply badge border-[rgb(var(--error))]/30 bg-[rgb(var(--error))]/10 text-[rgb(var(--error))];
+  .link-underline:hover::after {
+    background-color: rgb(var(--accent));
   }
 
   .link {
@@ -277,14 +372,99 @@
     @apply h-px w-full bg-[rgb(var(--border-subtle))];
   }
 
-  /* Faint technical grid used behind the hero. */
-  .grid-backdrop {
-    background-image:
-      linear-gradient(to right, rgb(var(--border-subtle) / 0.55) 1px, transparent 1px),
-      linear-gradient(to bottom, rgb(var(--border-subtle) / 0.55) 1px, transparent 1px);
-    background-size: 72px 72px;
-    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, #000 20%, transparent 75%);
-    mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, #000 20%, transparent 75%);
+  /* ---- Form controls -------------------------------------------------- */
+
+  .input {
+    @apply block w-full rounded-sm bg-[rgb(var(--surface))] px-4 py-3 text-[rgb(var(--text-primary))] transition-colors duration-150 placeholder:text-[rgb(var(--text-muted))] disabled:cursor-not-allowed disabled:opacity-60;
+    border: 1px solid rgb(var(--border-subtle));
+  }
+  .input:hover:not(:disabled) {
+    border-color: rgb(var(--border));
+  }
+  .input:focus {
+    outline: none;
+    border-color: rgb(var(--accent));
+    box-shadow: 0 0 0 3px rgb(var(--accent) / 0.12);
+  }
+  .input[aria-invalid='true'] {
+    border-color: rgb(var(--error));
+  }
+  .input[aria-invalid='true']:focus {
+    box-shadow: 0 0 0 3px rgb(var(--error) / 0.12);
+  }
+
+  .textarea {
+    @apply block w-full min-h-[9rem] resize-y rounded-sm bg-[rgb(var(--surface))] px-4 py-3 leading-relaxed text-[rgb(var(--text-primary))] transition-colors duration-150 placeholder:text-[rgb(var(--text-muted))] disabled:cursor-not-allowed disabled:opacity-60;
+    border: 1px solid rgb(var(--border-subtle));
+  }
+  .textarea:hover:not(:disabled) {
+    border-color: rgb(var(--border));
+  }
+  .textarea:focus {
+    outline: none;
+    border-color: rgb(var(--accent));
+    box-shadow: 0 0 0 3px rgb(var(--accent) / 0.12);
+  }
+  .textarea[aria-invalid='true'] {
+    border-color: rgb(var(--error));
+  }
+  .textarea[aria-invalid='true']:focus {
+    box-shadow: 0 0 0 3px rgb(var(--error) / 0.12);
+  }
+
+  .label {
+    @apply mb-2.5 block font-mono text-[0.6875rem] uppercase tracking-[0.14em] text-[rgb(var(--text-muted))];
+  }
+
+  .field-error {
+    @apply mt-2 text-sm text-[rgb(var(--error))];
+  }
+
+  .field-hint {
+    @apply mt-2 text-sm text-[rgb(var(--text-muted))];
+  }
+
+  /* ---- Surfaces ------------------------------------------------------- */
+
+  /*
+   * Square corners and hairline borders rather than soft rounded cards, so
+   * layouts read as a printed grid instead of a dashboard.
+   */
+  .card {
+    @apply border border-[rgb(var(--border-subtle))] bg-[rgb(var(--surface))];
+  }
+
+  .card-hover {
+    @apply border border-[rgb(var(--border-subtle))] bg-[rgb(var(--surface))] transition-colors duration-200;
+  }
+  .card-hover:hover {
+    border-color: rgb(var(--border));
+  }
+
+  /* ---- Badges ------------------------------------------------------- */
+
+  .badge {
+    @apply inline-flex items-center gap-1.5 border px-2.5 py-0.5 font-mono text-[0.6875rem] uppercase tracking-[0.12em];
+  }
+
+  .badge-primary {
+    @apply inline-flex items-center gap-1.5 border px-2.5 py-0.5 font-mono text-[0.6875rem] uppercase tracking-[0.12em] border-[rgb(var(--accent))]/30 bg-[rgb(var(--accent))]/10 text-[rgb(var(--accent))];
+  }
+
+  .badge-secondary {
+    @apply inline-flex items-center gap-1.5 border px-2.5 py-0.5 font-mono text-[0.6875rem] uppercase tracking-[0.12em] border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] text-[rgb(var(--text-secondary))];
+  }
+
+  .badge-success {
+    @apply inline-flex items-center gap-1.5 border px-2.5 py-0.5 font-mono text-[0.6875rem] uppercase tracking-[0.12em] border-[rgb(var(--success))]/30 bg-[rgb(var(--success))]/10 text-[rgb(var(--success))];
+  }
+
+  .badge-warning {
+    @apply inline-flex items-center gap-1.5 border px-2.5 py-0.5 font-mono text-[0.6875rem] uppercase tracking-[0.12em] border-[rgb(var(--warning))]/30 bg-[rgb(var(--warning))]/10 text-[rgb(var(--warning))];
+  }
+
+  .badge-error {
+    @apply inline-flex items-center gap-1.5 border px-2.5 py-0.5 font-mono text-[0.6875rem] uppercase tracking-[0.12em] border-[rgb(var(--error))]/30 bg-[rgb(var(--error))]/10 text-[rgb(var(--error))];
   }
 }
 
@@ -297,21 +477,60 @@
     text-wrap: pretty;
   }
 
-  /* Entrance animations. `forwards` is required so the final state sticks. */
+  /* ---- Microinteractions ------------------------------------------------
+   * Every duration sits in the 150-500ms band and every easing curve is the
+   * single token above, so the whole site moves as one system.
+   */
+  .transition-quick {
+    transition-property: color, background-color, border-color, opacity;
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease);
+  }
+
+  .transition-smooth {
+    transition-property: color, background-color, border-color, opacity, transform;
+    transition-duration: var(--dur);
+    transition-timing-function: var(--ease);
+  }
+
+  /*
+   * Project imagery. The scale is deliberately small (1.03) — enough to feel
+   * alive, not enough to read as a zoom effect.
+   */
+  .image-zoom {
+    transition: transform var(--dur-slow) var(--ease);
+    will-change: transform;
+  }
+  .group:hover .image-zoom,
+  .group:focus-within .image-zoom {
+    transform: scale(1.03);
+  }
+
+  /* Arrow that advances on hover, used next to "read more" style links. */
+  .arrow-shift {
+    transition: transform var(--dur) var(--ease);
+  }
+  .group:hover .arrow-shift {
+    transform: translateX(3px);
+  }
+
+  /* ---- Entrance animations ---------------------------------------------
+   * `both` is required so the final state sticks after the animation ends.
+   */
   .animate-fade-in {
-    animation: fadeIn 0.5s ease-out both;
+    animation: fadeIn var(--dur-slow) var(--ease) both;
   }
 
   .animate-slide-up {
-    animation: slideUp 0.6s ease-out both;
+    animation: slideUp 0.6s var(--ease) both;
   }
 
   .animate-slide-down {
-    animation: slideDown 0.25s ease-out both;
+    animation: slideDown 0.25s var(--ease) both;
   }
 
   .animate-scale-in {
-    animation: scaleIn 0.2s ease-out both;
+    animation: scaleIn 0.2s var(--ease) both;
   }
 
   @keyframes fadeIn {
@@ -362,13 +581,6 @@
   .stagger-4 { animation-delay: 240ms; }
   .stagger-5 { animation-delay: 300ms; }
   .stagger-6 { animation-delay: 360ms; }
-
-  .gradient-text {
-    background: linear-gradient(180deg, rgb(var(--text-primary)) 30%, rgb(var(--text-secondary)) 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
 
   .scrollbar-hide {
     -ms-overflow-style: none;

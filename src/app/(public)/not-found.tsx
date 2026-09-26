@@ -1,16 +1,17 @@
-import Link from 'next/link'
 import { ButtonLink } from '@/components/ui/button-link'
 import { ArrowLink } from '@/components/ui/arrow-link'
 import { siteConfig } from '@/config/site'
+import Link from 'next/link'
 
 /**
- * Root 404.
+ * 404 for unmatched URLs inside the public route group.
  *
- * Set as an editorial colophon rather than a centred apology: the status code is
- * set at display scale, which turns an error into a recognisable page of the
- * site instead of a modal-style dead end.
+ * Lives here rather than only at the root so it inherits the public shell —
+ * navbar, footer and background — instead of dropping the visitor on a bare
+ * page with no way back into the site. The root `not-found.tsx` still covers
+ * everything outside this group (admin, for example) and stays self-contained.
  */
-export default function NotFound() {
+export default function PublicNotFound() {
   return (
     <div className="container-custom">
       <div className="grid gap-x-10 gap-y-12 py-20 sm:py-28 lg:grid-cols-12 lg:py-32">
@@ -18,9 +19,7 @@ export default function NotFound() {
           <p className="eyebrow">
             Error <span className="text-[rgb(var(--accent))]">404</span>
           </p>
-          <h1 className="heading-1 mt-6 max-w-[14ch] text-balance">
-            This page does not exist.
-          </h1>
+          <h1 className="heading-1 mt-6 max-w-[14ch] text-balance">This page does not exist.</h1>
           <p className="body-lg mt-8 max-w-xl text-pretty text-[rgb(var(--text-secondary))]">
             The link may be out of date, or the project it pointed at may have been unpublished.
             Everything currently published is listed in the archive.

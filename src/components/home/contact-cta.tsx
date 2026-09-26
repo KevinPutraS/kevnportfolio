@@ -1,59 +1,57 @@
-import { ArrowUpRight } from 'lucide-react'
 import { ButtonLink } from '@/components/ui/button-link'
+import { ArrowLink } from '@/components/ui/arrow-link'
 import { siteConfig, socialLinks } from '@/config/site'
 
-/** Final call to action: one primary action, email as a fallback. */
+/**
+ * Closing call to action.
+ *
+ * One primary action, the email as a low-weight fallback, and the social links
+ * demoted to a running line. The earlier version gave "Elsewhere" a full column
+ * with its own heading, which made the end of the page compete with the
+ * projects above it.
+ */
 export function ContactCta() {
   return (
-    <section className="border-t border-[rgb(var(--border-subtle))]">
-      <div className="container-custom py-20 sm:py-28">
-        <div className="grid gap-10 lg:grid-cols-12 lg:items-end">
-          <div className="lg:col-span-8">
-            <p className="eyebrow">Get in touch</p>
-            <h2 className="heading-2 mt-4 text-balance">
-              Got a project, a question, or a half-formed idea?
-            </h2>
-            <p className="body mt-6 max-w-xl text-[rgb(var(--text-secondary))]">
-              I&apos;m always happy to talk about what I&apos;m building, swap notes on a problem I&apos;m
-              stuck on, or dig into something interesting together.
-            </p>
+    <section className="rule-top">
+      <div className="container-custom">
+        <div className="rhythm-xl">
+          <p className="eyebrow">Get in touch</p>
 
-            <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <ButtonLink href="/contact" size="lg" className="w-full sm:w-auto">
-                Start a conversation
-              </ButtonLink>
-              <a
-                href={`mailto:${siteConfig.email}`}
-                className="inline-flex h-12 items-center justify-center gap-2 px-2 text-sm text-[rgb(var(--text-secondary))] transition-colors hover:text-[rgb(var(--text-primary))] sm:justify-start"
-              >
-                <span className="font-mono">{siteConfig.email}</span>
-                <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
-              </a>
+          <div className="mt-8 grid gap-x-10 gap-y-12 lg:grid-cols-12 lg:items-end">
+            <div className="lg:col-span-8">
+              <h2 className="heading-1 max-w-[16ch] text-balance">
+                Got a project, a question, or a half-formed idea?
+              </h2>
+            </div>
+
+            <div className="lg:col-span-4">
+              <p className="body text-pretty text-[rgb(var(--text-secondary))]">
+                I&apos;m always happy to talk about what I&apos;m building, swap notes on a problem I&apos;m
+                stuck on, or dig into something interesting together.
+              </p>
+
+              <div className="mt-8 flex flex-col items-start gap-5">
+                <ButtonLink href="/contact" size="lg" className="w-full sm:w-auto">
+                  Start a conversation
+                </ButtonLink>
+
+                <ArrowLink href={siteConfig.contactEmail} direction="up">
+                  {siteConfig.email}
+                </ArrowLink>
+              </div>
             </div>
           </div>
 
-          <div className="lg:col-span-4">
-            <p className="eyebrow">Elsewhere</p>
-            <ul className="mt-5 space-y-3">
-              {socialLinks.map((link) => (
-                <li key={link.href}>
-                  <a
-                    href={link.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group inline-flex items-center gap-2 text-[rgb(var(--text-secondary))] transition-colors hover:text-[rgb(var(--accent))]"
-                  >
-                    {link.label}
-                    <ArrowUpRight
-                      className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                      aria-hidden="true"
-                    />
-                    <span className="sr-only">(opens in a new tab)</span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <ul className="mt-14 flex flex-wrap items-center gap-x-8 gap-y-3 border-t border-[rgb(var(--border-subtle))] pt-8">
+            <li className="caption text-[rgb(var(--text-muted))]">Elsewhere</li>
+            {socialLinks.map((link) => (
+              <li key={link.href}>
+                <ArrowLink href={link.href} direction="up" external>
+                  {link.label}
+                </ArrowLink>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </section>

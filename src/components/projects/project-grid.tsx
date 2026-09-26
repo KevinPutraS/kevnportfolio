@@ -17,17 +17,17 @@ function layoutFor(index: number): { wrapper: string; variant: ProjectCardVarian
     return { wrapper: 'lg:col-span-7', variant: 'feature' }
   }
   if (position === 1) {
-    return { wrapper: 'lg:col-span-5 lg:pt-16', variant: 'standard' }
+    return { wrapper: 'lg:col-span-5 lg:pt-20', variant: 'standard' }
   }
   if (position === 2) {
     return { wrapper: 'lg:col-span-5', variant: 'standard' }
   }
-  return { wrapper: 'lg:col-span-7 lg:pt-16', variant: 'standard' }
+  return { wrapper: 'lg:col-span-7 lg:pt-8', variant: 'standard' }
 }
 
 export function ProjectGrid({ projects, className }: { projects: Project[]; className?: string }) {
   return (
-    <div className={classNames('grid gap-x-10 gap-y-14 sm:gap-y-16 lg:grid-cols-12', className)}>
+    <div className={classNames('grid gap-x-10 gap-y-12 sm:gap-y-16 lg:grid-cols-12', className)}>
       {projects.map((project, index) => {
         const { wrapper, variant } = layoutFor(index)
         return (
