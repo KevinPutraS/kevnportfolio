@@ -1,44 +1,41 @@
-'use client'
-
-import { ProjectCard } from './project-card'
-import type { Project } from '@/types/project'
+import { ProjectCard, type ProjectCardVariant } from './project-card'
 import { classNames } from '@/lib/utils/helpers'
+import type { Project } from '@/types/project'
 
-interface ProjectGridProps {
-  projects: Project[]
-  className?: string
+/**
+ * Editorial grid.
+ *
+ * On wide screens a repeating 12-column rhythm is used (wide / narrow / narrow,
+ * then offset) so the page reads like a laid-out spread rather than a uniform
+ * card wall. On mobile and tablet everything collapses to a single column,
+ * which is the only honest layout at 320px.
+ */
+function layoutFor(index: number): { wrapper: string; variant: ProjectCardVariant } {
+  const position = index % 4
+
+  if (position === 0) {
+    return { wrapper: 'lg:col-span-7', variant: 'feature' }
+  }
+  if (position === 1) {
+    return { wrapper: 'lg:col-span-5 lg:pt-16', variant: 'standard' }
+  }
+  if (position === 2) {
+    return { wrapper: 'lg:col-span-5', variant: 'standard' }
+  }
+  return { wrapper: 'lg:col-span-7 lg:pt-16', variant: 'standard' }
 }
 
-export function ProjectGrid({ projects, className }: ProjectGridProps) {
-  if (!projects.length) {
-    return (
-      <div className="text-center py-20" role="status">
-        <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-[rgb(var(--accent))/0.1] text-[rgb(var(--accent))] mb-4">
-          <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
-        <h3 className="heading-4 mb-2">No projects found</h3>
-        <p className="text-[rgb(var(--text-muted))]">Try adjusting your filters or check back later.</p>
-      </div>
-    )
-  }
-
+export function ProjectGrid({ projects, className }: { projects: Project[]; className?: string }) {
   return (
-    <div
-      className={classNames(
-        'grid gap-6',
-        'sm:grid-cols-2 lg:grid-cols-3',
-        className
-      )}
-      role="list"
-      aria-label="Projects"
-    >
-      {projects.map((project, index) => (
-        <div key={project.id} className="animate-fade-in" style={{ animationDelay: `${index * 0.05}s` }}>
-          <ProjectCard project={project} />
-        </div>
-      ))}
+    <div className={classNames('grid gap-x-10 gap-y-14 sm:gap-y-16 lg:grid-cols-12', className)}>
+      {projects.map((project, index) => {
+        const { wrapper, variant } = layoutFor(index)
+        return (
+          <div key={project.id} className={classNames('min-w-0', wrapper)}>
+            <ProjectCard project={project} variant={variant} index={index} priority={index < 2} />
+          </div>
+        )
+      })}
     </div>
   )
 }

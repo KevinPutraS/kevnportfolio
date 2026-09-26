@@ -1,31 +1,29 @@
 import Link from 'next/link'
-import { siteConfig } from '@/config/site'
-import { Github, Twitter, Linkedin, Mail } from 'lucide-react'
+import { ArrowUpRight } from 'lucide-react'
+import { siteConfig, socialLinks } from '@/config/site'
 
 export function Footer() {
-  const currentYear = new Date().getFullYear()
+  const year = new Date().getFullYear()
 
   return (
-    <footer className="border-t border-[rgb(var(--border-subtle))] bg-[rgb(var(--surface))]" role="contentinfo">
-      <div className="container-custom py-12 lg:py-16">
-        <div className="grid gap-8 md:grid-cols-3 lg:grid-cols-4">
+    <footer className="border-t border-[rgb(var(--border-subtle))]">
+      <div className="container-custom py-12 sm:py-16">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div className="lg:col-span-2">
-            <Link href="/" className="font-display text-xl font-bold text-[rgb(var(--text-primary))]">
-              {siteConfig.name}
-            </Link>
-            <p className="mt-4 max-w-xs text-[rgb(var(--text-secondary))] text-sm leading-relaxed">
+            <p className="font-display text-lg font-bold tracking-tight">{siteConfig.name}</p>
+            <p className="mt-2 max-w-sm text-sm text-[rgb(var(--text-secondary))]">
               {siteConfig.description}
             </p>
           </div>
 
-          <nav aria-label="Footer navigation">
-            <h3 className="font-semibold text-[rgb(var(--text-primary))]">Navigate</h3>
-            <ul className="mt-4 space-y-3" role="list">
+          <nav aria-label="Footer">
+            <p className="eyebrow">Navigate</p>
+            <ul className="mt-4 space-y-2.5">
               {siteConfig.navigation.map((item) => (
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className="text-sm text-[rgb(var(--text-secondary))] hover:text-[rgb(var(--accent))] transition-colors"
+                    className="text-sm text-[rgb(var(--text-secondary))] transition-colors hover:text-[rgb(var(--text-primary))]"
                   >
                     {item.label}
                   </Link>
@@ -35,65 +33,33 @@ export function Footer() {
           </nav>
 
           <div>
-            <h3 className="font-semibold text-[rgb(var(--text-primary))]">Connect</h3>
-            <ul className="mt-4 space-y-3" role="list">
-              <li>
-                <a
-                  href={siteConfig.links.github}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 text-sm text-[rgb(var(--text-secondary))] hover:text-[rgb(var(--accent))] transition-colors"
-                  aria-label="GitHub"
-                >
-                  <Github className="h-5 w-5" aria-hidden="true" />
-                  <span>GitHub</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href={siteConfig.links.twitter}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 text-sm text-[rgb(var(--text-secondary))] hover:text-[rgb(var(--accent))] transition-colors"
-                  aria-label="Twitter"
-                >
-                  <Twitter className="h-5 w-5" aria-hidden="true" />
-                  <span>Twitter</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href={siteConfig.links.linkedin}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 text-sm text-[rgb(var(--text-secondary))] hover:text-[rgb(var(--accent))] transition-colors"
-                  aria-label="LinkedIn"
-                >
-                  <Linkedin className="h-5 w-5" aria-hidden="true" />
-                  <span>LinkedIn</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href={siteConfig.links.email}
-                  className="flex items-center gap-3 text-sm text-[rgb(var(--text-secondary))] hover:text-[rgb(var(--accent))] transition-colors"
-                  aria-label="Email"
-                >
-                  <Mail className="h-5 w-5" aria-hidden="true" />
-                  <span>Email</span>
-                </a>
-              </li>
+            <p className="eyebrow">Elsewhere</p>
+            <ul className="mt-4 space-y-2.5">
+              {socialLinks.map((link) => (
+                <li key={link.href}>
+                  <a
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group inline-flex items-center gap-1 text-sm text-[rgb(var(--text-secondary))] transition-colors hover:text-[rgb(var(--text-primary))]"
+                  >
+                    {link.label}
+                    <ArrowUpRight
+                      className="h-3 w-3 opacity-0 transition-opacity group-hover:opacity-100"
+                      aria-hidden="true"
+                    />
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-[rgb(var(--border-subtle))] pt-8 md:flex-row">
-          <p className="text-sm text-[rgb(var(--text-muted))]">
-            © {currentYear} {siteConfig.name}. All rights reserved.
+        <div className="mt-12 flex flex-col gap-3 border-t border-[rgb(var(--border-subtle))] pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <p className="caption text-[rgb(var(--text-muted))]">
+            © {year} {siteConfig.shortName}. All rights reserved.
           </p>
-          <p className="text-sm text-[rgb(var(--text-muted))]">
-            Built with Next.js, Tailwind CSS, and Supabase
-          </p>
+          <p className="caption text-[rgb(var(--text-muted))]">Built with Next.js &amp; Supabase</p>
         </div>
       </div>
     </footer>

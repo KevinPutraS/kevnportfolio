@@ -1,37 +1,48 @@
 'use client'
 
-import { forwardRef, SelectHTMLAttributes } from 'react'
+import { forwardRef, useId, type SelectHTMLAttributes } from 'react'
+import { ChevronDown } from 'lucide-react'
 import { classNames } from '@/lib/utils/helpers'
+import { FieldShell, describedByFor } from './field'
 
-interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
-  label?: string
+export interface SelectOption {
+  value: string
+  label: string
+}
+
+export interface SelectProps
+  extends Omit<SelectHTMLAttributes<HTMLSelectElement>, 'id' | 'children'> {
+  id?: string
+  label: string
   error?: string
   hint?: string
-  options: { value: string; label: string }[]
+  options: SelectOption[]
   placeholder?: string
 }
 
-export const Select = forwardRef<HTMLSelectElement, SelectProps>(
-  ({ className, label, error, hint, options, placeholder, id, ...props }, ref) => {
-    const selectId = id || label?.toLowerCase().replace(/\s+/g, '-')
+export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(
+  { className, label, error, hint, id, options, placeholder, required, ...props },
+  ref
+) {
+  const generatedId = useId()
+  const selectId = id ?? generatedId
+  const describedBy = describedByFor(selectId, Boolean(error), Boolean(hint))
 
-    return (
-      <div className="w-full">
-        {label && (
-          <label htmlFor={selectId} className="label">
-            {label}
-          </label>
-        )}
+  return (
+    <FieldShell label={label} labelHtmlFor={selectId} error={error} hint={hint} required={required}>
+      {/*
+        The chevron is a positioned sibling rather than a `bg-[url(data:...)]`
+        arbitrary value: the inline SVG data URI was fragile, unthemeable and
+        broke whenever the URL needed escaping.
+      */}
+      <div className="relative">
         <select
           ref={ref}
           id={selectId}
-          className={classNames(
-            'input appearance-none bg-[url(\"data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2716%27 height=%2716%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23a8a9b2%27 stroke-width=%272%27%3E%3Cpath d=%27M6 9l6 6 6-6%27/%3E%3C/svg%3E\")] bg-no-repeat bg-right-3 bg-center pr-10',
-            error && 'border-[rgb(var(--error))] focus:border-[rgb(var(--error))] focus:ring-[rgb(var(--error))]',
-            className
-          )}
-          aria-invalid={error ? 'true' : 'false'}
-          aria-describedby={error ? `${selectId}-error` : hint ? `${selectId}-hint` : undefined}
+          className={classNames('input appearance-none pr-10', className)}
+          aria-invalid={error ? 'true' : undefined}
+          aria-describedby={describedBy}
+          required={required}
           {...props}
         >
           {placeholder && (
@@ -45,19 +56,11 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             </option>
           ))}
         </select>
-        {error && (
-          <p id={`${selectId}-error`} className="mt-1.5 text-sm text-[rgb(var(--error))]" role="alert">
-            {error}
-          </p>
-        )}
-        {hint && !error && (
-          <p id={`${selectId}-hint`} className="mt-1.5 text-sm text-[rgb(var(--text-muted))]">
-            {hint}
-          </p>
-        )}
+        <ChevronDown
+          className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[rgb(var(--text-muted))]"
+          aria-hidden="true"
+        />
       </div>
-    )
-  }
-)
-
-Select.displayName = 'Select'
+    </FieldShell>
+  )
+})

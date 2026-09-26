@@ -1,117 +1,135 @@
-'use client'
-
-import Image from 'next/image'
 import Link from 'next/link'
-import { classNames } from '@/lib/utils/helpers'
-import { categoryLabels, categoryColors } from '@/types/category'
+import { ArrowUpRight } from 'lucide-react'
+import { categoryLabels, type ProjectCategory } from '@/config/site'
+import { formatProjectDate } from '@/lib/utils/helpers'
 import type { Project } from '@/types/project'
-import { ExternalLink } from 'lucide-react'
+import { classNames } from '@/lib/utils/helpers'
+import { ProjectThumbnail } from './project-thumbnail'
+
+/**
+ * `feature` spans two columns and shows the description; `compact` is the
+ * smaller tile used in the dense index. The variation is what keeps the
+ * projects index from reading as a uniform card grid.
+ */
+export type ProjectCardVariant = 'feature' | 'standard' | 'compact'
 
 interface ProjectCardProps {
   project: Project
-  variant?: 'default' | 'featured' | 'compact'
+  variant?: ProjectCardVariant
+  index?: number
   className?: string
-  style?: React.CSSProperties
+  priority?: boolean
 }
 
-export function ProjectCard({ project, variant = 'default', className, style }: ProjectCardProps) {
-  const categoryInfo = categoryColors[project.category] || categoryColors.other
-  const technologies = project.technologies || []
-
-  if (variant === 'compact') {
-    return (
-      <Link
-        href={`/projects/${project.slug}`}
-        className={classNames('card-hover group flex gap-4 p-4', className)}
-        aria-label={`View ${project.title}`}
-      >
-        {project.thumbnail_url && (
-          <div className="relative h-16 w-16 flex-shrink-0 rounded-lg overflow-hidden bg-[rgb(var(--surface-elevated))]">
-            <Image
-              src={project.thumbnail_url}
-              alt=""
-              fill
-              sizes="64px"
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
-            />
-          </div>
-        )}
-        <div className="flex-1 min-w-0">
-          <h3 className="font-medium text-[rgb(var(--text-primary))] group-hover:text-[rgb(var(--accent))] transition-colors truncate">
-            {project.title}
-          </h3>
-          <p className="mt-1 text-sm text-[rgb(var(--text-muted))] line-clamp-1">
-            {project.short_description}
-          </p>
-          <div className="mt-2 flex items-center gap-2">
-            <span className={classNames('badge', categoryInfo.bg, categoryInfo.text, categoryInfo.border)}>
-              {categoryLabels[project.category] || project.category}
-            </span>
-          </div>
-        </div>
-      </Link>
-    )
-  }
+export function ProjectCard({
+  project,
+  variant = 'standard',
+  index,
+  className,
+  priority,
+}: ProjectCardProps) {
+  const isFeature = variant === 'feature'
 
   return (
-    <article className={classNames('card-hover group', variant === 'featured' && 'h-full flex flex-col', className)} style={style}>
-      {project.thumbnail_url && (
-        <Link href={`/projects/${project.slug}`} className="relative aspect-video overflow-hidden" aria-label={`View ${project.title}`}>
-          <Image
-            src={project.thumbnail_url}
-            alt=""
-            fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-            loading="lazy"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[rgb(var(--background))/0.8] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        </Link>
-      )}
-      <div className={classNames('p-6', variant === 'featured' ? 'flex-1 flex flex-col' : '')}>
-        <div className="flex items-center gap-2 mb-3">
-          <span className={classNames('badge', categoryInfo.bg, categoryInfo.text, categoryInfo.border)}>
-            {categoryLabels[project.category] || project.category}
-          </span>
-          {project.featured && (
-            <span className="badge-success">Featured</span>
+    <article className={classNames('group relative', className)}>
+      <Link
+        href={`/projects/${project.slug}`}
+        className="block h-full focus-visible:outline-none"
+        // Stretch the link over the whole tile so the entire card is clickable,
+        // while keeping a single tab stop and a single accessible name.
+        aria-label={`${project.title} — view project`}
+      >
+        <ProjectThumbnail
+          src={project.thumbnail_url}
+          alt={`${project.title} preview`}
+          className={classNames(
+            'border border-[rgb(var(--border-subtle))] transition-colors duration-300',
+            isFeature ? 'aspect-[16/10]' : variant === 'compact' ? 'aspect-[16/9]' : 'aspect-[4/3]',
+            'group-hover:border-[rgb(var(--border))]'
           )}
-        </div>
-        <Link href={`/projects/${project.slug}`} className="group" aria-label={`View ${project.title}`}>
-          <h3 className="heading-4 group-hover:text-[rgb(var(--accent))] transition-colors">
-            {project.title}
-          </h3>
-        </Link>
-        <p className="mt-3 text-[rgb(var(--text-secondary))] line-clamp-3 {variant === 'featured' ? 'flex-1' : ''}">
-          {project.short_description}
-        </p>
-        {technologies.length > 0 && (
-          <div className="mt-4 flex flex-wrap gap-2" aria-label="Technologies used">
-            {technologies.slice(0, 5).map((tech) => (
-              <span key={tech} className="badge-secondary text-xs">
-                {tech}
-              </span>
-            ))}
-            {technologies.length > 5 && (
-              <span className="badge-secondary text-xs text-[rgb(var(--text-muted))]">
-                +{technologies.length - 5} more
+          priority={priority}
+          sizes={
+            isFeature
+              ? '(min-width: 1024px) 66vw, 100vw'
+              : variant === 'compact'
+                ? '(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw'
+                : '(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw'
+          }
+        />
+
+        <div className={classNames(isFeature ? 'pt-6' : 'pt-5')}>
+          <div className="flex items-center gap-3">
+            {index !== undefined && (
+              <span className="font-mono text-[0.6875rem] text-[rgb(var(--text-muted))]">
+                {String(index + 1).padStart(2, '0')}
               </span>
             )}
+            <span className="caption text-[rgb(var(--accent))]">
+              {categoryLabels[project.category as ProjectCategory] ?? project.category}
+            </span>
+            {project.project_date && (
+              <>
+                <span aria-hidden="true" className="h-px flex-1 bg-[rgb(var(--border-subtle))]" />
+                <time
+                  dateTime={project.project_date}
+                  className="font-mono text-[0.6875rem] text-[rgb(var(--text-muted))]"
+                >
+                  {formatProjectDate(project.project_date)}
+                </time>
+              </>
+            )}
           </div>
-        )}
-        {project.project_url && (
-          <Link
-            href={project.project_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-[rgb(var(--accent))] hover:text-[rgb(var(--accent-hover))] transition-colors"
-            aria-label={`View live project: ${project.title}`}
+
+          <h3
+            className={classNames(
+              'mt-3 font-display font-bold leading-tight tracking-tight transition-colors duration-200',
+              'text-[rgb(var(--text-primary))] group-hover:text-[rgb(var(--accent))]',
+              isFeature ? 'text-2xl sm:text-3xl' : 'text-lg'
+            )}
           >
-            View Project
-            <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-          </Link>
-        )}
-      </div>
+            <span className="absolute inset-0" aria-hidden="true" />
+            {project.title}
+          </h3>
+
+          {!isFeature && (
+            <p className="mt-2 line-clamp-2 text-sm text-[rgb(var(--text-secondary))]">
+              {project.short_description}
+            </p>
+          )}
+
+          {isFeature && (
+            <p className="mt-3 max-w-xl text-[rgb(var(--text-secondary))]">
+              {project.short_description}
+            </p>
+          )}
+
+          {project.technologies && project.technologies.length > 0 && (
+            <ul className="mt-4 flex flex-wrap gap-1.5">
+              {project.technologies.slice(0, isFeature ? 6 : 4).map((technology) => (
+                <li
+                  key={technology}
+                  className="border border-[rgb(var(--border-subtle))] px-2 py-0.5 font-mono text-[0.6875rem] text-[rgb(var(--text-muted))]"
+                >
+                  {technology}
+                </li>
+              ))}
+              {!isFeature && project.technologies.length > 4 && (
+                <li className="px-1 py-0.5 font-mono text-[0.6875rem] text-[rgb(var(--text-muted))]">
+                  +{project.technologies.length - 4}
+                </li>
+              )}
+            </ul>
+          )}
+
+          <span className="mt-5 inline-flex items-center gap-1 text-sm text-[rgb(var(--text-muted))] transition-colors group-hover:text-[rgb(var(--accent))]">
+            View project
+            <ArrowUpRight
+              className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+              aria-hidden="true"
+            />
+          </span>
+        </div>
+      </Link>
     </article>
   )
 }

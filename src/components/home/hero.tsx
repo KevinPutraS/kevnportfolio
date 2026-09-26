@@ -1,71 +1,75 @@
-'use client'
+import { ButtonLink } from '@/components/ui/button-link'
+import { siteConfig } from '@/config/site'
 
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { ArrowRight, MousePointer2 } from 'lucide-react'
-
+/**
+ * Hero.
+ *
+ * Server Component with no client JavaScript. The headline uses
+ * `clamp()`-based Tailwind steps plus `break-words` so it never causes a
+ * horizontal scrollbar at 320px.
+ */
 export function Hero() {
   return (
-    <section className="relative min-h-screen flex items-center justify-center pt-16 overflow-hidden" aria-labelledby="hero-heading">
-      <div className="absolute inset-0" aria-hidden="true">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-[rgb(var(--accent))/0.05] blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full bg-[rgb(var(--accent))/0.03] blur-3xl" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(139,92,246,0.03)_0%,_transparent_70%)]" />
-      </div>
+    <section className="relative overflow-hidden border-b border-[rgb(var(--border-subtle))]">
+      <div className="grid-backdrop pointer-events-none absolute inset-0" aria-hidden="true" />
 
-      <div className="relative container-custom py-20 lg:py-32">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="animate-fade-in stagger-1">
-            <h1 id="hero-heading" className="heading-1 gradient-text mb-6">
-              BUILDING THINGS.<br />
-              <span className="gradient-accent">EXPLORING IDEAS.</span>
-            </h1>
-          </div>
-          <div className="animate-fade-in stagger-2">
-            <p className="body-lg text-[rgb(var(--text-secondary))] max-w-2xl mx-auto mb-10 text-balance">
-              I create digital projects — web applications, experiments, tools, and creative coding explorations. 
-              Currently learning across the stack and building things that interest me.
+      <div className="container-custom relative py-20 sm:py-28 lg:py-36">
+        <div className="grid items-end gap-12 lg:grid-cols-12 lg:gap-8">
+          <div className="lg:col-span-8">
+            <p className="eyebrow animate-fade-in">
+              Portfolio <span className="text-[rgb(var(--accent))]">/</span> {new Date().getFullYear()}
             </p>
-          </div>
-          <div className="animate-fade-in stagger-3 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/projects">
-              <Button size="lg" className="group">
-                Explore Work
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
-              </Button>
-            </Link>
-            <Link href="/about">
-              <Button variant="secondary" size="lg">
-                About Me
-              </Button>
-            </Link>
-          </div>
-        </div>
 
-        <div className="animate-fade-in stagger-4 mt-20">
-          <div className="relative max-w-2xl mx-auto">
-            <div className="relative aspect-video rounded-xl bg-[rgb(var(--surface))] border border-[rgb(var(--border-subtle))] overflow-hidden">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center p-8">
-                  <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-[rgb(var(--accent))/0.1] mb-4">
-                    <MousePointer2 className="h-8 w-8 text-[rgb(var(--accent))]" aria-hidden="true" />
-                  </div>
-                  <p className="text-[rgb(var(--text-muted))]">Interactive project showcase</p>
-                  <p className="text-xs text-[rgb(var(--text-muted))] mt-2">Click to explore projects</p>
-                </div>
-              </div>
+            <h1 className="heading-1 mt-6 text-balance">
+              <span className="block animate-fade-in stagger-1">Building things.</span>
+              <span className="block animate-fade-in stagger-2 text-[rgb(var(--text-secondary))]">
+                Exploring ideas.
+              </span>
+            </h1>
+
+            <p className="body mt-8 max-w-xl text-pretty text-[rgb(var(--text-secondary))] animate-slide-up stagger-3">
+              I make websites, applications, tools and experiments — mostly to understand how something
+              works, and then to see how far I can push it. This is where the interesting ones end up.
+            </p>
+
+            <div className="mt-10 flex animate-slide-up flex-col gap-3 stagger-4 sm:flex-row sm:items-center">
+              <ButtonLink href="/projects" size="lg" className="w-full sm:w-auto">
+                Explore work
+              </ButtonLink>
+              <ButtonLink href="/about" size="lg" variant="secondary" className="w-full sm:w-auto">
+                About me
+              </ButtonLink>
             </div>
-            <Link 
-              href="/projects" 
-              className="absolute inset-0"
-              aria-label="View all projects"
-            />
           </div>
-        </div>
-      </div>
 
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce" aria-hidden="true">
-        <MousePointer2 className="h-6 w-6 text-[rgb(var(--text-muted))]" />
+          {/*
+            Editorial "contents" column. Replaces the previous decorative blur
+            blobs with something that reads like a printed table of contents.
+          */}
+          <aside className="animate-fade-in stagger-5 lg:col-span-4">
+            <div className="border-l border-[rgb(var(--border))] pl-6">
+              <p className="eyebrow">Currently</p>
+              <ul className="mt-4 space-y-3">
+                {[
+                  'Web apps & interfaces',
+                  'Networking experiments',
+                  'Generative sketches',
+                ].map((item) => (
+                  <li key={item} className="flex gap-3 text-sm text-[rgb(var(--text-secondary))]">
+                    <span aria-hidden="true" className="mt-2 h-1 w-1 shrink-0 bg-[rgb(var(--accent))]" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <a
+                href={`mailto:${siteConfig.email}`}
+                className="mt-6 inline-block font-mono text-xs text-[rgb(var(--text-muted))] transition-colors hover:text-[rgb(var(--accent))]"
+              >
+                {siteConfig.email}
+              </a>
+            </div>
+          </aside>
+        </div>
       </div>
     </section>
   )

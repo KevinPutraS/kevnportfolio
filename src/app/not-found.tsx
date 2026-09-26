@@ -1,32 +1,35 @@
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Home, Search } from 'lucide-react'
+import { ButtonLink } from '@/components/ui/button-link'
 
 export default function NotFound() {
   return (
-    <div className="min-h-[60vh] flex items-center justify-center px-4">
-      <div className="text-center max-w-md">
-        <h1 className="font-display text-9xl font-bold text-[rgb(var(--accent))/0.3] mb-4" aria-hidden="true">
-          404
-        </h1>
-        <h2 className="heading-2 mb-4">Page Not Found</h2>
-        <p className="body text-[rgb(var(--text-secondary))] mb-8">
-          Sorry, we couldn't find the page you're looking for. It might have been moved or doesn't exist.
+    <div className="flex min-h-screen flex-col items-center justify-center bg-[rgb(var(--background))] px-5 py-20">
+      <div className="w-full max-w-lg text-center">
+        <p className="font-mono text-[0.6875rem] uppercase tracking-[0.18em] text-[rgb(var(--accent))]">
+          Error 404
         </p>
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Link href="/">
-            <Button className="group w-full sm:w-auto">
-              <Home className="h-4 w-4 mr-2" aria-hidden="true" />
-              Go Home
-            </Button>
-          </Link>
-          <Link href="/projects">
-            <Button variant="secondary" className="group w-full sm:w-auto">
-              <Search className="h-4 w-4 mr-2" aria-hidden="true" />
-              Browse Projects
-            </Button>
-          </Link>
+        <h1 className="heading-2 mt-6">This page does not exist</h1>
+        <p className="mt-6 text-[rgb(var(--text-secondary))]">
+          The link may be out of date, or the project may have been unpublished. Everything that is
+          currently published is listed in the project archive.
+        </p>
+
+        <div className="mt-10 flex flex-col justify-center gap-3 sm:flex-row">
+          <ButtonLink href="/projects" className="w-full sm:w-auto">
+            Browse projects
+          </ButtonLink>
+          <ButtonLink href="/" variant="secondary" className="w-full sm:w-auto">
+            Back home
+          </ButtonLink>
         </div>
+
+        <p className="mt-10 text-sm text-[rgb(var(--text-muted))]">
+          Think something is broken?{' '}
+          <Link href="/contact" className="link">
+            Let me know
+          </Link>
+          .
+        </p>
       </div>
     </div>
   )

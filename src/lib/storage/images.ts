@@ -1,66 +1,80 @@
-import { createClient } from '@/lib/supabase/server'
+import { requireClient } from '@/lib/supabase/server'
+import {
+  ALLOWED_IMAGE_TYPES,
+  MAX_IMAGE_BYTES,
+  isAllowedImageType,
+  type AllowedImageType,
+  type UploadFolder,
+} from './image-types'
 
-const BUCKET_NAME = 'portfolio-images'
-const MAX_FILE_SIZE = 2 * 1024 * 1024 // 2MB
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+/** Bucket that holds every uploaded project thumbnail and gallery image. */
+export const PORTFOLIO_BUCKET = 'portfolio-images'
 
-export async function uploadImage(file: File, path: string): Promise<{ url: string | null; error: string | null }> {
-  const supabase = await createClient()
-  
-  // Validate file type
-  if (!ALLOWED_TYPES.includes(file.type)) {
-    return { url: null, error: 'Invalid file type. Only JPEG, PNG, WebP, and GIF are allowed.' }
-  }
-  
-  // Validate file size
-  if (file.size > MAX_FILE_SIZE) {
-    return { url: null, error: 'File size must be less than 2MB.' }
-  }
+export { MAX_IMAGE_BYTES, ALLOWED_IMAGE_TYPES, isAllowedImageType }
+export type { AllowedImageType, UploadFolder }
 
-  const { data, error } = await supabase.storage
-    .from(BUCKET_NAME)
-    .upload(path, file, {
-      cacheControl: '3600',
-      upsert: false,
-    })
-
-  if (error) {
-    return { url: null, error: error.message }
-  }
-
-  const { data: urlData } = supabase.storage.from(BUCKET_NAME).getPublicUrl(data.path)
-  
-  return { url: urlData.publicUrl, error: null }
+export interface ImageValidationResult {
+  ok: boolean
+  error?: string
+  extension?: string
 }
 
-export async function deleteImage(path: string): Promise<{ error: string | null }> {
-  const supabase = await createClient()
-  
-  const { error } = await supabase.storage.from(BUCKET_NAME).remove([path])
-  
-  return { error: error?.message || null }
-}
-
-export async function listImages(folder: string): Promise<{ urls: string[]; error: string | null }> {
-  const supabase = await createClient()
-  
-  const { data, error } = await supabase.storage.from(BUCKET_NAME).list(folder)
-  
-  if (error) {
-    return { urls: [], error: error.message }
+export function validateImageFile(file: File): ImageValidationResult {
+  if (!file || typeof file.arrayBuffer !== 'function') {
+    return { ok: false, error: 'No file was received.' }
   }
-
-  const urls = (data || []).map((file) => {
-    const { data: urlData } = supabase.storage.from(BUCKET_NAME).getPublicUrl(`${folder}/${file.name}`)
-    return urlData.publicUrl
-  })
-
-  return { urls, error: null }
+  if (!isAllowedImageType(file.type)) {
+    return { ok: false, error: 'Unsupported file type. Use JPEG, PNG, WebP or GIF.' }
+  }
+  if (file.size <= 0) {
+    return { ok: false, error: 'The selected file is empty.' }
+  }
+  if (file.size > MAX_IMAGE_BYTES) {
+    return { ok: false, error: 'File size must be 2MB or less.' }
+  }
+  return { ok: true, extension: ALLOWED_IMAGE_TYPES[file.type] }
 }
 
-export function generateImagePath(filename: string, prefix: string = 'projects'): string {
-  const timestamp = Date.now()
-  const random = Math.random().toString(36).substring(2, 8)
-  const extension = filename.split('.').pop()?.toLowerCase() || 'jpg'
-  return `${prefix}/${timestamp}-${random}.${extension}`
+/**
+ * Very light magic-number check. A browser-supplied MIME type alone is not
+ * enough, because both the filename and the type are attacker controlled.
+ */
+const MAGIC_BYTES: Record<AllowedImageType, number[]> = {
+  'image/jpeg': [0xff, 0xd8, 0xff],
+  'image/png': [0x89, 0x50, 0x4e, 0x47],
+  'image/webp': [0x52, 0x49, 0x46, 0x46],
+  'image/gif': [0x47, 0x49, 0x46, 0x38],
+}
+
+export async function hasValidImageSignature(file: File): Promise<boolean> {
+  if (!isAllowedImageType(file.type)) return false
+
+  const expected = MAGIC_BYTES[file.type]
+  const header = new Uint8Array(await file.slice(0, 12).arrayBuffer())
+
+  return expected.every((byte, index) => header[index] === byte)
+}
+
+/** Collision-resistant object key. The extension comes from the MIME type. */
+export function buildObjectPath(folder: UploadFolder, extension: string): string {
+  const random = crypto.randomUUID().replace(/-/g, '').slice(0, 12)
+  return `${folder}/${Date.now()}-${random}.${extension}`
+}
+
+/** Converts a public storage URL back into its object key. */
+export function objectPathFromPublicUrl(url: string): string | null {
+  if (!url.startsWith('/')) return null
+  return url.replace(/^\/+/, '')
+}
+
+export async function getPublicUrl(path: string): Promise<string> {
+  const supabase = await requireClient()
+  const { data } = supabase.storage.from(PORTFOLIO_BUCKET).getPublicUrl(path)
+  return data.publicUrl
+}
+
+export async function removeStoredObject(path: string): Promise<{ error: string | null }> {
+  const supabase = await requireClient()
+  const { error } = await supabase.storage.from(PORTFOLIO_BUCKET).remove([path])
+  return { error: error?.message ?? null }
 }

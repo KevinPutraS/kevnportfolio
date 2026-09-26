@@ -1,10 +1,17 @@
 import type { Config } from 'tailwindcss'
 
+/**
+ * Colours are driven by the CSS custom properties defined in
+ * `src/styles/globals.css`, so there is exactly one place to change a token.
+ * The font families reference the composed vars (which in turn reference the
+ * `next/font` variables), never the raw `--font-*` names from next/font.
+ */
 const config: Config = {
   content: [
-    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/config/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/lib/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
     extend: {
@@ -29,6 +36,9 @@ const config: Config = {
         sans: ['var(--font-sans)'],
         mono: ['var(--font-mono)'],
         display: ['var(--font-display)'],
+      },
+      maxWidth: {
+        prose: '65ch',
       },
     },
   },

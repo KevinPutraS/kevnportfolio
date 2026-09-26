@@ -1,41 +1,37 @@
-'use client'
+import { ButtonLink } from '@/components/ui/button-link'
 
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { ArrowRight } from 'lucide-react'
-
+/** Short teaser for /about with a single clear next step. */
 export function AboutPreview() {
   return (
-    <section className="section" aria-labelledby="about-preview-heading">
+    <section className="section border-t border-[rgb(var(--border-subtle))]">
       <div className="container-custom">
-        <div className="grid gap-12 lg:grid-cols-2 items-center">
-          <div>
-            <h2 id="about-preview-heading" className="heading-2 mb-6">
-              Always Learning
+        <div className="grid gap-10 lg:grid-cols-12">
+          <div className="lg:col-span-4">
+            <p className="eyebrow">About</p>
+          </div>
+
+          <div className="lg:col-span-8">
+            <h2 className="heading-2 text-balance">
+              Still figuring out the shape of it — and enjoying that part.
             </h2>
-            <div className="prose prose-invert max-w-none text-[rgb(var(--text-secondary))]">
-              <p className="body-lg mb-6">
-                I'm not a specialist — I'm an explorer. My background spans coursework, personal experiments, 
-                and collaborative projects across different areas of technology.
+
+            <div className="prose-block mt-8 max-w-2xl">
+              <p>
+                I do not have a single job title that describes what I do, and I have stopped trying
+                to find one. Some weeks that is web work, some weeks it is networking or tooling,
+                and some weeks it is a sketch that turns into something.
               </p>
-              <p className="body-lg mb-6">
-                This portfolio reflects that journey. You'll find web applications, API experiments, 
-                networking projects, creative coding sketches, and design explorations. Some are complete, 
-                some are works in progress, all represent genuine curiosity.
-              </p>
-              <p className="body-lg">
-                The common thread? I enjoy the process of taking an idea from concept to reality, 
-                learning whatever's needed along the way.
+              <p>
+                What stays constant is the process: pick something that looks interesting, learn
+                enough to build it, then write down what surprised me.
               </p>
             </div>
-          </div>
-          <div className="lg:pl-12">
-            <Link href="/about">
-              <Button variant="secondary" size="lg" className="group w-full justify-center">
-                Read More About Me
-                <ArrowRight className="h-4 w-4 ml-2 transition-transform group-hover:translate-x-1" aria-hidden="true" />
-              </Button>
-            </Link>
+
+            <div className="mt-10">
+              <ButtonLink href="/about" variant="secondary">
+                More about me
+              </ButtonLink>
+            </div>
           </div>
         </div>
       </div>

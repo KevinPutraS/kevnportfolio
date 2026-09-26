@@ -2,9 +2,11 @@
 
 import { useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { RefreshCw, Home } from 'lucide-react'
-import Link from 'next/link'
 
+/**
+ * Route-level error boundary. Catches errors thrown while rendering a page,
+ * including failed database requests.
+ */
 export default function Error({
   error,
   reset,
@@ -13,32 +15,42 @@ export default function Error({
   reset: () => void
 }) {
   useEffect(() => {
-    console.error('Application error:', error)
+    // Surfaces the failure in the server log with the request digest.
+    console.error('[app] render error:', error.message, error.digest ?? '')
   }, [error])
 
   return (
-    <div className="min-h-[60vh] flex items-center justify-center px-4">
-      <div className="text-center max-w-md">
-        <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-[rgb(var(--error))/0.1] text-[rgb(var(--error))] mb-6">
-          <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-        </div>
-        <h2 className="heading-2 mb-4">Something went wrong</h2>
-        <p className="body text-[rgb(var(--text-secondary))] mb-8">
-          We encountered an unexpected error. Please try refreshing the page or go back home.
+    <div className="flex min-h-screen flex-col items-center justify-center bg-[rgb(var(--background))] px-5 py-20">
+      <div className="w-full max-w-lg text-center">
+        <p className="font-mono text-[0.6875rem] uppercase tracking-[0.18em] text-[rgb(var(--error))]">
+          Something went wrong
         </p>
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Button onClick={reset} className="group w-full sm:w-auto">
-            <RefreshCw className="h-4 w-4 mr-2" aria-hidden="true" />
-            Try Again
+        <h1 className="heading-2 mt-6">This page failed to load</h1>
+        <p className="mt-6 text-[rgb(var(--text-secondary))]">
+          An unexpected error occurred while rendering this page. Trying again often fixes it — if the
+          database is not configured yet, the public pages will render empty rather than fail.
+        </p>
+
+        {error.digest && (
+          <p className="mt-4 font-mono text-xs text-[rgb(var(--text-muted))]">
+            Reference: {error.digest}
+          </p>
+        )}
+
+        <div className="mt-10 flex flex-col justify-center gap-3 sm:flex-row">
+          <Button type="button" onClick={reset} className="w-full sm:w-auto">
+            Try again
           </Button>
-          <Link href="/">
-            <Button variant="secondary" className="group w-full sm:w-auto">
-              <Home className="h-4 w-4 mr-2" aria-hidden="true" />
-              Go Home
-            </Button>
-          </Link>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => {
+              window.location.href = '/'
+            }}
+            className="w-full sm:w-auto"
+          >
+            Back home
+          </Button>
         </div>
       </div>
     </div>

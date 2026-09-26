@@ -1,66 +1,106 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { NextResponse, type NextRequest } from 'next/server'
+import { getAdminClient, guardAdmin } from '@/lib/api/admin-guard'
+import { ALLOWED_UPLOAD_FOLDERS, isAllowedFolder } from '@/lib/storage/image-types'
+import {
+  PORTFOLIO_BUCKET,
+  buildObjectPath,
+  hasValidImageSignature,
+  validateImageFile,
+} from '@/lib/storage/images'
 
-const BUCKET_NAME = 'portfolio-images'
-const MAX_FILE_SIZE = 2 * 1024 * 1024 // 2MB
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+export const dynamic = 'force-dynamic'
 
+/**
+ * POST /api/upload
+ *
+ * Multipart upload for project thumbnails and gallery images.
+ *
+ * Security decisions:
+ * - the destination folder is validated against an allowlist, so a client
+ *   cannot write `../../` or an arbitrary bucket path
+ * - the file extension is derived from the *validated MIME type*, never from
+ *   the client-supplied filename, so `payload.html` is stored as `payload.jpg`
+ * - the magic number is checked, because `file.type` is attacker controlled
+ * - the bucket is private; public read is granted per object
+ */
 export async function POST(request: NextRequest) {
+  const { error } = await guardAdmin()
+  if (error) return error
+
+  let formData: FormData
   try {
-    const supabase = await createClient()
-    
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const formData = await request.formData()
-    const file = formData.get('file') as File
-    const folder = (formData.get('folder') as string) || 'uploads'
-
-    if (!file) {
-      return NextResponse.json({ error: 'No file provided' }, { status: 400 })
-    }
-
-    // Validate file type
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      return NextResponse.json(
-        { error: 'Invalid file type. Only JPEG, PNG, WebP, and GIF are allowed.' },
-        { status: 400 }
-      )
-    }
-
-    // Validate file size
-    if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json(
-        { error: `File size must be less than ${MAX_FILE_SIZE / 1024 / 1024}MB.` },
-        { status: 400 }
-      )
-    }
-
-    const timestamp = Date.now()
-    const random = Math.random().toString(36).substring(2, 8)
-    const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg'
-    const path = `${folder}/${timestamp}-${random}.${extension}`
-
-    const { data, error } = await supabase.storage
-      .from(BUCKET_NAME)
-      .upload(path, file, {
-        cacheControl: '3600',
-        upsert: false,
-      })
-
-    if (error) {
-      console.error('Upload error:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-
-    const { data: urlData } = supabase.storage.from(BUCKET_NAME).getPublicUrl(data.path)
-
-    return NextResponse.json({ url: urlData.publicUrl, path: data.path })
-  } catch (error) {
-    console.error('Upload error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    formData = await request.formData()
+  } catch {
+    return NextResponse.json({ message: 'Expected a multipart form upload.' }, { status: 400 })
   }
+
+  const file = formData.get('file')
+  const folder = formData.get('folder')
+
+  if (!isAllowedFolder(folder)) {
+    return NextResponse.json(
+      { message: `folder must be one of: ${ALLOWED_UPLOAD_FOLDERS.join(', ')}` },
+      { status: 400 }
+    )
+  }
+
+  if (!(file instanceof File)) {
+    return NextResponse.json({ message: 'No file was uploaded.' }, { status: 400 })
+  }
+
+  const validation = validateImageFile(file)
+  if (!validation.ok || !validation.extension) {
+    return NextResponse.json({ message: validation.error }, { status: 400 })
+  }
+
+  if (!(await hasValidImageSignature(file))) {
+    return NextResponse.json(
+      { message: 'The file contents do not match the declared image type.' },
+      { status: 400 }
+    )
+  }
+
+  const objectPath = buildObjectPath(folder, validation.extension)
+  const buffer = Buffer.from(await file.arrayBuffer())
+
+  const supabase = await getAdminClient()
+  const { error: uploadError } = await supabase.storage
+    .from(PORTFOLIO_BUCKET)
+    .upload(objectPath, buffer, {
+      contentType: file.type,
+      // Never treat a user upload as executable markup.
+      cacheControl: '31536000',
+      upsert: false,
+    })
+
+  if (uploadError) {
+    return NextResponse.json({ message: `Upload failed: ${uploadError.message}` }, { status: 500 })
+  }
+
+  const { data } = supabase.storage.from(PORTFOLIO_BUCKET).getPublicUrl(objectPath)
+
+  return NextResponse.json({ url: data.publicUrl, path: objectPath }, { status: 201 })
+}
+
+/** DELETE /api/upload?path=projects/gallery/… — used when replacing an image. */
+export async function DELETE(request: NextRequest) {
+  const { error } = await guardAdmin()
+  if (error) return error
+
+  const { searchParams } = new URL(request.url)
+  const path = searchParams.get('path') ?? ''
+
+  const isAllowedPrefix = ALLOWED_UPLOAD_FOLDERS.some((folder) => path.startsWith(`${folder}/`))
+  if (!path || !isAllowedPrefix || path.includes('..')) {
+    return NextResponse.json({ message: 'Invalid storage path.' }, { status: 400 })
+  }
+
+  const supabase = await getAdminClient()
+  const { error: removeError } = await supabase.storage.from(PORTFOLIO_BUCKET).remove([path])
+
+  if (removeError) {
+    return NextResponse.json({ message: 'Could not delete the file.' }, { status: 500 })
+  }
+
+  return NextResponse.json({ success: true })
 }

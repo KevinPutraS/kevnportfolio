@@ -1,84 +1,93 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, Space_Grotesk } from 'next/font/google'
-import { Navbar } from '@/components/layout/navbar'
-import { Footer } from '@/components/layout/footer'
+import { siteConfig } from '@/config/site'
 import '@/styles/globals.css'
 
 const inter = Inter({
   subsets: ['latin'],
-  variable: '--font-sans',
+  variable: '--font-inter',
   display: 'swap',
 })
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
-  variable: '--font-display',
+  variable: '--font-grotesk',
   display: 'swap',
 })
 
+/**
+ * `metadataBase` is what makes Next resolve relative OG/canonical URLs into
+ * absolute ones. It was previously missing, which produced a build warning and
+ * social cards with no host.
+ */
 export const metadata: Metadata = {
+  metadataBase: new URL(siteConfig.url),
   title: {
-    default: 'Kevin Portfolio | Building Things. Exploring Ideas.',
-    template: '%s | Kevin Portfolio',
+    default: `${siteConfig.name} — Building things, exploring ideas`,
+    template: `%s — ${siteConfig.name}`,
   },
-  description: 'Building things. Exploring ideas. Creating digital projects. A portfolio of web applications, experiments, and creative coding explorations.',
-  keywords: ['portfolio', 'web development', 'software', 'experiments', 'creative coding', 'projects'],
-  authors: [{ name: 'Kevin' }],
-  creator: 'Kevin',
-  publisher: 'Kevin Portfolio',
-  robots: 'index, follow',
+  description: siteConfig.description,
+  applicationName: siteConfig.name,
+  keywords: [
+    'portfolio',
+    'web development',
+    'software projects',
+    'networking',
+    'experiments',
+    'creative coding',
+  ],
+  authors: [{ name: siteConfig.shortName, url: siteConfig.url }],
+  creator: siteConfig.shortName,
+  alternates: {
+    canonical: '/',
+  },
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://kevnportfolio.dev',
-    siteName: 'Kevin Portfolio',
-    title: 'Kevin Portfolio | Building Things. Exploring Ideas.',
-    description: 'Building things. Exploring ideas. Creating digital projects.',
+    url: siteConfig.url,
+    siteName: siteConfig.name,
+    title: `${siteConfig.name} — Building things, exploring ideas`,
+    description: siteConfig.description,
+    // `metadataBase` turns this into an absolute URL, which social scrapers
+    // require. Without it a shared link renders as a card with no image.
     images: [
       {
-        url: '/images/og-image.png',
+        url: siteConfig.ogImage,
         width: 1200,
         height: 630,
-        alt: 'Kevin Portfolio',
+        alt: `${siteConfig.name} — building things, exploring ideas`,
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Kevin Portfolio | Building Things. Exploring Ideas.',
-    description: 'Building things. Exploring ideas. Creating digital projects.',
-    images: ['/images/og-image.png'],
+    title: `${siteConfig.name} — Building things, exploring ideas`,
+    description: siteConfig.description,
+    images: [siteConfig.ogImage],
   },
-  verification: {
-    google: '',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, 'max-image-preview': 'large' },
   },
 }
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#08090D' },
-    { media: '(prefers-color-scheme: dark)', color: '#08090D' },
-  ],
+  themeColor: '#08090D',
+  colorScheme: 'dark',
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 5,
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`}>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      </head>
-      <body className="min-h-screen flex flex-col">
-        <Navbar />
-        <main className="flex-1 pt-16">{children}</main>
-        <Footer />
+      <body className="min-h-screen bg-[rgb(var(--background))] text-[rgb(var(--text-primary))] antialiased">
+        {/*
+          Server-rendered children only. Public navigation and footer live in
+          the (public) route group so they can never appear behind /admin.
+        */}
+        {children}
       </body>
     </html>
   )

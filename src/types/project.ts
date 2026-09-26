@@ -1,3 +1,7 @@
+import type { ProjectCategory } from '@/config/site'
+
+export type { ProjectCategory }
+
 export interface Project {
   id: string
   title: string
@@ -12,13 +16,13 @@ export interface Project {
   repository_url: string | null
   featured: boolean
   published: boolean
+  /** Month precision: stored as `YYYY-MM`. */
   project_date: string | null
   created_at: string
   updated_at: string
 }
 
-export type ProjectCategory = 'web' | 'app' | 'design' | 'networking' | 'experiment' | 'school' | 'other'
-
+/** The exact set of fields the project editor manages. */
 export interface ProjectFormData {
   title: string
   slug: string
@@ -35,11 +39,7 @@ export interface ProjectFormData {
   published: boolean
 }
 
-export interface ProjectCardProps {
-  project: Project
-  variant?: 'default' | 'featured' | 'compact'
-  className?: string
-}
+export type ProjectFieldErrors = Partial<Record<keyof ProjectFormData, string>>
 
 export interface PaginatedProjects {
   projects: Project[]

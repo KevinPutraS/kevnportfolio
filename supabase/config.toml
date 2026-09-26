@@ -20,13 +20,17 @@ smtp_port = 54325
 pop3_port = 54326
 
 [storage]
-file_size_limit = "50MiB"
+# Matches the 2MB application limit in src/lib/storage/images.ts.
+file_size_limit = "2MiB"
 
 [auth]
 site_url = "http://localhost:3000"
 additional_redirect_urls = ["http://localhost:3000/**"]
 jwt_expiry = 3600
-enable_signup = true
+# Public sign-up is disabled: accounts are created by the project owner and
+# granted access by inserting into public.admins. With sign-up enabled, any
+# visitor could create an auth user.
+enable_signup = false
 enable_anonymous_sign_ins = false
 min_password_length = 8
 password_min_entropy = 30

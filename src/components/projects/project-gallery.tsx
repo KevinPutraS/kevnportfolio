@@ -1,171 +1,120 @@
 'use client'
 
+import { useCallback, useState } from 'react'
 import Image from 'next/image'
-import { useState } from 'react'
-import { classNames } from '@/lib/utils/helpers'
 import { X, ChevronLeft, ChevronRight, Expand } from 'lucide-react'
+import { classNames } from '@/lib/utils/helpers'
+import { useFocusTrap } from '@/lib/hooks/use-focus-trap'
 
-interface ProjectGalleryProps {
-  images: string[]
-  alt?: string
-}
+/**
+ * Project image gallery.
+ *
+ * The lightbox is a labelled modal dialog with a focus trap, Escape handling
+ * and keyboard arrow navigation. All hooks are declared before any early
+ * return — the previous version called `useState` after `if (!images.length)`
+ * which breaks the rules of hooks and crashes when the gallery count changes.
+ */
+export function ProjectGallery({ images, title }: { images: string[]; title: string }) {
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
 
-export function ProjectGallery({ images, alt = 'Project screenshot' }: ProjectGalleryProps) {
-  if (!images.length) return null
+  const close = useCallback(() => setLightboxIndex(null), [])
+  const dialogRef = useFocusTrap<HTMLDivElement>(lightboxIndex !== null, close)
 
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [isFullscreen, setIsFullscreen] = useState(false)
-
-  const goToPrevious = () => {
-    setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1))
-  }
-
-  const goToNext = () => {
-    setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1))
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'ArrowLeft') goToPrevious()
-    if (e.key === 'ArrowRight') goToNext()
-    if (e.key === 'Escape') setIsFullscreen(false)
-  }
-
-  if (isFullscreen) {
-    return (
-      <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/95"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Image gallery"
-        onKeyDown={handleKeyDown}
-      >
-        <button
-          type="button"
-          onClick={() => setIsFullscreen(false)}
-          className="absolute top-4 right-4 z-10 rounded-lg p-2 text-white/70 hover:text-white transition-colors"
-          aria-label="Close gallery"
-        >
-          <X className="h-6 w-6" />
-        </button>
-        <button
-          type="button"
-          onClick={goToPrevious}
-          className="absolute left-4 z-10 rounded-lg p-2 text-white/70 hover:text-white transition-colors hidden sm:block"
-          aria-label="Previous image"
-        >
-          <ChevronLeft className="h-8 w-8" />
-        </button>
-        <button
-          type="button"
-          onClick={goToNext}
-          className="absolute right-4 z-10 rounded-lg p-2 text-white/70 hover:text-white transition-colors hidden sm:block"
-          aria-label="Next image"
-        >
-          <ChevronRight className="h-8 w-8" />
-        </button>
-        <div className="relative max-w-[90vw] max-h-[90vh]">
-          <Image
-            src={images[currentIndex]}
-            alt={`${alt} ${currentIndex + 1} of ${images.length}`}
-            width={1920}
-            height={1080}
-            className="max-w-[90vw] max-h-[90vh] object-contain"
-            priority
-          />
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-center text-white/60 text-sm">
-            {currentIndex + 1} / {images.length}
-          </div>
-        </div>
-      </div>
+  const hasImages = images.length > 0
+  const showPrev = useCallback(() => {
+    setLightboxIndex((current) =>
+      current === null ? null : (current - 1 + images.length) % images.length
     )
-  }
+  }, [images.length])
+  const showNext = useCallback(() => {
+    setLightboxIndex((current) => (current === null ? null : (current + 1) % images.length))
+  }, [images.length])
+
+  // Nothing to show: render nothing at all rather than an empty section.
+  if (!hasImages) return null
 
   return (
-    <div className="relative">
-      <div className="relative aspect-video rounded-lg overflow-hidden bg-[rgb(var(--surface-elevated))]">
-        <Image
-          src={images[currentIndex]}
-          alt={`${alt} ${currentIndex + 1} of ${images.length}`}
-          fill
-          sizes="(max-width: 768px) 100vw, 800px"
-          priority
-          className="object-cover"
-          onClick={() => setIsFullscreen(true)}
-        />
-        {images.length > 1 && (
-          <>
-            <button
-              type="button"
-              onClick={goToPrevious}
-              className="absolute left-4 top-1/2 -translate-y-1/2 hidden sm:block rounded-lg bg-black/50 p-2 text-white/70 hover:text-white hover:bg-black/70 transition-colors"
-              aria-label="Previous image"
+    <section aria-label={`${title} gallery`}>
+      <div className="grid gap-4 sm:grid-cols-2">
+        {images.map((src, index) => (
+          <button
+            key={`${src}-${index}`}
+            type="button"
+            onClick={() => setLightboxIndex(index)}
+            className={classNames(
+              'group relative block w-full overflow-hidden border border-[rgb(var(--border-subtle))] transition-colors hover:border-[rgb(var(--border))]',
+              index === 0 ? 'sm:col-span-2' : ''
+            )}
+            style={{ aspectRatio: index === 0 ? '16 / 9' : '4 / 3' }}
+          >
+            <Image
+              src={src}
+              alt={`${title} screenshot ${index + 1} of ${images.length}`}
+              fill
+              sizes={index === 0 ? '(min-width: 768px) 66vw, 100vw' : '(min-width: 768px) 33vw, 100vw'}
+              className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+            />
+            <span
+              aria-hidden="true"
+              className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center border border-[rgb(var(--border))] bg-[rgb(var(--background))]/80 text-[rgb(var(--text-primary))] opacity-0 transition-opacity group-hover:opacity-100"
             >
-              <ChevronLeft className="h-6 w-6" />
-            </button>
-            <button
-              type="button"
-              onClick={goToNext}
-              className="absolute right-4 top-1/2 -translate-y-1/2 hidden sm:block rounded-lg bg-black/50 p-2 text-white/70 hover:text-white hover:bg-black/70 transition-colors"
-              aria-label="Next image"
-            >
-              <ChevronRight className="h-6 w-6" />
-            </button>
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-              {images.map((_, index) => (
-                <button
-                  key={index}
-                  type="button"
-                  onClick={() => setCurrentIndex(index)}
-                  className={classNames(
-                    'h-2 w-2 rounded-full transition-all duration-200',
-                    index === currentIndex
-                      ? 'bg-white w-6'
-                      : 'bg-white/40 hover:bg-white/60'
-                  )}
-                  aria-label={`Go to image ${index + 1}`}
-                  aria-current={index === currentIndex ? 'true' : 'false'}
-                />
-              ))}
-            </div>
-          </>
-        )}
-        <button
-          type="button"
-          onClick={() => setIsFullscreen(true)}
-          className="absolute top-4 right-4 rounded-lg bg-black/50 p-2 text-white/70 hover:text-white hover:bg-black/70 transition-colors sm:hidden"
-          aria-label="Open fullscreen gallery"
-        >
-          <Expand className="h-5 w-5" />
-        </button>
+              <Expand className="h-4 w-4" />
+            </span>
+            <span className="sr-only">View image {index + 1} full size</span>
+          </button>
+        ))}
       </div>
-      {images.length > 1 && (
-        <div className="mt-4 flex items-center justify-center gap-2 overflow-x-auto pb-2 snap-x" role="tablist" aria-label="Gallery thumbnails">
-          {images.map((image, index) => (
-            <button
-              key={index}
-              type="button"
-              onClick={() => setCurrentIndex(index)}
-              className={classNames(
-                'relative h-16 w-24 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all duration-200 snap-center',
-                index === currentIndex
-                  ? 'border-[rgb(var(--accent))]'
-                  : 'border-transparent hover:border-[rgb(var(--border))]'
-              )}
-              role="tab"
-              aria-selected={index === currentIndex}
-              aria-label={`View image ${index + 1}`}
-            >
+
+      {lightboxIndex !== null && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4">
+          <div ref={dialogRef} role="dialog" aria-modal="true" aria-label={`${title} image viewer`} tabIndex={-1} className="relative w-full max-w-5xl focus:outline-none">
+            <div className="relative aspect-[16/10] w-full">
               <Image
-                src={image}
-                alt=""
+                src={images[lightboxIndex]}
+                alt={`${title} screenshot ${lightboxIndex + 1} of ${images.length}`}
                 fill
-                sizes="96px"
-                className="object-cover"
+                sizes="100vw"
+                className="object-contain"
+                priority
               />
+            </div>
+
+            <p className="mt-4 text-center font-mono text-xs text-[rgb(var(--text-secondary))]">
+              {lightboxIndex + 1} / {images.length}
+            </p>
+
+            <button
+              type="button"
+              onClick={close}
+              aria-label="Close image viewer"
+              className="absolute -top-2 right-0 inline-flex h-10 w-10 items-center justify-center text-[rgb(var(--text-primary))] transition-colors hover:text-[rgb(var(--accent))] sm:-right-12 sm:-top-12"
+            >
+              <X className="h-5 w-5" aria-hidden="true" />
             </button>
-          ))}
+
+            {images.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={showPrev}
+                  aria-label="Previous image"
+                  className="absolute left-0 top-1/2 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center border border-[rgb(var(--border))] bg-[rgb(var(--background))]/80 text-[rgb(var(--text-primary))] transition-colors hover:border-[rgb(var(--accent))] sm:-left-14"
+                >
+                  <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  onClick={showNext}
+                  aria-label="Next image"
+                  className="absolute right-0 top-1/2 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center border border-[rgb(var(--border))] bg-[rgb(var(--background))]/80 text-[rgb(var(--text-primary))] transition-colors hover:border-[rgb(var(--accent))] sm:-right-14"
+                >
+                  <ChevronRight className="h-5 w-5" aria-hidden="true" />
+                </button>
+              </>
+            )}
+          </div>
         </div>
       )}
-    </div>
+    </section>
   )
 }

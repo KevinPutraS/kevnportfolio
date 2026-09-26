@@ -1,50 +1,38 @@
 'use client'
 
-import { forwardRef, InputHTMLAttributes } from 'react'
+import { forwardRef, useId, type InputHTMLAttributes } from 'react'
 import { classNames } from '@/lib/utils/helpers'
+import { FieldShell, describedByFor } from './field'
 
-interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
-  label?: string
+export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'id'> {
+  id?: string
+  label: string
   error?: string
   hint?: string
 }
 
-export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className, label, error, hint, id, ...props }, ref) => {
-    const inputId = id || label?.toLowerCase().replace(/\s+/g, '-')
+/**
+ * Invalid state is driven by `aria-invalid` in `globals.css` rather than a
+ * separate border utility class, so markup and styling cannot disagree.
+ */
+export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
+  { className, label, error, hint, id, required, ...props },
+  ref
+) {
+  const generatedId = useId()
+  const inputId = id ?? generatedId
 
-    return (
-      <div className="w-full">
-        {label && (
-          <label htmlFor={inputId} className="label">
-            {label}
-          </label>
-        )}
-        <input
-          ref={ref}
-          id={inputId}
-          className={classNames(
-            'input',
-            error && 'border-[rgb(var(--error))] focus:border-[rgb(var(--error))] focus:ring-[rgb(var(--error))]',
-            className
-          )}
-          aria-invalid={error ? 'true' : 'false'}
-          aria-describedby={error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined}
-          {...props}
-        />
-        {error && (
-          <p id={`${inputId}-error`} className="mt-1.5 text-sm text-[rgb(var(--error))]" role="alert">
-            {error}
-          </p>
-        )}
-        {hint && !error && (
-          <p id={`${inputId}-hint`} className="mt-1.5 text-sm text-[rgb(var(--text-muted))]">
-            {hint}
-          </p>
-        )}
-      </div>
-    )
-  }
-)
-
-Input.displayName = 'Input'
+  return (
+    <FieldShell label={label} labelHtmlFor={inputId} error={error} hint={hint} required={required}>
+      <input
+        ref={ref}
+        id={inputId}
+        className={classNames('input', className)}
+        aria-invalid={error ? 'true' : undefined}
+        aria-describedby={describedByFor(inputId, Boolean(error), Boolean(hint))}
+        required={required}
+        {...props}
+      />
+    </FieldShell>
+  )
+})

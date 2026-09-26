@@ -1,64 +1,77 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import { projectFormSchema } from '@/lib/validation/project'
+import { NextResponse, type NextRequest } from 'next/server'
+import { getAdminClient, guardAdmin, parseJson, validationErrorResponse } from '@/lib/api/admin-guard'
+import { projectFormSchema, toProjectRecord } from '@/lib/validation/project'
 
+export const dynamic = 'force-dynamic'
+
+/** GET /api/admin/projects — paginated listing including drafts. */
+export async function GET(request: NextRequest) {
+  const { error } = await guardAdmin()
+  if (error) return error
+
+  const { searchParams } = new URL(request.url)
+  const page = Math.max(1, Number(searchParams.get('page') ?? '1') || 1)
+  const pageSize = Math.min(100, Math.max(1, Number(searchParams.get('pageSize') ?? '25') || 25))
+  const from = (page - 1) * pageSize
+
+  const supabase = await getAdminClient()
+  const { data, error: queryError, count } = await supabase
+    .from('projects')
+    .select('*', { count: 'exact' })
+    .order('project_date', { ascending: false, nullsFirst: false })
+    .order('created_at', { ascending: false })
+    .range(from, from + pageSize - 1)
+
+  if (queryError) {
+    return NextResponse.json({ message: 'Could not load projects.' }, { status: 500 })
+  }
+
+  return NextResponse.json({ projects: data ?? [], total: count ?? 0, page, pageSize })
+}
+
+/** POST /api/admin/projects — create a project. */
 export async function POST(request: NextRequest) {
-  try {
-    const supabase = await createClient()
-    
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+  const { error } = await guardAdmin()
+  if (error) return error
 
-    const body = await request.json()
-    
-    const result = projectFormSchema.safeParse({
-      ...body,
-      technologies: body.technologies ? body.technologies.split(',').map((t: string) => t.trim()).filter(Boolean) : [],
-      gallery: body.gallery || [],
-    })
-    
-    if (!result.success) {
+  const body = await parseJson(request)
+  if (body === null) {
+    return NextResponse.json({ message: 'Request body must be valid JSON.' }, { status: 400 })
+  }
+
+  /*
+   * `technologies` arrives here as the comma-separated string the editor shows
+   * (matching the form schema), and `toProjectRecord` converts it to a text[]
+   * for the database. The previous implementation converted it in the client
+   * and then re-validated against a string schema, so every create returned 400.
+   */
+  const parsed = projectFormSchema.safeParse(body)
+  if (!parsed.success) {
+    return validationErrorResponse(parsed.error)
+  }
+
+  const record = toProjectRecord(parsed.data)
+  const supabase = await getAdminClient()
+
+  const { data, error: insertError } = await supabase
+    .from('projects')
+    .insert(record)
+    .select('*')
+    .single()
+
+  if (insertError) {
+    // 23505 = unique_violation on projects_slug_key
+    if (insertError.code === '23505') {
       return NextResponse.json(
-        { message: 'Validation failed', errors: result.error.flatten().fieldErrors },
-        { status: 400 }
-      )
-    }
-
-    // Check for duplicate slug
-    const { data: existing } = await supabase
-      .from('projects')
-      .select('id')
-      .eq('slug', result.data.slug)
-      .single()
-
-    if (existing) {
-      return NextResponse.json(
-        { message: 'A project with this slug already exists' },
+        {
+          message: 'That slug is already in use.',
+          errors: { slug: 'Another project already uses this slug.' },
+        },
         { status: 409 }
       )
     }
-
-    const { data, error } = await supabase
-      .from('projects')
-      .insert({
-        ...result.data,
-        technologies: result.data.technologies,
-        gallery: result.data.gallery,
-      })
-      .select()
-      .single()
-
-    if (error) {
-      console.error('Create project error:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-
-    return NextResponse.json(data, { status: 201 })
-  } catch (error) {
-    console.error('Create project error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({ message: 'Could not create the project.' }, { status: 500 })
   }
+
+  return NextResponse.json({ project: data }, { status: 201 })
 }

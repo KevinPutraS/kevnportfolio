@@ -1,51 +1,35 @@
-'use client'
-
-import { forwardRef, HTMLAttributes } from 'react'
+import type { HTMLAttributes } from 'react'
 import { classNames } from '@/lib/utils/helpers'
 
-interface CardProps extends HTMLAttributes<HTMLDivElement> {
-  variant?: 'default' | 'hover' | 'elevated'
+export type CardVariant = 'default' | 'hover' | 'elevated'
+
+const VARIANTS: Record<CardVariant, string> = {
+  default: 'card',
+  hover: 'card-hover',
+  elevated: 'card border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))]',
 }
 
-export const Card = forwardRef<HTMLDivElement, CardProps>(
-  ({ className, variant = 'default', children, ...props }, ref) => {
-    const variants = {
-      default: 'rounded-lg bg-[rgb(var(--surface))] border border-[rgb(var(--border-subtle))]',
-      hover: 'rounded-lg bg-[rgb(var(--surface))] border border-[rgb(var(--border-subtle))] transition-all duration-300 hover:border-[rgb(var(--border))] hover:shadow-xl hover:shadow-[rgb(var(--accent))/0.05]',
-      elevated: 'rounded-lg bg-[rgb(var(--surface))] border border-[rgb(var(--border))] shadow-lg',
-    }
+/** Square-cornered hairline panel. No client boundary: safe in Server Components. */
+export function Card({ className, variant = 'default', ...props }: HTMLAttributes<HTMLDivElement> & { variant?: CardVariant }) {
+  return <div className={classNames(VARIANTS[variant], className)} {...props} />
+}
 
-    return (
-      <div
-        ref={ref}
-        className={classNames(variants[variant], className)}
-        {...props}
-      >
-        {children}
-      </div>
-    )
-  }
-)
+export function CardHeader({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+  return <div className={classNames('px-5 pt-5 sm:px-6 sm:pt-6', className)} {...props} />
+}
 
-Card.displayName = 'Card'
+export function CardContent({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+  return <div className={classNames('p-5 sm:p-6', className)} {...props} />
+}
 
-export const CardHeader = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
-    <div ref={ref} className={classNames('px-6 pt-6 pb-2', className)} {...props} />
+export function CardFooter({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      className={classNames(
+        'flex items-center border-t border-[rgb(var(--border-subtle))] px-5 py-4 sm:px-6',
+        className
+      )}
+      {...props}
+    />
   )
-)
-CardHeader.displayName = 'CardHeader'
-
-export const CardContent = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
-    <div ref={ref} className={classNames('px-6 pb-6', className)} {...props} />
-  )
-)
-CardContent.displayName = 'CardContent'
-
-export const CardFooter = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
-    <div ref={ref} className={classNames('flex items-center px-6 py-4 border-t border-[rgb(var(--border-subtle))]', className)} {...props} />
-  )
-)
-CardFooter.displayName = 'CardFooter'
+}

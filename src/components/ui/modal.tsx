@@ -1,68 +1,78 @@
 'use client'
 
-import { forwardRef, HTMLAttributes } from 'react'
-import { classNames } from '@/lib/utils/helpers'
+import { useCallback, useEffect, useId, type ReactNode } from 'react'
 import { X } from 'lucide-react'
+import { classNames } from '@/lib/utils/helpers'
+import { useFocusTrap } from '@/lib/hooks/use-focus-trap'
 
-interface ModalProps {
+export interface ModalProps {
   isOpen: boolean
   onClose: () => void
-  title?: string
+  title: string
   description?: string
-  children: React.ReactNode
+  children: ReactNode
   className?: string
 }
 
-export const Modal = forwardRef<HTMLDivElement, ModalProps>(
-  ({ isOpen, onClose, title, description, children, className, ...props }, ref) => {
-    if (!isOpen) return null
+export function Modal({ isOpen, onClose, title, description, children, className }: ModalProps) {
+  const titleId = useId()
+  const descriptionId = useId()
+  const containerRef = useFocusTrap<HTMLDivElement>(isOpen, onClose)
 
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby={title ? 'modal-title' : undefined} aria-describedby={description ? 'modal-description' : undefined}>
-        <div 
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" 
-          onClick={onClose}
-          aria-hidden="true"
-        />
-        <div
-          ref={ref}
-          className={classNames(
-            'relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl bg-[rgb(var(--surface))] border border-[rgb(var(--border))] shadow-2xl animate-scale-in',
-            className
-          )}
-          {...props}
-        >
-          {(title || description) && (
-            <div className="flex items-start justify-between gap-4 border-b border-[rgb(var(--border-subtle))] p-6">
-              <div>
-                {title && (
-                  <h2 id="modal-title" className="text-xl font-semibold text-[rgb(var(--text-primary))]">
-                    {title}
-                  </h2>
-                )}
-                {description && (
-                  <p id="modal-description" className="mt-1 text-sm text-[rgb(var(--text-secondary))]">
-                    {description}
-                  </p>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={onClose}
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-[rgb(var(--text-muted))] hover:text-[rgb(var(--text-primary))] hover:bg-[rgb(var(--surface-elevated))] transition-colors"
-                aria-label="Close modal"
-              >
-                <X className="h-4 w-4" aria-hidden="true" />
-              </button>
-            </div>
-          )}
-          <div className="p-6">
-            {children}
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto sm:items-center sm:p-4">
+      <div className="fixed inset-0 animate-fade-in bg-black/75" onClick={onClose} aria-hidden="true" />
+      <div
+        ref={containerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        aria-describedby={description ? descriptionId : undefined}
+        tabIndex={-1}
+        className={classNames(
+          'relative z-10 w-full max-w-lg animate-slide-up border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-6 shadow-2xl focus:outline-none sm:max-w-xl',
+          className
+        )}
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h2 id={titleId} className="font-display text-xl font-semibold">
+              {title}
+            </h2>
+            {description && (
+              <p id={descriptionId} className="mt-1.5 text-sm text-[rgb(var(--text-secondary))]">
+                {description}
+              </p>
+            )}
           </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="-mr-1 -mt-1 inline-flex h-9 w-9 shrink-0 items-center justify-center text-[rgb(var(--text-muted))] transition-colors hover:text-[rgb(var(--text-primary))]"
+            aria-label="Close dialog"
+          >
+            <X className="h-4 w-4" aria-hidden="true" />
+          </button>
         </div>
+        <div className="mt-6">{children}</div>
       </div>
-    )
-  }
-)
+    </div>
+  )
+}
 
-Modal.displayName = 'Modal'
+/** Escape handler helper reused by dismissible surfaces. */
+export function useEscapeKey(enabled: boolean, onEscape: () => void): void {
+  const handler = useCallback(
+    (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onEscape()
+    },
+    [onEscape]
+  )
+  useEffect(() => {
+    if (!enabled) return
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [enabled, handler])
+}

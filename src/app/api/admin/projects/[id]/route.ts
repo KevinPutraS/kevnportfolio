@@ -1,112 +1,159 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import { projectFormSchema } from '@/lib/validation/project'
+import { NextResponse, type NextRequest } from 'next/server'
+import { getAdminClient, guardAdmin, parseJson, validationErrorResponse } from '@/lib/api/admin-guard'
+import { projectFormSchema, toProjectRecord } from '@/lib/validation/project'
+import { isUuid } from '@/lib/utils/validation'
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const supabase = await createClient()
-    
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+export const dynamic = 'force-dynamic'
 
-    const resolvedParams = await params
-    const body = await request.json()
-
-    // For partial updates, we only validate provided fields
-    const updateData: Record<string, unknown> = {}
-    
-    if (body.title !== undefined) updateData.title = body.title
-    if (body.slug !== undefined) updateData.slug = body.slug
-    if (body.short_description !== undefined) updateData.short_description = body.short_description
-    if (body.description !== undefined) updateData.description = body.description
-    if (body.category !== undefined) updateData.category = body.category
-    if (body.technologies !== undefined) {
-      updateData.technologies = typeof body.technologies === 'string'
-        ? body.technologies.split(',').map((t: string) => t.trim()).filter(Boolean)
-        : body.technologies
-    }
-    if (body.project_date !== undefined) updateData.project_date = body.project_date || null
-    if (body.thumbnail_url !== undefined) updateData.thumbnail_url = body.thumbnail_url || null
-    if (body.gallery !== undefined) updateData.gallery = body.gallery
-    if (body.project_url !== undefined) updateData.project_url = body.project_url || null
-    if (body.repository_url !== undefined) updateData.repository_url = body.repository_url || null
-    if (body.featured !== undefined) updateData.featured = body.featured
-    if (body.published !== undefined) updateData.published = body.published
-
-    // If slug is being changed, check for duplicates
-    if (body.slug !== undefined) {
-      const { data: existing } = await supabase
-        .from('projects')
-        .select('id')
-        .eq('slug', body.slug)
-        .neq('id', resolvedParams.id)
-        .single()
-
-      if (existing) {
-        return NextResponse.json(
-          { message: 'A project with this slug already exists' },
-          { status: 409 }
-        )
-      }
-    }
-
-    const { data, error } = await supabase
-      .from('projects')
-      .update(updateData)
-      .eq('id', resolvedParams.id)
-      .select()
-      .single()
-
-    if (error) {
-      console.error('Update project error:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-
-    if (!data) {
-      return NextResponse.json({ error: 'Project not found' }, { status: 404 })
-    }
-
-    return NextResponse.json(data)
-  } catch (error) {
-    console.error('Update project error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
+interface RouteContext {
+  params: { id: string }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const supabase = await createClient()
-    
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+export async function GET(_request: NextRequest, { params }: RouteContext) {
+  const { error } = await guardAdmin()
+  if (error) return error
 
-    const resolvedParams = await params
-
-    const { error } = await supabase
-      .from('projects')
-      .delete()
-      .eq('id', resolvedParams.id)
-
-    if (error) {
-      console.error('Delete project error:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-
-    return NextResponse.json({ success: true })
-  } catch (error) {
-    console.error('Delete project error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  if (!isUuid(params.id)) {
+    return NextResponse.json({ message: 'Invalid project id.' }, { status: 400 })
   }
+
+  const supabase = await getAdminClient()
+  const { data, error: queryError } = await supabase
+    .from('projects')
+    .select('*')
+    .eq('id', params.id)
+    .maybeSingle()
+
+  if (queryError) {
+    return NextResponse.json({ message: 'Could not load the project.' }, { status: 500 })
+  }
+  if (!data) {
+    return NextResponse.json({ message: 'Project not found.' }, { status: 404 })
+  }
+
+  return NextResponse.json({ project: data })
+}
+
+/**
+ * PATCH /api/admin/projects/[id]
+ *
+ * Applies a partial update (used by the publish/feature toggles). Validated
+ * against the same schema as create so a toggle can never write a malformed
+ * row, and a missing row returns 404 rather than a misleading success.
+ */
+export async function PATCH(request: NextRequest, { params }: RouteContext) {
+  const { error } = await guardAdmin()
+  if (error) return error
+
+  if (!isUuid(params.id)) {
+    return NextResponse.json({ message: 'Invalid project id.' }, { status: 400 })
+  }
+
+  const body = await parseJson(request)
+  if (body === null) {
+    return NextResponse.json({ message: 'Request body must be valid JSON.' }, { status: 400 })
+  }
+
+  if (typeof body !== 'object' || body === null) {
+    return NextResponse.json({ message: 'Request body must be an object.' }, { status: 400 })
+  }
+
+  const patch = body as Record<string, unknown>
+  const allowedFields = ['featured', 'published'] as const
+  const hasOnlyToggleFields = Object.keys(patch).length > 0 &&
+    Object.keys(patch).every((key) => (allowedFields as readonly string[]).includes(key)) &&
+    Object.values(patch).every((value) => typeof value === 'boolean')
+
+  let update: Record<string, unknown>
+
+  if (hasOnlyToggleFields) {
+    // Fast path for the publish / feature switches.
+    update = Object.fromEntries(
+      Object.entries(patch).map(([key, value]) => [key, value as boolean])
+    )
+  } else {
+    // Full editor save: merge over the existing row, then validate everything.
+    const supabase = await getAdminClient()
+    const { data: existing, error: readError } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('id', params.id)
+      .maybeSingle()
+
+    if (readError) {
+      return NextResponse.json({ message: 'Could not load the project.' }, { status: 500 })
+    }
+    if (!existing) {
+      return NextResponse.json({ message: 'Project not found.' }, { status: 404 })
+    }
+
+    const merged = {
+      title: existing.title,
+      slug: existing.slug,
+      short_description: existing.short_description,
+      description: existing.description ?? '',
+      category: existing.category,
+      technologies: (existing.technologies ?? []).join(', '),
+      project_date: existing.project_date ? existing.project_date.slice(0, 7) : '',
+      thumbnail_url: existing.thumbnail_url ?? '',
+      gallery: existing.gallery ?? [],
+      project_url: existing.project_url ?? '',
+      repository_url: existing.repository_url ?? '',
+      featured: existing.featured,
+      published: existing.published,
+      ...patch,
+    }
+
+    const parsed = projectFormSchema.safeParse(merged)
+    if (!parsed.success) {
+      return validationErrorResponse(parsed.error)
+    }
+    update = toProjectRecord(parsed.data) as unknown as Record<string, unknown>
+  }
+
+  const supabase = await getAdminClient()
+  const { data, error: updateError } = await supabase
+    .from('projects')
+    .update(update)
+    .eq('id', params.id)
+    .select('*')
+    .maybeSingle()
+
+  if (updateError) {
+    if (updateError.code === '23505') {
+      return NextResponse.json(
+        {
+          message: 'That slug is already in use.',
+          errors: { slug: 'Another project already uses this slug.' },
+        },
+        { status: 409 }
+      )
+    }
+    return NextResponse.json({ message: 'Could not update the project.' }, { status: 500 })
+  }
+
+  if (!data) {
+    return NextResponse.json({ message: 'Project not found.' }, { status: 404 })
+  }
+
+  return NextResponse.json({ project: data })
+}
+
+/** DELETE /api/admin/projects/[id] */
+export async function DELETE(_request: NextRequest, { params }: RouteContext) {
+  const { error } = await guardAdmin()
+  if (error) return error
+
+  if (!isUuid(params.id)) {
+    return NextResponse.json({ message: 'Invalid project id.' }, { status: 400 })
+  }
+
+  const supabase = await getAdminClient()
+  const { error: deleteError } = await supabase.from('projects').delete().eq('id', params.id)
+
+  if (deleteError) {
+    return NextResponse.json({ message: 'Could not delete the project.' }, { status: 500 })
+  }
+
+  return NextResponse.json({ success: true })
 }

@@ -1,46 +1,70 @@
-'use client'
-
-import { useSearchParams, useRouter, usePathname } from 'next/navigation'
+import Link from 'next/link'
 import { projectCategories, type ProjectCategoryFilter } from '@/config/site'
-import { categoryLabels } from '@/types/category'
 import { classNames } from '@/lib/utils/helpers'
 
-export function ProjectFilter() {
-  const searchParams = useSearchParams()
-  const router = useRouter()
-  const pathname = usePathname()
+export interface ProjectFilterOption {
+  value: ProjectCategoryFilter
+  label: string
+  count?: number
+}
 
-  const currentCategory = (searchParams.get('category') as ProjectCategoryFilter) || 'all'
+export interface ProjectFilterProps {
+  options: ProjectFilterOption[]
+  active: ProjectCategoryFilter
+}
 
-  const handleCategoryChange = (category: ProjectCategoryFilter) => {
-    const params = new URLSearchParams(searchParams.toString())
-    if (category === 'all') {
-      params.delete('category')
-    } else {
-      params.set('category', category)
-    }
-    params.set('page', '1')
-    router.push(`${pathname}?${params.toString()}`)
-  }
+/**
+ * Category filter.
+ *
+ * Uses real links (not buttons + state) so a filtered view is shareable,
+ * bookmarkable, works without JavaScript, and the active item is announced
+ * through `aria-current`. The "All" entry is always present, even when a
+ * category currently has no projects.
+ */
+export function ProjectFilter({ options, active }: ProjectFilterProps) {
+  const all: ProjectFilterOption = { value: 'all', label: 'All' }
 
   return (
-    <div className="flex flex-wrap items-center justify-center gap-2 mb-10" role="group" aria-label="Filter projects by category">
-      {projectCategories.map((category) => (
-        <button
-          key={category.value}
-          type="button"
-          onClick={() => handleCategoryChange(category.value)}
-          className={classNames(
-            'rounded-full px-4 py-2 text-sm font-medium transition-all duration-200',
-            currentCategory === category.value
-              ? 'bg-[rgb(var(--accent))] text-[rgb(var(--text-inverse))] shadow-[0_0_0_1px_rgb(var(--accent))]'
-              : 'bg-[rgb(var(--surface-elevated))] text-[rgb(var(--text-secondary))] hover:text-[rgb(var(--text-primary))] hover:bg-[rgb(var(--border))]'
-          )}
-          aria-pressed={currentCategory === category.value}
-        >
-          {categoryLabels[category.value] || category.label}
-        </button>
-      ))}
-    </div>
+    <nav aria-label="Project categories">
+      <ul className="-mx-5 flex snap-x gap-2 overflow-x-auto px-5 pb-2 scrollbar-hide sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
+        {[all, ...options].map((option) => {
+          const isActive = option.value === active
+          return (
+            <li key={option.value} className="snap-start">
+              <Link
+                href={option.value === 'all' ? '/projects' : `/projects?category=${option.value}`}
+                scroll={false}
+                aria-current={isActive ? 'true' : undefined}
+                className={classNames(
+                  'inline-flex h-9 items-center gap-2 whitespace-nowrap border px-3.5 font-mono text-[0.6875rem] uppercase tracking-[0.12em] transition-colors duration-150',
+                  isActive
+                    ? 'border-[rgb(var(--accent))] bg-[rgb(var(--accent))]/10 text-[rgb(var(--accent))]'
+                    : 'border-[rgb(var(--border-subtle))] text-[rgb(var(--text-muted))] hover:border-[rgb(var(--border))] hover:text-[rgb(var(--text-primary))]'
+                )}
+              >
+                {option.label}
+                {option.count !== undefined && (
+                  <span className={isActive ? 'text-[rgb(var(--accent))]/70' : 'text-[rgb(var(--text-muted))]/60'}>
+                    {String(option.count).padStart(2, '0')}
+                  </span>
+                )}
+              </Link>
+            </li>
+          )
+        })}
+      </ul>
+    </nav>
   )
+}
+
+/** Every category, so the filter bar never silently omits an empty category. */
+export function buildFilterOptions(
+  counts: Array<{ category: (typeof projectCategories)[number]['value']; count: number }>
+): ProjectFilterOption[] {
+  const byCategory = new Map(counts.map((entry) => [entry.category, entry.count]))
+  return projectCategories.map((category) => ({
+    value: category.value,
+    label: category.label,
+    count: byCategory.get(category.value) ?? 0,
+  }))
 }
