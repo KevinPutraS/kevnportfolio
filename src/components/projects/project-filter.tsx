@@ -19,8 +19,13 @@ export interface ProjectFilterProps {
  * The previous version used bordered pills, which is the single most
  * recognisable "filter dropdown" pattern and was the fastest way to make the
  * archive look like an admin table. Running text with hairline dividers reads
- * as an index instead, and the only thing that changes state is the type colour
- * and a small marker.
+ * as an index instead.
+ *
+ * Type size matters more than the treatment. Filtering is a primary action, so
+ * the options sit at 14px in sentence case, matching the header navigation,
+ * with a 44px touch target on small screens. At the previous 11px uppercase
+ * mono the categories were the hardest thing on the page to read, and a filter
+ * you cannot read is a filter you cannot use.
  *
  * Real links, not buttons + client state, so a filtered view stays shareable,
  * bookmarkable and works with JavaScript disabled. On mobile the line scrolls
@@ -34,12 +39,13 @@ export function ProjectFilter({ options, active }: ProjectFilterProps) {
 
   return (
     <nav aria-label="Project categories" className="relative">
-      <ul className="-mx-5 flex items-center gap-4 overflow-x-auto px-5 scrollbar-hide sm:mx-0 sm:flex-wrap sm:gap-x-6 sm:overflow-visible sm:px-0">
+      <ul className="-mx-5 flex items-center gap-4 overflow-x-auto px-5 scrollbar-hide sm:mx-0 sm:flex-wrap sm:gap-x-7 sm:overflow-visible sm:px-0">
         {entries.map((option, index) => {
           const isActive = option.value === active
+          const isEmpty = option.count === 0 && option.value !== 'all'
 
           return (
-            <li key={option.value} className="flex shrink-0 items-center gap-4 sm:gap-6">
+            <li key={option.value} className="flex shrink-0 items-center gap-4 sm:gap-7">
               {index > 0 && (
                 <span aria-hidden="true" className="hidden h-3 w-px bg-[rgb(var(--border-subtle))] sm:block" />
               )}
@@ -49,29 +55,39 @@ export function ProjectFilter({ options, active }: ProjectFilterProps) {
                 scroll={false}
                 aria-current={isActive ? 'true' : undefined}
                 className={classNames(
-                  'group inline-flex items-center gap-2 whitespace-nowrap font-mono text-[0.6875rem] uppercase tracking-[0.16em] transition-colors duration-150',
+                  // `min-h-11` keeps the tap target at 44px on a phone; the
+                  // underline is a separate `::after`-style child rather than a
+                  // border so it can animate width without moving the text.
+                  'group relative inline-flex min-h-11 items-center gap-2 whitespace-nowrap py-2 text-[length:var(--text-nav)] font-medium tracking-[-0.01em] transition-colors duration-150',
                   isActive
                     ? 'text-[rgb(var(--text-primary))]'
-                    : 'text-[rgb(var(--text-muted))] hover:text-[rgb(var(--text-secondary))]'
+                    : 'text-[rgb(var(--text-secondary))] hover:text-[rgb(var(--text-primary))]'
                 )}
               >
+                {option.label}
+                {option.count !== undefined && (
+                  <span className="meta tabular-nums">{String(option.count).padStart(2, '0')}</span>
+                )}
                 {/*
-                  The active marker. One small accent square, and the only
-                  accent on the page outside a single CTA.
+                  The active marker: a 2px accent bar, matching the header's
+                  active navigation item so the two read as the same language.
                 */}
                 <span
                   aria-hidden="true"
                   className={classNames(
-                    'h-1.5 w-1.5 shrink-0 transition-colors duration-150',
+                    'absolute inset-x-0 -bottom-px h-0.5 transition-colors duration-150',
                     isActive
                       ? 'bg-[rgb(var(--accent))]'
-                      : 'bg-[rgb(var(--border))] group-hover:bg-[rgb(var(--text-muted))]'
+                      : 'bg-transparent group-hover:bg-[rgb(var(--border))]'
                   )}
                 />
-                {option.label}
-                {option.count !== undefined && (
-                  <span className="tabular-nums opacity-50">{String(option.count).padStart(2, '0')}</span>
-                )}
+                {/*
+                  An empty category stays listed — the bar should never
+                  silently omit one — and its `00` count is the visible signal.
+                  The screen-reader text spells that out, because "00" alone
+                  reads as a number rather than as "there is nothing here".
+                */}
+                {isEmpty && <span className="sr-only"> (no projects)</span>}
               </Link>
             </li>
           )

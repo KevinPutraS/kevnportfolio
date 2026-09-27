@@ -24,10 +24,17 @@
     --border-subtle: 28 29 37;
     --border: 46 47 57;
 
-    /* Type. Warm off-white -> neutral -> recessive. */
+    /* Type. Warm off-white -> neutral -> recessive.
+     *
+     * `--text-muted` is not decorative grey. It carries dates, technology lists
+     * and captions at 12px, so it has to clear WCAG AA (4.5:1) against the
+     * near-black base like any other body text. The previous 108/107/104 sat
+     * around 3.9:1 and failed; 124/123/120 measures about 4.8:1 while still
+     * reading as clearly recessed next to `--text-secondary`.
+     */
     --text-primary: 243 242 238;
-    --text-secondary: 154 153 149;
-    --text-muted: 108 107 104;
+    --text-secondary: 158 157 153;
+    --text-muted: 124 123 120;
 
     --accent: 214 242 106;
     --accent-hover: 228 249 145;
@@ -43,37 +50,43 @@
     --font-mono: ui-monospace, 'SFMono-Regular', 'Cascadia Code', Menlo, monospace;
 
     /* ---- Type scale -----------------------------------------------------
-     * Fluid rather than stepped. A stepped scale only has the right size at
-     * the breakpoints it declares, so between 768px and 1280px the display type
-     * either jumps or sits too small. `clamp()` interpolates continuously,
-     * which is what makes the headline feel deliberate at every width.
+     * Fluid rather than stepped, so the display face is deliberate at every
+     * width instead of only at the breakpoints a stepped scale declares.
      *
-     * The numbers matter more than they look. The display face is set at a
-     * 10.5vw slope, and the hero runs full container width, so the longest
-     * display line ("Building things.", 16 characters) lands at roughly 8.1em —
-     * which means it fits on ONE line from about 640px up, and breaks to two
-     * lines per statement below that. The `clamp()` minimum is 2.75rem because
-     * at 320px anything larger makes the longest single word ("Exploring")
-     * exceed the 280px content box.
+     * The display size is the person's name and nothing else. It is deliberately
+     * capped well below the old 8.5rem (136px): at that size a short word fills
+     * the viewport, pushes the explanation and both calls to action below the
+     * fold on a phone, and turns the page into a poster. Confident is not the
+     * same as enormous.
      */
-    --text-display: clamp(2.75rem, 10.5vw, 8.5rem);
-    --text-h1: clamp(2.25rem, 6.4vw, 5.25rem);
-    --text-h2: clamp(1.75rem, 3.7vw, 3.125rem);
-    --text-h3: clamp(1.375rem, 2.2vw, 1.875rem);
-    --text-h4: clamp(1.125rem, 1.4vw, 1.375rem);
-    --text-lead: clamp(1.0625rem, 1.35vw, 1.375rem);
-    --text-meta: 0.6875rem;
+    --text-display: clamp(2.75rem, 7.5vw, 6.25rem);
+    --text-h1: clamp(2rem, 4.6vw, 3.5rem);
+    --text-h2: clamp(1.625rem, 3.1vw, 2.5rem);
+    --text-h3: clamp(1.25rem, 1.85vw, 1.5rem);
+    --text-h4: clamp(1.0625rem, 1.3vw, 1.1875rem);
+    --text-lead: clamp(1.0625rem, 1.25vw, 1.25rem);
+    --text-body: 1rem;
+    --text-body-sm: 0.9375rem;
+    /* Metadata was 11px everywhere, which is the same size as navigation used
+     * to be — so the two had identical visual weight. 12px keeps metadata
+     * clearly smaller than body while staying legible. */
+    --text-meta: 0.75rem;
+    /* Navigation is a primary interface, not metadata. */
+    --text-nav: 0.875rem;
 
     /* ---- Spacing rhythm -------------------------------------------------
-     * Sections deliberately do NOT share one padding value. Repeating the same
-     * vertical rhythm is the single clearest "template" signal. These four are
-     * composed as a sequence (large, medium, small, large) so the page has
-     * audible pacing instead of a metronome.
+     * Sections deliberately do not share one padding value; repeating the same
+     * vertical rhythm is the clearest "template" signal. These four compose as
+     * a sequence (large, medium, small, large) so the page has pacing.
+     *
+     * The maxima were pulled in from 11.5rem/8rem. On a 1440px display that is
+     * 184px of empty space above and below a section, which reads as padding
+     * rather than composition and makes the homepage a long scroll of nothing.
      */
-    --rhythm-xl: clamp(5rem, 11vw, 11.5rem);
-    --rhythm-lg: clamp(4rem, 7.5vw, 8rem);
-    --rhythm-md: clamp(3rem, 5.5vw, 5.5rem);
-    --rhythm-sm: clamp(2rem, 3.5vw, 3.5rem);
+    --rhythm-xl: clamp(4rem, 7.5vw, 7.5rem);
+    --rhythm-lg: clamp(3.25rem, 5.5vw, 5.5rem);
+    --rhythm-md: clamp(2.5rem, 4vw, 4rem);
+    --rhythm-sm: clamp(1.75rem, 2.75vw, 2.75rem);
 
     /* Flat, not round. Corners stay square — that is the editorial tell. */
     --radius: 0px;
@@ -180,13 +193,42 @@
   .section {
     @apply rhythm-lg;
   }
-  .section-sm {
-    @apply rhythm-md;
-  }
 
   /* Structural separator. One hairline, full bleed of the container. */
   .rule-top {
     border-top: 1px solid rgb(var(--border-subtle));
+  }
+
+  /* ---- Page introduction -----------------------------------------------
+   * Every public page opens with this: an eyebrow naming the page, an H1 that
+   * says what the page is, and one paragraph saying what a visitor will find.
+   * Defining it once is what stops the four pages drifting into four different
+   * shapes — which is what made the old site feel assembled rather than
+   * designed.
+   */
+  .page-header {
+    @apply rhythm-lg;
+  }
+
+  .page-header-title {
+    @apply heading-1 mt-5 max-w-3xl text-balance;
+  }
+
+  .page-header-lede {
+    @apply body-lg mt-6 max-w-prose text-pretty text-[rgb(var(--text-secondary))];
+  }
+
+  /* ---- Section header --------------------------------------------------
+   * Eyebrow + title, with an optional action on the right. The action is part
+   * of the header rather than a stray link below the content, so "where do I
+   * go next" is answered at the point the visitor finishes reading.
+   */
+  .section-head {
+    @apply flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between sm:gap-8;
+  }
+
+  .section-head-title {
+    @apply heading-2 mt-4 max-w-2xl text-balance;
   }
 
   /* ---- Background depth ------------------------------------------------
@@ -232,12 +274,13 @@
    * "body but grey".
    */
 
-  /* Hero only. Line height below 1 so stacked words read as a solid block. */
+  /* The person's name, and the footer wordmark. Tight leading so a stacked
+   * name reads as one block rather than two lines. */
   .display-1 {
     font-family: var(--font-display);
     font-size: var(--text-display);
-    line-height: 0.86;
-    letter-spacing: -0.045em;
+    line-height: 0.92;
+    letter-spacing: -0.04em;
     font-weight: 700;
   }
 
@@ -279,22 +322,35 @@
   }
 
   .body {
-    font-size: 1rem;
+    font-size: var(--text-body);
     line-height: 1.6;
   }
 
   .body-sm {
-    font-size: 0.875rem;
+    font-size: var(--text-body-sm);
     line-height: 1.6;
+  }
+
+  /*
+   * Metadata. One class for every date, technology list, category and caption so
+   * they can never drift apart, and so "small" is defined once at 12px instead
+   * of being re-invented as `text-[0.6875rem]` in a dozen files.
+   */
+  .meta {
+    @apply font-mono text-[length:var(--text-meta)] leading-relaxed text-[rgb(var(--text-muted))];
+  }
+
+  .meta-strong {
+    @apply font-mono text-[length:var(--text-meta)] uppercase leading-relaxed tracking-[0.14em] text-[rgb(var(--text-secondary))];
   }
 
   /* The line above a section. All-caps mono at a size that stays legible. */
   .eyebrow {
-    @apply font-mono text-[0.6875rem] uppercase tracking-[0.2em] text-[rgb(var(--text-muted))];
+    @apply font-mono text-[length:var(--text-meta)] uppercase tracking-[0.18em] text-[rgb(var(--text-muted))];
   }
 
   .caption {
-    @apply font-mono text-[0.6875rem] uppercase leading-normal tracking-[0.16em];
+    @apply font-mono text-[length:var(--text-meta)] uppercase leading-normal tracking-[0.14em];
   }
 
   /*
@@ -330,14 +386,15 @@
 
   /* ---- Editorial primitives --------------------------------------------- */
 
-  /* The small numeral that opens a list or a section. */
+  /*
+   * The small numeral that opens a genuine sequence — currently only the
+   * ordered "My approach to projects" list on /about. Deliberately not used for
+   * parallel lists (interests, navigation, credentials): numbering something
+   * that is not ordered implies a ranking and a depth that do not exist, and it
+   * competes with the category label, which does carry meaning.
+   */
   .index-marker {
-    @apply font-mono text-[0.6875rem] tabular-nums tracking-[0.12em] text-[rgb(var(--text-muted))];
-  }
-
-  /* Label above a metadata group. */
-  .meta-label {
-    @apply font-mono text-[0.625rem] uppercase tracking-[0.18em] text-[rgb(var(--text-muted))];
+    @apply font-mono text-[length:var(--text-meta)] tabular-nums tracking-[0.12em] text-[rgb(var(--text-muted))];
   }
 
   /*
@@ -370,6 +427,52 @@
 
   .rule {
     @apply h-px w-full bg-[rgb(var(--border-subtle))];
+  }
+
+  /* ---- Navigation ------------------------------------------------------
+   * One class for both the desktop bar and the mobile drawer, so a link looks
+   * and behaves identically in each.
+   *
+   * Navigation was previously set in 11px uppercase mono with a `01`-style
+   * numeral in front of it — the same treatment as a date or a technology list.
+   * Primary interface and secondary metadata ended up with identical weight,
+   * and a first-time visitor had to squint at the most important element on the
+   * page. Navigation is 14px, sentence case, and readable at a glance.
+   */
+  .nav-link {
+    @apply relative inline-flex items-center rounded-sm px-3 py-2 text-[length:var(--text-nav)] font-medium tracking-[-0.01em] transition-colors duration-150;
+  }
+
+  .nav-link-active {
+    @apply text-[rgb(var(--text-primary))];
+  }
+
+  .nav-link-idle {
+    @apply text-[rgb(var(--text-secondary))] hover:text-[rgb(var(--text-primary))];
+  }
+
+  /* The active marker. A 2px accent bar plus full-contrast text: two signals,
+   * so the current page is obvious even where colour alone would be ambiguous. */
+  .nav-link-active::after {
+    content: '';
+    position: absolute;
+    left: 0.75rem;
+    right: 0.75rem;
+    bottom: 0.125rem;
+    height: 2px;
+    background-color: rgb(var(--accent));
+  }
+
+  /* ---- Technology list -------------------------------------------------
+   * Technologies appear on project cards, experience entries and certificates.
+   * They were styled two different ways — a running mono line in one place and a
+   * row of bordered pills in another — which made the same data look like
+   * different content depending on the page. One class, used everywhere, and no
+   * pills: a separated list carries the same information without adding eight
+   * boxes to a page.
+   */
+  .tech-list {
+    @apply font-mono text-[length:var(--text-meta)] leading-relaxed text-[rgb(var(--text-muted))];
   }
 
   /* ---- Form controls -------------------------------------------------- */
@@ -413,7 +516,7 @@
   }
 
   .label {
-    @apply mb-2.5 block font-mono text-[0.6875rem] uppercase tracking-[0.14em] text-[rgb(var(--text-muted))];
+    @apply mb-2.5 block font-mono text-[length:var(--text-meta)] uppercase tracking-[0.12em] text-[rgb(var(--text-secondary))];
   }
 
   .field-error {
@@ -440,32 +543,6 @@
   .card-hover:hover {
     border-color: rgb(var(--border));
   }
-
-  /* ---- Badges ------------------------------------------------------- */
-
-  .badge {
-    @apply inline-flex items-center gap-1.5 border px-2.5 py-0.5 font-mono text-[0.6875rem] uppercase tracking-[0.12em];
-  }
-
-  .badge-primary {
-    @apply inline-flex items-center gap-1.5 border px-2.5 py-0.5 font-mono text-[0.6875rem] uppercase tracking-[0.12em] border-[rgb(var(--accent))]/30 bg-[rgb(var(--accent))]/10 text-[rgb(var(--accent))];
-  }
-
-  .badge-secondary {
-    @apply inline-flex items-center gap-1.5 border px-2.5 py-0.5 font-mono text-[0.6875rem] uppercase tracking-[0.12em] border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] text-[rgb(var(--text-secondary))];
-  }
-
-  .badge-success {
-    @apply inline-flex items-center gap-1.5 border px-2.5 py-0.5 font-mono text-[0.6875rem] uppercase tracking-[0.12em] border-[rgb(var(--success))]/30 bg-[rgb(var(--success))]/10 text-[rgb(var(--success))];
-  }
-
-  .badge-warning {
-    @apply inline-flex items-center gap-1.5 border px-2.5 py-0.5 font-mono text-[0.6875rem] uppercase tracking-[0.12em] border-[rgb(var(--warning))]/30 bg-[rgb(var(--warning))]/10 text-[rgb(var(--warning))];
-  }
-
-  .badge-error {
-    @apply inline-flex items-center gap-1.5 border px-2.5 py-0.5 font-mono text-[0.6875rem] uppercase tracking-[0.12em] border-[rgb(var(--error))]/30 bg-[rgb(var(--error))]/10 text-[rgb(var(--error))];
-  }
 }
 
 @layer utilities {
@@ -475,22 +552,6 @@
 
   .text-pretty {
     text-wrap: pretty;
-  }
-
-  /* ---- Microinteractions ------------------------------------------------
-   * Every duration sits in the 150-500ms band and every easing curve is the
-   * single token above, so the whole site moves as one system.
-   */
-  .transition-quick {
-    transition-property: color, background-color, border-color, opacity;
-    transition-duration: var(--dur-fast);
-    transition-timing-function: var(--ease);
-  }
-
-  .transition-smooth {
-    transition-property: color, background-color, border-color, opacity, transform;
-    transition-duration: var(--dur);
-    transition-timing-function: var(--ease);
   }
 
   /*
@@ -529,10 +590,6 @@
     animation: slideDown 0.25s var(--ease) both;
   }
 
-  .animate-scale-in {
-    animation: scaleIn 0.2s var(--ease) both;
-  }
-
   @keyframes fadeIn {
     from {
       opacity: 0;
@@ -564,23 +621,14 @@
     }
   }
 
-  @keyframes scaleIn {
-    from {
-      opacity: 0;
-      transform: scale(0.98);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
-  }
-
-  .stagger-1 { animation-delay: 60ms; }
+  /*
+   * Entrance stagger. Only the steps the hero actually uses are declared —
+   * `stagger-2/3/4`. An earlier version shipped six steps "in case"; unused ones
+   * are dead weight in the critical stylesheet.
+   */
   .stagger-2 { animation-delay: 120ms; }
   .stagger-3 { animation-delay: 180ms; }
   .stagger-4 { animation-delay: 240ms; }
-  .stagger-5 { animation-delay: 300ms; }
-  .stagger-6 { animation-delay: 360ms; }
 
   .scrollbar-hide {
     -ms-overflow-style: none;

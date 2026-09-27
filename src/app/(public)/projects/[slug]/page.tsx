@@ -112,18 +112,16 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
           <div className="flex items-center justify-between gap-6 border-b border-[rgb(var(--border-subtle))] py-4">
             <Link
               href="/projects"
-              className="group inline-flex items-center gap-2 font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-[rgb(var(--text-muted))] transition-colors duration-150 hover:text-[rgb(var(--text-primary))]"
+              className="group -ml-2 inline-flex min-h-11 items-center gap-2 px-2 text-[length:var(--text-body-sm)] font-medium text-[rgb(var(--text-secondary))] transition-colors duration-150 hover:text-[rgb(var(--text-primary))]"
             >
               <ArrowLeft
-                className="h-3.5 w-3.5 transition-transform duration-200 group-hover:-translate-x-1"
+                className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-1"
                 aria-hidden="true"
               />
               All projects
             </Link>
 
-            <p className="caption hidden text-[rgb(var(--text-muted))] sm:block">
-              Case study
-            </p>
+            <p className="meta hidden sm:block">Case study</p>
           </div>
 
           {/*
@@ -133,7 +131,7 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
           <div className="grid gap-x-10 gap-y-10 py-14 sm:py-20 lg:grid-cols-12 lg:py-24">
             <div className="lg:col-span-7">
               <div className="flex flex-wrap items-center gap-3">
-                <span className="caption text-[rgb(var(--text-muted))]">
+                <span className="meta-strong">
                   {categoryLabels[project.category] ?? project.category}
                 </span>
                 {project.project_date && (
@@ -141,7 +139,7 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
                     <span aria-hidden="true" className="h-3 w-px bg-[rgb(var(--border-subtle))]" />
                     <time
                       dateTime={project.project_date}
-                      className="font-mono text-[0.6875rem] tabular-nums text-[rgb(var(--text-muted))]"
+                      className="meta tabular-nums"
                     >
                       {formatMonth(project.project_date)}
                     </time>
@@ -180,12 +178,12 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
 
             {technologies.length > 0 && (
               <aside className="lg:col-span-4 lg:col-start-9">
-                <p className="meta-label">Built with</p>
-                <ul className="mt-4 flex flex-wrap gap-x-3 gap-y-2 lg:block">
+                <h2 className="label">Built with</h2>
+                <ul className="mt-3 flex flex-wrap gap-x-3 gap-y-2 lg:block">
                   {technologies.map((technology) => (
                     <li
                       key={technology}
-                      className="border-t border-[rgb(var(--border-subtle))] py-2.5 text-sm text-[rgb(var(--text-secondary))] lg:flex lg:items-baseline lg:gap-3"
+                      className="border-t border-[rgb(var(--border-subtle))] py-2.5 text-[length:var(--text-body-sm)] text-[rgb(var(--text-secondary))] lg:flex lg:items-baseline lg:gap-3"
                     >
                       <span
                         aria-hidden="true"
@@ -220,7 +218,14 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
         <section className="container-custom">
           <div className="grid gap-x-10 gap-y-6 py-16 sm:py-20 lg:grid-cols-12">
             <div className="lg:col-span-3">
-              <p className="eyebrow">Overview</p>
+              {/*
+               * These three are headings, not decorative labels. The rest of the
+               * site pairs an eyebrow with a real heading underneath, but here
+               * the label *is* the section title — as a <p> it was invisible to
+               * anyone navigating by heading, leaving a case study that jumped
+               * straight from the project title to "Related projects".
+               */}
+              <h2 className="eyebrow">Overview</h2>
             </div>
             <div className="prose-block max-w-2xl text-pretty lg:col-span-8 lg:col-start-5">
               {project.description?.split('\n\n').map((paragraph, index) => (
@@ -237,8 +242,8 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
           <div className="container-custom">
             <div className="grid gap-x-10 gap-y-8 py-16 sm:py-20 lg:grid-cols-12">
               <div className="lg:col-span-3">
-                <p className="eyebrow">Gallery</p>
-                <p className="mt-3 font-mono text-[0.6875rem] tabular-nums text-[rgb(var(--text-muted))]">
+                <h2 className="eyebrow">Gallery</h2>
+                <p className="meta mt-3 tabular-nums">
                   {String(gallery.length).padStart(2, '0')}{' '}
                   {gallery.length === 1 ? 'image' : 'images'}
                 </p>
@@ -257,10 +262,10 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
           <div className="flex flex-col gap-6 py-12 sm:flex-row sm:items-center sm:justify-between sm:py-16">
             <Link
               href="/projects"
-              className="group inline-flex items-center gap-2 font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-[rgb(var(--text-muted))] transition-colors duration-150 hover:text-[rgb(var(--text-primary))]"
+              className="group -ml-2 inline-flex min-h-11 items-center gap-2 px-2 text-[length:var(--text-body-sm)] font-medium text-[rgb(var(--text-secondary))] transition-colors duration-150 hover:text-[rgb(var(--text-primary))]"
             >
               <ArrowLeft
-                className="h-3.5 w-3.5 transition-transform duration-200 group-hover:-translate-x-1"
+                className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-1"
                 aria-hidden="true"
               />
               Back to all projects
@@ -271,12 +276,12 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
                 href={project.repository_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group inline-flex items-center gap-2 font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-[rgb(var(--text-muted))] transition-colors duration-150 hover:text-[rgb(var(--text-primary))]"
+                className="group inline-flex min-h-11 items-center gap-2 text-[length:var(--text-body-sm)] font-medium text-[rgb(var(--text-secondary))] transition-colors duration-150 hover:text-[rgb(var(--text-primary))]"
               >
-                <GitBranch className="h-3.5 w-3.5" aria-hidden="true" />
+                <GitBranch className="h-4 w-4" aria-hidden="true" />
                 Source
                 <ArrowUpRight
-                  className="h-3 w-3 text-[rgb(var(--text-muted))] transition-colors duration-150 group-hover:text-[rgb(var(--accent))]"
+                  className="h-3.5 w-3.5 text-[rgb(var(--text-muted))] transition-colors duration-150 group-hover:text-[rgb(var(--accent))]"
                   aria-hidden="true"
                 />
                 <span className="sr-only">(opens in a new tab)</span>

@@ -100,7 +100,7 @@ export function ContactForm() {
             setStatus('idle')
             setFeedback('')
           }}
-          className="link-underline mt-8 font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-[rgb(var(--text-secondary))]"
+          className="link-underline mt-8 inline-flex min-h-11 items-center text-[length:var(--text-body-sm)] font-medium text-[rgb(var(--text-secondary))]"
         >
           Send another message
         </button>
@@ -183,7 +183,7 @@ export function ContactForm() {
         <Button type="submit" size="lg" loading={status === 'submitting'} className="w-full sm:w-auto">
           {status === 'submitting' ? 'Sending…' : 'Send message'}
         </Button>
-        <p className="text-sm text-[rgb(var(--text-muted))]">
+        <p className="text-[length:var(--text-body-sm)] text-[rgb(var(--text-muted))]">
           Or email{' '}
           <a href={siteConfig.contactEmail} className="link break-all">
             {siteConfig.email}

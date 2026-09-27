@@ -23,7 +23,7 @@ const spaceGrotesk = Space_Grotesk({
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
-    default: `${siteConfig.name} — Building things, exploring ideas`,
+    default: `${siteConfig.name} — ${siteConfig.descriptor}`,
     template: `%s — ${siteConfig.name}`,
   },
   description: siteConfig.description,
@@ -36,8 +36,8 @@ export const metadata: Metadata = {
     'experiments',
     'creative coding',
   ],
-  authors: [{ name: siteConfig.shortName, url: siteConfig.url }],
-  creator: siteConfig.shortName,
+  authors: [{ name: siteConfig.name, url: siteConfig.url }],
+  creator: siteConfig.name,
   alternates: {
     canonical: '/',
   },
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: siteConfig.url,
     siteName: siteConfig.name,
-    title: `${siteConfig.name} — Building things, exploring ideas`,
+    title: `${siteConfig.name} — ${siteConfig.descriptor}`,
     description: siteConfig.description,
     // `metadataBase` turns this into an absolute URL, which social scrapers
     // require. Without it a shared link renders as a card with no image.
@@ -55,13 +55,13 @@ export const metadata: Metadata = {
         url: siteConfig.ogImage,
         width: 1200,
         height: 630,
-        alt: `${siteConfig.name} — building things, exploring ideas`,
+        alt: `${siteConfig.name} — ${siteConfig.descriptor}`,
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: `${siteConfig.name} — Building things, exploring ideas`,
+    title: `${siteConfig.name} — ${siteConfig.descriptor}`,
     description: siteConfig.description,
     images: [siteConfig.ogImage],
   },

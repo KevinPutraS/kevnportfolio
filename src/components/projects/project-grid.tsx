@@ -32,7 +32,7 @@ export function ProjectGrid({ projects, className }: { projects: Project[]; clas
         const { wrapper, variant } = layoutFor(index)
         return (
           <div key={project.id} className={classNames('min-w-0', wrapper)}>
-            <ProjectCard project={project} variant={variant} index={index} priority={index < 2} />
+            <ProjectCard project={project} variant={variant} priority={index < 2} />
           </div>
         )
       })}

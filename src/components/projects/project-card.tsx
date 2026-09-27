@@ -6,24 +6,31 @@ import type { Project } from '@/types/project'
 import { ProjectThumbnail } from './project-thumbnail'
 
 /**
- * `feature` spans two columns and shows the description; `compact` is the
- * smaller tile used in the dense index. The variation is what keeps the
- * projects index from reading as a uniform card grid.
+ * `feature` spans two columns and shows the full description; `compact` is the
+ * smaller tile used in dense lists. The variation is what keeps the projects
+ * index from reading as a uniform card wall.
  */
 export type ProjectCardVariant = 'feature' | 'standard' | 'compact'
 
 interface ProjectCardProps {
   project: Project
   variant?: ProjectCardVariant
-  index?: number
   className?: string
   priority?: boolean
 }
 
+/**
+ * One project.
+ *
+ * Every card states its three facts in the same order — category and date,
+ * title, description, technologies — and ends with a visible "View case study"
+ * action. There is no `index` prop: a sequential number on a filtered, sortable
+ * list is a tie-breaker that means nothing to a reader, and it was competing
+ * for attention with the category label, which does mean something.
+ */
 export function ProjectCard({
   project,
   variant = 'standard',
-  index,
   className,
   priority,
 }: ProjectCardProps) {
@@ -34,13 +41,13 @@ export function ProjectCard({
   const overflowCount = technologies.length - visibleTechnologies.length
 
   return (
-    <article className={classNames('group relative', className)}>
+    <article className={classNames('group relative flex h-full', className)}>
       <Link
         href={`/projects/${project.slug}`}
-        className="flex h-full flex-col focus-visible:outline-none"
-        // Stretch the link over the whole tile so the entire card is clickable,
-        // while keeping a single tab stop and a single accessible name.
-        aria-label={`${project.title} — view project`}
+        className="flex w-full flex-col focus-visible:outline-none"
+        // Stretches over the whole tile so the entire card is clickable, while
+        // keeping a single tab stop and a single accessible name.
+        aria-label={`${project.title} — view case study`}
       >
         <ProjectThumbnail
           src={project.thumbnail_url}
@@ -59,74 +66,69 @@ export function ProjectCard({
           }
         />
 
-        {/*
-          Metadata row. The rule is the hover target: it wipes in from the left
-          on hover so the card reacts without recolouring the title or adding
-          another box. `flex-1` keeps the date hard right on every card width.
-        */}
+        {/* Category and date: the two facts that help someone decide whether to
+            keep reading. Category leads because it is the broader filter. */}
         <div className="mt-5 flex items-center gap-3 border-t border-[rgb(var(--border-subtle))] pt-4">
-          {index !== undefined && (
-            <span className="index-marker transition-colors duration-150 group-hover:text-[rgb(var(--accent))]">
-              {String(index + 1).padStart(2, '0')}
-            </span>
-          )}
-          <span className="caption text-[rgb(var(--text-muted))]">
+          <span className="meta-strong">
             {categoryLabels[project.category as ProjectCategory] ?? project.category}
           </span>
           {project.project_date && (
             <time
               dateTime={project.project_date}
-              className="ml-auto shrink-0 font-mono text-[0.6875rem] tabular-nums text-[rgb(var(--text-muted))]"
+              className="meta ml-auto shrink-0 tabular-nums"
             >
               {formatMonth(project.project_date)}
             </time>
           )}
         </div>
 
-        <div className="mt-3 flex items-start justify-between gap-4">
-          <h3
-            className={classNames(
-              'font-display font-bold leading-[1.15] tracking-[-0.025em] text-[rgb(var(--text-primary))]',
-              isFeature ? 'text-2xl sm:text-3xl' : isCompact ? 'text-base' : 'text-lg'
-            )}
-          >
-            <span className="absolute inset-0" aria-hidden="true" />
-            {project.title}
-          </h3>
-
-          {/*
-            Replaces the old always-visible "View project" line. The affordance
-            is now a mark in the corner that appears on hover, which removes a
-            row of repeated text from every tile.
-          */}
-          <span
-            aria-hidden="true"
-            className="mt-0.5 hidden shrink-0 -translate-x-1 text-[rgb(var(--accent))] opacity-0 transition-[opacity,transform] duration-200 group-hover:translate-x-0 group-hover:opacity-100 sm:block"
-          >
-            <ArrowUpRight className="h-4 w-4" />
-          </span>
-        </div>
+        <h3
+          className={classNames(
+            'mt-3 font-display font-bold leading-[1.15] tracking-[-0.025em] text-[rgb(var(--text-primary))] transition-colors duration-150 group-hover:text-[rgb(var(--accent))]',
+            isFeature ? 'text-3xl sm:text-4xl' : isCompact ? 'text-base' : 'text-xl'
+          )}
+        >
+          <span className="absolute inset-0" aria-hidden="true" />
+          {project.title}
+        </h3>
 
         <p
           className={classNames(
-            'text-pretty text-[rgb(var(--text-secondary))]',
-            isFeature ? 'mt-3 max-w-xl' : isCompact ? 'mt-2 line-clamp-2 text-sm' : 'mt-2 line-clamp-2 text-sm'
+            'mt-2 text-pretty text-[rgb(var(--text-secondary))]',
+            isFeature ? 'max-w-xl text-base' : 'line-clamp-3 text-[length:var(--text-body-sm)]'
           )}
         >
           {project.short_description}
         </p>
 
-        {/*
-          Technologies as a running mono list. Chips were the single most
-          "dashboard" element in the old card; a comma-separated line carries
-          the same information and reads as part of the typography.
-        */}
         {visibleTechnologies.length > 0 && (
-          <p className="mt-auto pt-4 font-mono text-[0.6875rem] leading-relaxed text-[rgb(var(--text-muted))]">
+          <p className="tech-list mt-4">
+            <span className="sr-only">Built with: </span>
             {visibleTechnologies.join(' · ')}
-            {overflowCount > 0 && <span> · +{overflowCount}</span>}
+            {overflowCount > 0 && <span> · +{overflowCount} more</span>}
           </p>
         )}
+
+        {/*
+          The action, always visible.
+          The affordance used to be a corner arrow that only appeared on hover,
+          which meant the clickability existed only for pointer users and only
+          while hovering. A labelled link with a rule under it is legible before
+          you touch anything and says what happens next.
+        */}
+        <span className="mt-auto flex items-center gap-2 pt-6">
+          <span className="relative text-[length:var(--text-body-sm)] font-medium text-[rgb(var(--text-primary))]">
+            View case study
+            <span
+              aria-hidden="true"
+              className="absolute -bottom-0.5 left-0 h-px w-full bg-[rgb(var(--border))] transition-colors duration-150 group-hover:bg-[rgb(var(--accent))]"
+            />
+          </span>
+          <ArrowUpRight
+            className="h-4 w-4 shrink-0 text-[rgb(var(--text-muted))] transition-[color,transform] duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[rgb(var(--accent))]"
+            aria-hidden="true"
+          />
+        </span>
       </Link>
     </article>
   )

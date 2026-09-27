@@ -3,8 +3,9 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef } from 'react'
-import { siteConfig, currentlyExploring } from '@/config/site'
-import { classNames } from '@/lib/utils/helpers'
+import { siteConfig } from '@/config/site'
+import { classNames, isActiveRoute } from '@/lib/utils/helpers'
+import { buttonStyles } from '@/components/ui/button-styles'
 import { MobileMenu } from './mobile-menu'
 
 /**
@@ -60,83 +61,70 @@ function ScrollProgress() {
 
 export function Navbar() {
   const pathname = usePathname()
-  const wordmark = `${siteConfig.shortName}.`
+  const wordmark = `${siteConfig.name}.`
 
   return (
     <header className="sticky top-0 z-50 border-b border-[rgb(var(--border-subtle))] bg-[rgb(var(--background))]/80 backdrop-blur-md">
       <div className="container-custom flex h-16 items-center justify-between gap-4">
+        {/*
+          The wordmark is the name and nothing else. It used to carry a small
+          "portfolio" label beside it, which was both below the readable size
+          floor and redundant — the hero already states what kind of site this
+          is, and a visitor inside the site does not need to be told twice.
+        */}
         <Link
           href="/"
-          className="group flex min-w-0 items-baseline gap-2.5"
+          className="-ml-1 flex min-h-11 min-w-0 items-center px-1"
           aria-label={`${siteConfig.name} — home`}
         >
-          <span className="font-display text-base font-bold tracking-[-0.03em] text-[rgb(var(--text-primary))]">
+          <span className="font-display text-lg font-bold tracking-[-0.035em] text-[rgb(var(--text-primary))]">
             {wordmark}
-          </span>
-          <span className="hidden font-mono text-[0.625rem] uppercase tracking-[0.18em] text-[rgb(var(--text-muted))] sm:inline">
-            portfolio
           </span>
         </Link>
 
         {/*
-          The desktop bar appears at `lg`, not `md`. Five numbered items plus the
-          wordmark need roughly 640px before the labels start wrapping or
-          colliding with the wordmark, and a tablet-width bar squeezed to fit
-          reads worse than the drawer, which has room for the same list at a
-          comfortable touch size.
+          The desktop bar appears at `lg`, not `md`. Six items plus the wordmark
+          and the contact button need roughly 1024px before labels start
+          colliding, and a tablet-width bar squeezed to fit reads worse than the
+          drawer, which has room for the same list at a comfortable touch size.
         */}
         <nav aria-label="Main" className="hidden lg:block">
-          <ul className="flex items-center gap-1">
-            {siteConfig.navigation.map((item, index) => {
-              const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
+          <ul className="flex items-center gap-0.5">
+            {siteConfig.navigation.map((item) => {
+              const isActive = isActiveRoute(pathname, item.href)
+
+              // The primary action is a filled button rather than a link, so
+              // there is one obvious next step instead of six equal-looking
+              // options. `aria-current` still marks it, so assistive tech
+              // reports the active page the same way for every item.
+              if (item.emphasis === 'primary') {
+                return (
+                  <li key={item.href} className="ml-1.5">
+                    <Link
+                      href={item.href}
+                      aria-current={isActive ? 'page' : undefined}
+                      className={buttonStyles({ variant: 'primary', size: 'md' })}
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                )
+              }
 
               return (
                 <li key={item.href}>
                   <Link
                     href={item.href}
                     aria-current={isActive ? 'page' : undefined}
-                    className={classNames(
-                      'group relative inline-flex h-9 items-center gap-2 px-2.5 font-mono text-[0.6875rem] uppercase tracking-[0.14em] transition-colors duration-150 sm:px-3',
-                      isActive
-                        ? 'text-[rgb(var(--text-primary))]'
-                        : 'text-[rgb(var(--text-muted))] hover:text-[rgb(var(--text-secondary))]'
-                    )}
+                    className={classNames('nav-link', isActive ? 'nav-link-active' : 'nav-link-idle')}
                   >
-                    <span className="text-[0.5625rem] tabular-nums opacity-60">
-                      {String(index + 1).padStart(2, '0')}
-                    </span>
                     {item.label}
-                    <span
-                      aria-hidden="true"
-                      className={classNames(
-                        'absolute inset-x-2.5 bottom-0 h-px transition-colors duration-150 sm:inset-x-3',
-                        isActive
-                          ? 'bg-[rgb(var(--accent))]'
-                          : 'bg-transparent group-hover:bg-[rgb(var(--border))]'
-                      )}
-                    />
                   </Link>
                 </li>
               )
             })}
           </ul>
         </nav>
-
-        {/*
-         * Live context line. Sourced from config rather than hard-coded, so it
-         * always describes something real, and hidden below 2xl where there is
-         * not enough room to add information without crowding the bar.
-         */}
-        <p className="hidden min-w-0 items-center gap-2.5 2xl:flex">
-          <span
-            aria-hidden="true"
-            className="h-1.5 w-1.5 shrink-0 rounded-full bg-[rgb(var(--accent))]"
-          />
-          <span className="truncate font-mono text-[0.625rem] uppercase tracking-[0.16em] text-[rgb(var(--text-muted))]">
-            <span className="sr-only">Currently exploring: </span>
-            {currentlyExploring[0]}
-          </span>
-        </p>
 
         <MobileMenu />
       </div>

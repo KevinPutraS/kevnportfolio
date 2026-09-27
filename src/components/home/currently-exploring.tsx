@@ -14,7 +14,7 @@ export function CurrentlyExploring() {
         <div className="grid gap-x-10 gap-y-10 lg:grid-cols-12">
           <div className="lg:col-span-3">
             <p className="eyebrow">Right now</p>
-            <p className="mt-4 max-w-xs text-pretty text-sm text-[rgb(var(--text-muted))]">
+            <p className="mt-4 max-w-xs text-pretty text-[length:var(--text-body-sm)] text-[rgb(var(--text-muted))]">
               It changes whenever something else gets interesting.
             </p>
           </div>

@@ -137,6 +137,13 @@ limiting. But it has no mail SDK bundled, so it **does not pretend to deliver**:
 Point `CONTACT_WEBHOOK_URL` at a serverless function, a Zapier/Make hook or a
 Discord webhook to enable real delivery. No key is ever compiled into the bundle.
 
+The contact page copy follows the same switch: with a webhook configured it says
+the form reaches you directly, and without one it says email is the reliable
+channel and that the form is not yet connected. `/contact` is therefore
+`force-dynamic` — a statically prerendered page would freeze that decision at
+build time and start making a promise it can no longer keep once the variable is
+added.
+
 ---
 
 ## Supabase setup

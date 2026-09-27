@@ -1,11 +1,11 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, X, ArrowUpRight } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 import { siteConfig, socialLinks } from '@/config/site'
-import { classNames } from '@/lib/utils/helpers'
+import { classNames, isActiveRoute } from '@/lib/utils/helpers'
 import { useFocusTrap } from '@/lib/hooks/use-focus-trap'
 
 /**
@@ -20,15 +20,25 @@ import { useFocusTrap } from '@/lib/hooks/use-focus-trap'
  * - the panel is unmounted when closed, so its links are not tabbable
  *
  * Visually it mirrors the desktop bar rather than inventing a second design:
- * the same wordmark, the same numbered index, the same hairline separators. The
- * only concession to the small viewport is the larger touch target.
+ * the same wordmark, the same labels, the same active marker. Each item also
+ * carries a one-line description of what is on that page, so on a phone — where
+ * there is no other context — a visitor knows what they are about to open
+ * before they commit to it.
  */
 export function MobileMenu() {
   const [isOpen, setIsOpen] = useState(false)
   const pathname = usePathname()
+  const panelRef = useFocusTrap<HTMLDivElement>(isOpen, () => setIsOpen(false))
 
   const close = useCallback(() => setIsOpen(false), [])
-  const panelRef = useFocusTrap<HTMLDivElement>(isOpen, close)
+
+  // Annotated as `Map<string, string>`: `siteConfig.sections` is `as const`, so
+  // an inferred Map keys on the literal href union and rejects the plain
+  // `string` coming from `NavItem`.
+  const descriptions = useMemo(
+    () => new Map<string, string>(siteConfig.sections.map((section) => [section.href, section.description])),
+    []
+  )
 
   return (
     <>
@@ -38,9 +48,9 @@ export function MobileMenu() {
         aria-expanded={isOpen}
         aria-controls="mobile-navigation"
         aria-label="Open menu"
-        className="inline-flex h-10 w-10 items-center justify-center text-[rgb(var(--text-primary))] transition-colors duration-150 hover:text-[rgb(var(--accent))] lg:hidden"
+        className="-mr-1 inline-flex h-11 w-11 items-center justify-center rounded-sm text-[rgb(var(--text-primary))] transition-colors duration-150 hover:text-[rgb(var(--accent))] lg:hidden"
       >
-        <Menu className="h-5 w-5" aria-hidden="true" />
+        <Menu className="h-6 w-6" aria-hidden="true" />
       </button>
 
       {isOpen && (
@@ -57,83 +67,80 @@ export function MobileMenu() {
             className="absolute inset-x-0 top-0 max-h-[100dvh] animate-slide-down overflow-y-auto overscroll-contain border-b border-[rgb(var(--border))] bg-[rgb(var(--background))] focus:outline-none"
           >
             <div className="container-custom flex h-16 items-center justify-between border-b border-[rgb(var(--border-subtle))]">
-              <span className="font-display text-base font-bold tracking-[-0.03em]">
-                {siteConfig.shortName}
+              <span className="font-display text-lg font-bold tracking-[-0.035em]">
+                {siteConfig.name}
                 <span className="text-[rgb(var(--accent))]">.</span>
               </span>
               <button
                 type="button"
                 onClick={close}
                 aria-label="Close menu"
-                className="inline-flex h-10 w-10 items-center justify-center text-[rgb(var(--text-primary))] transition-colors duration-150 hover:text-[rgb(var(--accent))]"
+                className="-mr-1 inline-flex h-11 w-11 items-center justify-center rounded-sm text-[rgb(var(--text-primary))] transition-colors duration-150 hover:text-[rgb(var(--accent))]"
               >
-                <X className="h-5 w-5" aria-hidden="true" />
+                <X className="h-6 w-6" aria-hidden="true" />
               </button>
             </div>
 
-            <nav aria-label="Mobile" className="container-custom py-8">
+            <nav aria-label="Mobile" className="container-custom py-6">
               <ul>
                 {siteConfig.navigation.map((item, index) => {
-                  const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
+                  const isActive = isActiveRoute(pathname, item.href)
+                  const description = descriptions.get(item.href)
 
                   return (
                     <li
                       key={item.href}
                       className="animate-fade-in border-t border-[rgb(var(--border-subtle))] last:border-b"
-                      style={{ animationDelay: `${index * 45}ms` }}
+                      style={{ animationDelay: `${index * 40}ms` }}
                     >
                       <Link
                         href={item.href}
                         onClick={close}
                         aria-current={isActive ? 'page' : undefined}
-                        className="group flex items-baseline gap-4 py-4"
+                        className={classNames(
+                          'group flex min-h-14 flex-col justify-center gap-1 py-4',
+                          isActive && 'border-l-2 border-l-[rgb(var(--accent))] pl-4'
+                        )}
                       >
                         <span
                           className={classNames(
-                            'index-marker transition-colors duration-150',
-                            isActive && 'text-[rgb(var(--accent))]'
-                          )}
-                        >
-                          {String(index + 1).padStart(2, '0')}
-                        </span>
-                        <span
-                          className={classNames(
-                            'flex-1 font-display text-2xl font-bold tracking-[-0.03em] transition-colors duration-150',
+                            'font-display text-xl font-bold tracking-[-0.03em] transition-colors duration-150',
                             isActive
-                              ? 'text-[rgb(var(--text-primary))]'
-                              : 'text-[rgb(var(--text-secondary))] group-hover:text-[rgb(var(--text-primary))]'
+                              ? 'text-[rgb(var(--accent))]'
+                              : 'text-[rgb(var(--text-primary))]'
                           )}
                         >
                           {item.label}
                         </span>
-                        <ArrowUpRight
-                          className="h-4 w-4 shrink-0 self-center text-[rgb(var(--text-muted))] transition-colors duration-150 group-hover:text-[rgb(var(--accent))]"
-                          aria-hidden="true"
-                        />
+                        {description && (
+                          <span className="max-w-prose text-[length:var(--text-body-sm)] leading-snug text-[rgb(var(--text-secondary))]">
+                            {description}
+                          </span>
+                        )}
                       </Link>
                     </li>
                   )
                 })}
               </ul>
 
-              <div className="mt-10 border-t border-[rgb(var(--border-subtle))] pt-6">
-                <p className="meta-label">Email</p>
+              <div className="mt-8 border-t border-[rgb(var(--border-subtle))] pt-6">
+                <p className="label">Email</p>
                 <a
                   href={siteConfig.contactEmail}
-                  className="mt-3 inline-block break-all font-mono text-sm text-[rgb(var(--text-secondary))] transition-colors duration-150 hover:text-[rgb(var(--accent))]"
+                  className="inline-block min-h-11 break-all py-1 font-mono text-sm text-[rgb(var(--text-secondary))] transition-colors duration-150 hover:text-[rgb(var(--accent))]"
                 >
                   {siteConfig.email}
                 </a>
 
-                <p className="meta-label mt-8">Elsewhere</p>
-                <ul className="mt-3 flex flex-wrap gap-x-6 gap-y-2">
+                <p className="label mt-6">Elsewhere</p>
+                <ul className="flex flex-wrap gap-x-6 gap-y-1">
                   {socialLinks.map((link) => (
                     <li key={link.href}>
                       <a
                         href={link.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-[rgb(var(--text-muted))] transition-colors duration-150 hover:text-[rgb(var(--text-primary))]"
+                        className="inline-flex min-h-11 items-center text-[length:var(--text-body-sm)] text-[rgb(var(--text-secondary))] transition-colors duration-150 hover:text-[rgb(var(--accent))]"
                       >
                         {link.label}
                         <span className="sr-only"> (opens in a new tab)</span>

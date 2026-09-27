@@ -1,4 +1,4 @@
-import { siteConfig } from '@/config/site'
+import { ArrowLink } from '@/components/ui/arrow-link'
 
 /**
  * Opening statement.
@@ -45,23 +45,16 @@ export function Intro() {
                   on a single specialisation — a networking tool teaches me something a dashboard
                   never would.
                 </p>
-                <p>
-                  Start with{' '}
-                  <a href="/projects" className="link">
-                    the work
-                  </a>{' '}
-                  or read{' '}
-                  <a href="/about" className="link">
-                    how I approach projects
-                  </a>
-                  .
-                </p>
               </div>
             </div>
 
-            <p className="caption mt-12 text-[rgb(var(--text-muted))]">
-              {siteConfig.name} — updated as things get made
-            </p>
+            <div className="mt-12 flex flex-col gap-5 border-t border-[rgb(var(--border-subtle))] pt-8 sm:flex-row sm:items-center sm:gap-10">
+              <ArrowLink href="/projects">View the projects</ArrowLink>
+              <ArrowLink href="/about">How I approach projects</ArrowLink>
+              <p className="meta sm:ml-auto">
+                Updated as things get made
+              </p>
+            </div>
           </div>
         </div>
       </div>

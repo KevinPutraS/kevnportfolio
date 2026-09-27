@@ -3,6 +3,8 @@ import { Briefcase } from 'lucide-react'
 import { getPublishedExperiences } from '@/lib/db/experience'
 import { ExperienceEntry } from '@/components/experience/experience-entry'
 import { EmptyState } from '@/components/ui/empty-state'
+import { ArrowLink } from '@/components/ui/arrow-link'
+import { PageHeader } from '@/components/ui/page-header'
 import { siteConfig } from '@/config/site'
 
 /**
@@ -16,11 +18,11 @@ export const revalidate = 60
 
 export const metadata: Metadata = {
   title: 'Experience',
-  description: `Roles, school projects and organization work by ${siteConfig.name}.`,
+  description: `Internships, school projects and organization work by ${siteConfig.personName}, written as what was actually done.`,
   alternates: { canonical: '/experience' },
   openGraph: {
     title: `Experience — ${siteConfig.name}`,
-    description: 'Roles, school projects and organization work.',
+    description: 'Internships, school projects and organization work, written as what was done.',
     url: '/experience',
   },
 }
@@ -30,16 +32,27 @@ export default async function ExperiencePage() {
 
   return (
     <>
-      <header className="rule-top">
-        <div className="container-custom pt-20 sm:pt-28">
-          <p className="eyebrow">Experience</p>
-          <h1 className="heading-1 mt-6 max-w-3xl text-balance">Where I have worked and built.</h1>
-          <p className="mt-6 max-w-prose text-[rgb(var(--text-secondary))]">
-            Internships, coursework and committees alongside anything else that shaped how I
-            work. Written as what I actually did rather than a list of responsibilities.
-          </p>
-        </div>
-      </header>
+      <div className="container-custom">
+        <PageHeader
+          eyebrow="Experience"
+          title="Where I have worked and built."
+          lede="Internships, school projects, committee work and anything else that taught me something. Each entry lists what I actually did, not just the job title — and it is listed newest first."
+          action={
+            <ArrowLink href="/projects" direction="up">
+              See the projects
+            </ArrowLink>
+          }
+          meta={
+            <p className="meta">
+              {experiences.length === 0
+                ? 'No published entries yet'
+                : `${String(experiences.length).padStart(2, '0')} ${
+                    experiences.length === 1 ? 'entry' : 'entries'
+                  }, newest first`}
+            </p>
+          }
+        />
+      </div>
 
       <section className="rule-top">
         <div className="container-custom">
@@ -47,8 +60,11 @@ export default async function ExperiencePage() {
             <EmptyState
               className="mt-12"
               icon={<Briefcase className="h-8 w-8" aria-hidden="true" />}
-              title="Nothing published yet"
-              description="Experience entries appear here once they are added and published in the CMS."
+              title="No experience published yet"
+              description="Entries appear here once they are added and published. In the meantime, the projects page shows what I have built and the about page explains how I work."
+              action={
+                <ArrowLink href="/projects">Browse projects instead</ArrowLink>
+              }
             />
           ) : (
             <ol className="mt-2">

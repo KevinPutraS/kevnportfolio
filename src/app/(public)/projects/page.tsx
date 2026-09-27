@@ -6,6 +6,8 @@ import { ProjectFilter, buildFilterOptions } from '@/components/projects/project
 import { ProjectGrid } from '@/components/projects/project-grid'
 import { EmptyState } from '@/components/ui/empty-state'
 import { ButtonLink } from '@/components/ui/button-link'
+import { ArrowLink } from '@/components/ui/arrow-link'
+import { PageHeader } from '@/components/ui/page-header'
 import { GridSkeleton } from '@/components/ui/skeletons'
 import { FolderOpen } from 'lucide-react'
 
@@ -51,27 +53,26 @@ export default function ProjectsPage({
 
   return (
     <>
-      <section>
-        <div className="container-custom">
-          {/*
-            Masthead. Title set against a right-hand column of body copy rather
-            than stacked underneath it — the offset is what makes the archive
-            read as a contents page instead of a page heading.
-          */}
-          <div className="grid gap-10 py-14 sm:py-20 lg:grid-cols-12 lg:gap-8 lg:py-24">
-            <div className="lg:col-span-7">
-              <p className="eyebrow">Archive</p>
-              <h1 className="heading-1 mt-6">Projects.</h1>
-            </div>
-
-            <p className="body-lg text-pretty text-[rgb(var(--text-secondary))] lg:col-span-5 lg:self-end">
-              Everything I have made public so far — applications, experiments, coursework and the
-              occasional thing that was never meant to leave a hard drive. Not all of it is
-              finished.
-            </p>
-          </div>
-        </div>
-      </section>
+      <div className="container-custom">
+        {/*
+          Shared page opening. The eyebrow used to read "Archive", which named a
+          filing convention rather than anything a visitor recognises — the
+          destination is a list of projects, so it says "Projects". The copy
+          below it now states what is in the list and what a project entry
+          contains, so someone can tell whether this is the page they wanted
+          before they scroll.
+        */}
+        <PageHeader
+          eyebrow="Projects"
+          title="Things I have built."
+          lede="Every project I have made public, from coursework to longer experiments. Each entry explains what it is, what it is made of, and why I built it. Not everything here is finished — that is part of the point."
+          action={
+            <ArrowLink href="/about" direction="up">
+              How I work
+            </ArrowLink>
+          }
+        />
+      </div>
 
       {/*
         The Suspense boundary is declared *inside* this page rather than through a
@@ -82,16 +83,16 @@ export default function ProjectsPage({
         Scoping the boundary to this page keeps the skeleton and gives the
         detail route a correct status code.
       */}
-      <Suspense fallback={<ArchiveSkeleton />}>
-        <ArchiveResults category={category} page={page} />
+      <Suspense fallback={<ProjectsSkeleton />}>
+        <ProjectResults category={category} page={page} />
       </Suspense>
     </>
   )
 }
 
-function ArchiveSkeleton() {
+function ProjectsSkeleton() {
   return (
-    <section className="section-sm">
+    <section className="rhythm-lg">
       <div className="container-custom">
         <div className="h-10 w-full max-w-3xl animate-pulse bg-[rgb(var(--surface))]" />
         <div className="mt-6 h-3 w-40 animate-pulse bg-[rgb(var(--surface-elevated))]" />
@@ -101,7 +102,7 @@ function ArchiveSkeleton() {
   )
 }
 
-async function ArchiveResults({
+async function ProjectResults({
   category,
   page,
 }: {
@@ -129,10 +130,7 @@ async function ArchiveResults({
         <div className="flex flex-col gap-4 border-y border-[rgb(var(--border-subtle))] py-5 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
           <ProjectFilter options={filterOptions} active={category} />
 
-          <p
-            className="caption shrink-0 text-[rgb(var(--text-muted))]"
-            aria-live="polite"
-          >
+          <p className="meta shrink-0 text-[rgb(var(--text-muted))]" aria-live="polite">
             {String(total).padStart(2, '0')} {total === 1 ? 'project' : 'projects'}
             {isFiltered ? ` / ${filterOptions.find((o) => o.value === category)?.label}` : ''}
           </p>

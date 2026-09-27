@@ -29,12 +29,12 @@ export default function PublicError({
           <p className="eyebrow text-[rgb(var(--error))]">Something went wrong</p>
           <h1 className="heading-1 mt-6 max-w-[14ch] text-balance">This page failed to load.</h1>
           <p className="body-lg mt-8 max-w-xl text-pretty text-[rgb(var(--text-secondary))]">
-            An unexpected error occurred while rendering this page. Trying again often fixes it — if
-            the database is not configured yet, the public pages render empty rather than fail.
+            Something went wrong while putting this page together. Trying again usually fixes it.
+            If it keeps happening, please let me know and I will fix it.
           </p>
 
           {error.digest && (
-            <p className="mt-6 font-mono text-[0.6875rem] text-[rgb(var(--text-muted))]">
+            <p className="meta mt-6">
               Reference: {error.digest}
             </p>
           )}

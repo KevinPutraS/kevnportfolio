@@ -1,5 +1,4 @@
 import { ProjectCard } from './project-card'
-import { EmptyState } from '@/components/ui/empty-state'
 import type { Project } from '@/types/project'
 
 /** Renders nothing when there is nothing to relate. */
@@ -23,7 +22,6 @@ export function RelatedProjects({ projects }: { projects: Project[] }) {
                 key={project.id}
                 project={project}
                 variant="compact"
-                index={index}
                 className={index === projects.length - 1 ? 'sm:col-span-2 lg:col-span-1' : undefined}
               />
             ))}
@@ -33,5 +31,3 @@ export function RelatedProjects({ projects }: { projects: Project[] }) {
     </section>
   )
 }
-
-export { EmptyState }

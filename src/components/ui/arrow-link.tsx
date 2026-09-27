@@ -13,13 +13,19 @@ type ArrowLinkProps = {
 }
 
 /**
- * Editorial text action: a label with a rule that grows underneath on hover and
- * an arrow that advances a few pixels.
+ * The secondary action: a labelled link with an arrow.
  *
- * This is the restrained counterpart to the filled accent button. Anywhere a
- * second, equal-priority action is needed, a bordered box would double the
- * visual weight and make the hero look like a dialog. A rule carries the same
- * affordance at a fraction of the noise.
+ * This is the restrained counterpart to the filled accent button, used wherever
+ * a section needs a "see everything" next step. Two deliberate changes from the
+ * version it replaces:
+ *
+ * 1. It is `body-sm` in sentence case, not 11px uppercase mono. It was sharing
+ *    a visual treatment with dates and technology lists, so the one element that
+ *    tells a visitor where to go next was the hardest thing on the page to read.
+ * 2. The rule under the label is always visible, and the arrow always sits at
+ *    full contrast. Both were hover-only, which meant the affordance existed
+ *    only for people using a mouse — and requirement is that a link looks
+ *    clickable before you touch it.
  */
 export function ArrowLink({
   href,
@@ -34,7 +40,7 @@ export function ArrowLink({
     <Link
       href={href}
       className={classNames(
-        'group inline-flex items-center gap-2 font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-[rgb(var(--text-secondary))] transition-colors duration-150 hover:text-[rgb(var(--text-primary))]',
+        'group inline-flex min-h-11 items-center gap-2 py-2 text-[length:var(--text-body-sm)] font-medium text-[rgb(var(--text-primary))] transition-colors duration-150',
         className
       )}
       {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
@@ -43,12 +49,12 @@ export function ArrowLink({
         {children}
         <span
           aria-hidden="true"
-          className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-100 bg-[rgb(var(--border))] transition-transform duration-250 ease-[cubic-bezier(0.22,0.61,0.36,1)] group-hover:bg-[rgb(var(--accent))]"
+          className="absolute -bottom-0.5 left-0 h-px w-full bg-[rgb(var(--border))] transition-colors duration-150 group-hover:bg-[rgb(var(--accent))]"
         />
       </span>
       <Icon
         className={classNames(
-          'h-3.5 w-3.5 shrink-0 text-[rgb(var(--text-muted))] transition-colors duration-150 group-hover:text-[rgb(var(--accent))]',
+          'h-4 w-4 shrink-0 text-[rgb(var(--text-secondary))] transition-colors duration-150 group-hover:text-[rgb(var(--accent))]',
           direction === 'up'
             ? 'transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5'
             : 'arrow-shift'

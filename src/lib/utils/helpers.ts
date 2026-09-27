@@ -112,3 +112,20 @@ export function truncate(text: string, length: number): string {
 export function classNames(...classes: (string | false | null | undefined)[]): string {
   return classes.filter(Boolean).join(' ')
 }
+
+/**
+ * Whether a navigation item points at the page currently being viewed.
+ *
+ * Shared by the desktop bar and the mobile drawer so the active state can never
+ * disagree between them.
+ *
+ * The root path needs its own branch. The obvious implementation —
+ * `pathname === href || pathname.startsWith(href + '/')` — marks *every* page as
+ * a child of `/`, because `'/projects'.startsWith('//')` is false but
+ * `startsWith('/')` is true for all of them. Left unguarded that highlights
+ * "Home" on every route in the site.
+ */
+export function isActiveRoute(pathname: string, href: string): boolean {
+  if (href === '/') return pathname === '/'
+  return pathname === href || pathname.startsWith(`${href}/`)
+}

@@ -21,7 +21,7 @@ export default function ProjectNotFound() {
           <h1 className="heading-1 mt-6 max-w-[18ch] text-balance">That project is not here.</h1>
           <p className="body-lg mt-8 max-w-xl text-pretty text-[rgb(var(--text-secondary))]">
             The address may have changed, or the project may not be published. Everything currently
-            public is listed in the archive.
+            public is on the projects page.
           </p>
 
           <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
@@ -35,8 +35,8 @@ export default function ProjectNotFound() {
         </div>
 
         <div className="lg:col-span-4 lg:col-start-9">
-          <p className="meta-label border-t border-[rgb(var(--border-subtle))] pt-5">Elsewhere</p>
-          <p className="mt-4 text-sm leading-relaxed text-[rgb(var(--text-muted))]">
+          <p className="label border-t border-[rgb(var(--border-subtle))] pt-5">Broken link?</p>
+          <p className="mt-3 text-[length:var(--text-body-sm)] leading-relaxed text-[rgb(var(--text-muted))]">
             If a link to this project is broken somewhere else, please{' '}
             <Link href="/contact" className="link">
               let me know

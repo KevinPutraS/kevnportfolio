@@ -1,18 +1,23 @@
 import type { Metadata } from 'next'
 import { ButtonLink } from '@/components/ui/button-link'
 import { ArrowLink } from '@/components/ui/arrow-link'
+import { PageHeader } from '@/components/ui/page-header'
 import { BackgroundSummary } from '@/components/about/background-summary'
 import { ExploringList } from '@/components/home/exploring-list'
-import { projectApproach, technologies } from '@/config/site'
+import { projectApproach, technologies, siteConfig } from '@/config/site'
 
 /** ISR, so published records reach this page without a redeploy. */
 export const revalidate = 60
 
 export const metadata: Metadata = {
   title: 'About',
-  description:
-    'How I work, what I like building, and the areas of technology I am still exploring. No job titles, no inflated claims — just an honest picture of the process.',
+  description: `How ${siteConfig.personName} works, what he likes building, and the areas of technology he is still exploring. No inflated claims — an honest picture of the process.`,
   alternates: { canonical: '/about' },
+  openGraph: {
+    title: `About — ${siteConfig.name}`,
+    description: 'How I work, what I like building, and what I am still exploring.',
+    url: '/about',
+  },
 }
 
 /**
@@ -23,10 +28,16 @@ export const metadata: Metadata = {
  * now, and how I work. No employment, clients, dates or credentials appear
  * because none are known.
  *
- * Structure note: the label column alternates between three and four of the
- * twelve columns and the vertical rhythm steps large → small → large. A page
- * that repeats one grid and one padding value five times reads as a template
- * no matter how good the type is.
+ * Two things were deliberately removed while restructuring this page:
+ *
+ * - A self-assessed proficiency column ("Comfortable", "Intermediate"). Ratings
+ *   are unverifiable and read as a claim of seniority the rest of the site
+ *   deliberately avoids making. The descriptions carry the same information
+ *   honestly — "slower going, but it changes how you reason" says more than
+ *   "Intermediate" does.
+ * - Numbering on the motivations list. It is a `<ul>` of parallel reasons, not a
+ *   sequence, so the numbers implied an order that does not exist. The approach
+ *   list below is a real `<ol>` and keeps its numbers.
  */
 
 const motivations = [
@@ -51,23 +62,19 @@ const motivations = [
 const focusAreas = [
   {
     title: 'Web & interfaces',
-    body: 'Browser rendering, state management, accessibility, and the endless details that separate a working page from a good one.',
-    level: 'Comfortable',
+    body: 'Browser rendering, state management, accessibility, and the endless details that separate a working page from a good one. This is where most of my projects end up.',
   },
   {
     title: 'Networking & infrastructure',
     body: 'How services find each other and keep talking. Servers, protocols, deployment, and enough systems thinking to debug things properly.',
-    level: 'Intermediate',
   },
   {
     title: 'Systems & low-level',
     body: 'Operating systems, compilers, and what actually happens below the abstraction. Slower going, but it changes how you reason about everything above it.',
-    level: 'Learning',
   },
   {
     title: 'Graphics & generative work',
-    body: 'Shaders, simulation and procedural generation. A side interest that keeps expanding.',
-    level: 'Experimenting',
+    body: 'Shaders, simulation and procedural generation. A side interest that keeps expanding and occasionally leaks back into interface work.',
   },
 ]
 
@@ -75,31 +82,31 @@ export default function AboutPage() {
   return (
     <>
       {/* ---- Intro ------------------------------------------------------- */}
-      <section>
-        <div className="container-custom">
-          <div className="grid gap-x-10 gap-y-10 py-14 sm:py-20 lg:grid-cols-12 lg:py-28">
-            <div className="lg:col-span-7">
-              <p className="eyebrow">About</p>
-              <h1 className="heading-1 mt-6 max-w-[14ch] text-balance">
-                I build things to find out how they work.
-              </h1>
-            </div>
-
-            <div className="prose-block text-pretty lg:col-span-5 lg:self-end">
-              <p>
-                I am a self-directed builder. Most of what I know came from picking something
+      <div className="container-custom">
+        <PageHeader
+          eyebrow="About"
+          title="I build things to find out how they work."
+          lede={
+            <>
+              <span className="block">
+                I&apos;m {siteConfig.personName}. Most of what I know came from picking something
                 specific to make, hitting a wall, and reading documentation until the wall
                 disappeared.
-              </p>
-              <p>
+              </span>
+              <span className="mt-4 block">
                 I deliberately do not label myself with a single role. A stretch of web work and a
                 month of networking experiments are both just ways of learning how computers fit
                 together — pretending otherwise would narrow the work for no reason.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+              </span>
+            </>
+          }
+          action={
+            <ArrowLink href="/contact" direction="up">
+              Work with me
+            </ArrowLink>
+          }
+        />
+      </div>
 
       {/* ---- What I like building ---------------------------------------- */}
       <section className="rule-top">
@@ -111,12 +118,11 @@ export default function AboutPage() {
             </div>
 
             <ul className="lg:col-span-9">
-              {motivations.map((item, index) => (
+              {motivations.map((item) => (
                 <li
                   key={item.title}
-                  className="grid gap-x-10 gap-y-2 border-t border-[rgb(var(--border-subtle))] py-6 last:border-b sm:grid-cols-[3rem_5rem_1fr]"
+                  className="grid gap-x-10 gap-y-2 border-t border-[rgb(var(--border-subtle))] py-6 last:border-b sm:grid-cols-[minmax(0,14rem)_1fr]"
                 >
-                  <span className="index-marker">{String(index + 1).padStart(2, '0')}</span>
                   <h3 className="font-display text-base font-semibold tracking-[-0.02em] text-[rgb(var(--text-primary))] sm:text-lg">
                     {item.title}
                   </h3>
@@ -130,9 +136,8 @@ export default function AboutPage() {
 
       {/*
         ---- Areas I'm exploring -------------------------------------------
-        A table, not a tile grid. The depth reading is a right-aligned mono
-        column so the four rows line up on one axis, and the accent is dropped
-        from the level label so it stops competing with the page's real CTAs.
+        A list, not a tile grid. Each row pairs a named area with an honest
+        description of where that relationship actually stands.
       */}
       <section className="rule-top">
         <div className="container-custom">
@@ -148,21 +153,21 @@ export default function AboutPage() {
                 {focusAreas.map((item) => (
                   <li
                     key={item.title}
-                    className="grid gap-x-10 gap-y-2 border-t border-[rgb(var(--border-subtle))] py-5 sm:grid-cols-[14rem_1fr_7rem] sm:items-baseline"
+                    className="grid gap-x-10 gap-y-2 border-t border-[rgb(var(--border-subtle))] py-5 sm:grid-cols-[14rem_1fr] sm:items-baseline"
                   >
                     <h3 className="font-display text-base font-semibold tracking-[-0.02em] text-[rgb(var(--text-primary))]">
                       {item.title}
                     </h3>
-                    <p className="text-pretty text-sm text-[rgb(var(--text-secondary))]">
+                    <p className="text-pretty text-[length:var(--text-body-sm)] text-[rgb(var(--text-secondary))]">
                       {item.body}
                     </p>
-                    <p className="caption text-[rgb(var(--text-muted))] sm:text-right">{item.level}</p>
                   </li>
                 ))}
               </ul>
 
-              <p className="mt-5 text-sm text-[rgb(var(--text-muted))]">
-                These readings are rough self-assessments, not qualifications.
+              <p className="mt-5 text-[length:var(--text-body-sm)] text-[rgb(var(--text-muted))]">
+                These are areas I am actively working in, not a claim of expertise. Depth varies a
+                lot between them.
               </p>
             </div>
           </div>
@@ -188,15 +193,15 @@ export default function AboutPage() {
             <dl className="grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:col-span-9">
               {technologies.map((group) => (
                 <div key={group.group} className="border-t border-[rgb(var(--border-subtle))] pt-4">
-                  <dt className="meta-label">{group.group}</dt>
-                  <dd className="mt-4 font-mono text-sm leading-[1.9] text-[rgb(var(--text-secondary))]">
+                  <dt className="label">{group.group}</dt>
+                  <dd className="tech-list mt-3 leading-[1.9] text-[rgb(var(--text-secondary))]">
                     {group.items.join(' · ')}
                   </dd>
                 </div>
               ))}
             </dl>
 
-            <p className="text-sm text-[rgb(var(--text-muted))] lg:col-span-9 lg:col-start-4">
+            <p className="text-[length:var(--text-body-sm)] text-[rgb(var(--text-muted))] lg:col-span-9 lg:col-start-4">
               Tools I have actually used on something. Not an exhaustive list, and not a ranking.
             </p>
           </div>
@@ -235,13 +240,19 @@ export default function AboutPage() {
               </h2>
             </div>
 
+            {/*
+              A genuine sequence, so the numbers stay: these describe the order
+              the work actually happens in, not a set of parallel benefits.
+            */}
             <ol className="lg:col-span-9">
               {projectApproach.map((item, index) => (
                 <li
                   key={item.title}
                   className="grid gap-x-10 gap-y-2 border-t border-[rgb(var(--border-subtle))] py-6 last:border-b sm:grid-cols-[3rem_5rem_1fr]"
                 >
-                  <span className="index-marker">{String(index + 1).padStart(2, '0')}</span>
+                  <span className="index-marker" aria-hidden="true">
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
                   <h3 className="font-display text-base font-semibold tracking-[-0.02em] text-[rgb(var(--text-primary))] sm:text-lg">
                     {item.title}
                   </h3>

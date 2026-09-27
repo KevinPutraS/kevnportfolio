@@ -1,4 +1,5 @@
 import { interests } from '@/config/site'
+import { ArrowLink } from '@/components/ui/arrow-link'
 
 /**
  * Areas of interest.
@@ -30,22 +31,26 @@ export function Interests() {
               {interests.map((interest, index) => (
                 <li
                   key={interest.title}
-                  className={
-                    index === interests.length - 1 ? 'sm:col-span-2' : undefined
-                  }
+                  className={index === interests.length - 1 ? 'sm:col-span-2' : undefined}
                 >
-                  <div className="flex items-baseline gap-4 border-t border-[rgb(var(--border-subtle))] pt-4">
-                    <span className="index-marker">{String(index + 1).padStart(2, '0')}</span>
-                    <h3 className="flex-1 font-display text-lg font-semibold tracking-[-0.02em] text-[rgb(var(--text-primary))]">
-                      {interest.title}
-                    </h3>
-                  </div>
-                  <p className="mt-3 text-pretty text-[rgb(var(--text-secondary))] sm:pl-9">
+                  {/*
+                    No index numerals. These five areas are parallel curiosities,
+                    not a sequence, so "03" implied an order and a depth ranking
+                    that does not exist. The hairline is enough to separate them.
+                  */}
+                  <h3 className="border-t border-[rgb(var(--border-subtle))] pt-4 font-display text-lg font-semibold tracking-[-0.02em] text-[rgb(var(--text-primary))]">
+                    {interest.title}
+                  </h3>
+                  <p className="mt-3 text-pretty text-[rgb(var(--text-secondary))]">
                     {interest.description}
                   </p>
                 </li>
               ))}
             </ul>
+
+            <div className="mt-12 border-t border-[rgb(var(--border-subtle))] pt-8">
+              <ArrowLink href="/about">How I work</ArrowLink>
+            </div>
           </div>
         </div>
       </div>

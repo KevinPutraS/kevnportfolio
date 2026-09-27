@@ -1,7 +1,47 @@
+/**
+ * One entry in the primary navigation.
+ *
+ * `emphasis: 'primary'` renders the item as a filled accent button instead of a
+ * plain link. Exactly one item should carry it — the single next action you want
+ * a visitor to take. It is declared here rather than hard-coded in the navbar as
+ * a `href === '/contact'` comparison, so adding or moving the primary action is
+ * a data change and cannot silently promote two links at once.
+ */
+export type NavItem = {
+  readonly label: string
+  readonly href: string
+  readonly emphasis?: 'primary'
+}
+
 export const siteConfig = {
-  name: 'Kevin Portfolio',
-  shortName: 'Kevin',
-  description: 'Building things. Exploring ideas. Creating digital projects.',
+  /**
+   * The person's name as it should appear in metadata, the wordmark and the
+   * footer. Keep it to the name alone — no role, no "Portfolio" suffix — so
+   * titles compose predictably (`%s | Kevin`) instead of reading
+   * "Kevin Portfolio — Personal Digital Portfolio".
+   */
+  name: 'Kevin',
+  /**
+   * The person's name set on its own line as the hero's `<h1>`. Separate from
+   * `name` so a full name can be introduced later without touching the
+   * wordmark, metadata or footer.
+   */
+  personName: 'Kevin',
+  /**
+   * A plain-language descriptor. The hero needs to say what kind of site this is
+   * in words a first-time visitor recognises, not leave them to infer it from a
+   * headline.
+   */
+  descriptor: 'Personal Digital Portfolio',
+  description:
+    'The digital portfolio of Kevin — projects, experience, certificates and what he is exploring.',  /**
+   * One sentence that says what the visitor will find here. Deliberately
+   * concrete: it names the four sections instead of describing a feeling.
+   */
+  heroStatement:
+    'I build digital projects, explore technology, and experiment with different ideas.',
+  heroSupport:
+    'This site collects the things I have made and the things I have learned along the way. Everything is organised into four sections, and you can jump straight to whichever one interests you.',
   /**
    * Public origin used for canonical URLs, Open Graph and the sitemap.
    * Override with NEXT_PUBLIC_SITE_URL so preview deployments stay correct.
@@ -18,12 +58,50 @@ export const siteConfig = {
   get contactEmail() {
     return `mailto:${this.email}`
   },
+  /**
+   * Primary navigation.
+   *
+   * Every label is the plain name of the page it points at. Nothing here is
+   * clever — "Projects" is a list of projects, "Experience" is a history, and a
+   * visitor who has never seen the site can guess correctly from the word alone.
+   *
+   * `Home` is first and is handled specially by the active-state check, because
+   * `pathname.startsWith('/')` is true on every route.
+   */
   navigation: [
-    { label: 'Work', href: '/projects' },
+    { label: 'Home', href: '/' },
+    { label: 'Projects', href: '/projects' },
     { label: 'Experience', href: '/experience' },
     { label: 'Certificates', href: '/certificates' },
     { label: 'About', href: '/about' },
-    { label: 'Contact', href: '/contact' },
+    { label: 'Contact', href: '/contact', emphasis: 'primary' },
+  ] as readonly NavItem[],
+  /**
+   * The four content sections, each with a one-line description of what the
+   * visitor will find there. Used by the hero to answer "what is this site?"
+   * without making anyone click to find out.
+   */
+  sections: [
+    {
+      label: 'Projects',
+      href: '/projects',
+      description: 'Applications, experiments and coursework I have built, with what they are made of.',
+    },
+    {
+      label: 'Experience',
+      href: '/experience',
+      description: 'Internships, school projects and organization work, written as what I actually did.',
+    },
+    {
+      label: 'Certificates',
+      href: '/certificates',
+      description: 'Courses and training I completed, with the issuer and the date.',
+    },
+    {
+      label: 'About',
+      href: '/about',
+      description: 'How I work, what I like building and what I am exploring right now.',
+    },
   ],
   /**
    * Single source of truth for the CMS sidebar. Imported by
