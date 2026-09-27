@@ -70,10 +70,26 @@ export const metadata: Metadata = {
     follow: true,
     googleBot: { index: true, follow: true, 'max-image-preview': 'large' },
   },
+  /*
+   * Declared here rather than relying on the `app/icon.svg` file convention
+   * alone. The file gives the scalable SVG, but browsers that ask for
+   * `/favicon.ico` directly — and some do, from bookmarks and history — would
+   * otherwise 404 now that the legacy file is gone. The shortcut is a small
+   * standalone `.ico` in `public` that needs no build step.
+   */
+  icons: {
+    icon: [{ url: '/icon.svg', type: 'image/svg+xml' }],
+    shortcut: ['/favicon.ico'],
+    // A real PNG, not the SVG: iOS does not render SVG for apple-touch-icon and
+    // silently falls back to a screenshot of the page.
+    apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180' }],
+  },
 }
 
 export const viewport: Viewport = {
-  themeColor: '#08090D',
+  // Matches `--bg` (10 13 18) in globals.css. It was still the pre-redesign
+  // #08090D, so the browser chrome and the page did not quite agree.
+  themeColor: '#0E0D12',
   colorScheme: 'dark',
   width: 'device-width',
   initialScale: 1,

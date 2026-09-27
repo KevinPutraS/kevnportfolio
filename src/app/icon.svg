@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Kevin — personal digital portfolio">
+  <!--
+    Mark: a mosaic of blocks on the near-black site background.
+
+    It stands for the project grid, and each block wears one of the seven
+    category hues the site actually uses — the same blue, green, pink, amber,
+    violet, cyan and slate. So the icon is not a decoration that happens to be
+    colourful; it is the site's own system, reduced to something that survives
+    being shrunk into a browser tab.
+
+    Drawn at 32px on a 4px grid. Every shape is a plain rect with a small
+    radius, because at 16px a stroke or a gradient turns to mush — the
+    silhouette has to be countable. The wide bar top-left is the lead project
+    tile, and the four smaller blocks are the grid it sits in.
+  -->
+
+  <rect width="32" height="32" rx="7" fill="#0E0D12" />
+
+  <!-- Lead tile: accent blue, the most-used category. -->
+  <rect x="5" y="5" width="14" height="8" rx="2" fill="#60A5FA" />
+
+  <!-- Green: app. -->
+  <rect x="21" y="5" width="6" height="8" rx="2" fill="#34D399" />
+
+  <!-- Pink: design. -->
+  <rect x="5" y="15" width="6" height="6" rx="2" fill="#F472B6" />
+
+  <!-- Amber: networking. -->
+  <rect x="13" y="15" width="6" height="6" rx="2" fill="#FBBF24" />
+
+  <!-- Violet: experiment. -->
+  <rect x="21" y="15" width="6" height="6" rx="2" fill="#A78BFA" />
+
+  <!-- Cyan: school, sitting alone on the last row like a footnote. -->
+  <rect x="5" y="23" width="10" height="4" rx="2" fill="#22D3EE" />
+</svg>
