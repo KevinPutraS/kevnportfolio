@@ -1,5 +1,11 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { getAdminClient, guardAdmin, parseJson, validationErrorResponse } from '@/lib/api/admin-guard'
+import {
+  getAdminClient,
+  guardAdmin,
+  parseJson,
+  revalidateProjectPaths,
+  validationErrorResponse,
+} from '@/lib/api/admin-guard'
 import { projectFormSchema, toProjectRecord } from '@/lib/validation/project'
 import { isUuid } from '@/lib/utils/validation'
 
@@ -136,6 +142,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     return NextResponse.json({ message: 'Project not found.' }, { status: 404 })
   }
 
+  revalidateProjectPaths(data.slug)
   return NextResponse.json({ project: data })
 }
 
@@ -149,11 +156,17 @@ export async function DELETE(_request: NextRequest, { params }: RouteContext) {
   }
 
   const supabase = await getAdminClient()
-  const { error: deleteError } = await supabase.from('projects').delete().eq('id', params.id)
+  const { data: removed, error: deleteError } = await supabase
+    .from('projects')
+    .delete()
+    .eq('id', params.id)
+    .select('slug')
+    .maybeSingle()
 
   if (deleteError) {
     return NextResponse.json({ message: 'Could not delete the project.' }, { status: 500 })
   }
 
+  revalidateProjectPaths(removed?.slug)
   return NextResponse.json({ success: true })
 }

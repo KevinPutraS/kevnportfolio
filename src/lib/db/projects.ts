@@ -91,14 +91,14 @@ export async function getProjectBySlug(slug: string): Promise<Project | null> {
     .select('*')
     .eq('slug', slug)
     .eq('published', true)
-    .maybeSingle()
+    .limit(1)
 
   if (error) {
     console.error('[db] failed to fetch project by slug:', error.message)
     return null
   }
 
-  return (data as Project | null) ?? null
+  return (data as Project[])[0] ?? null
 }
 
 /** Used by the admin editor. Returns drafts as well as published projects. */
@@ -111,14 +111,14 @@ export async function getProjectById(id: string): Promise<Project | null> {
     .from('projects')
     .select('*')
     .eq('id', id)
-    .maybeSingle()
+    .limit(1)
 
   if (error) {
     console.error('[db] failed to fetch project by id:', error.message)
     return null
   }
 
-  return (data as Project | null) ?? null
+  return (data as Project[])[0] ?? null
 }
 
 export async function getFeaturedProjects(limit = 4): Promise<Project[]> {

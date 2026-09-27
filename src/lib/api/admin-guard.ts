@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { requireClient } from '@/lib/supabase/server'
 import { getUser } from '@/lib/auth'
 import { projectFormSchema, toProjectRecord } from '@/lib/validation/project'
@@ -54,4 +55,21 @@ export async function parseJson(request: NextRequest): Promise<unknown | null> {
 /** Convenience wrapper for the Supabase client used by admin routes. */
 export async function getAdminClient() {
   return requireClient()
+}
+
+/**
+ * Drops the public caches for a project that was just written.
+ *
+ * Without this, a project requested while it was still a draft keeps serving
+ * the 404 that was rendered for it, and publishing it in the CMS changes
+ * nothing on the public site until the cache is discarded by a redeploy. The
+ * detail route already opts out of the Full Route Cache, so this exists for the
+ * ISR windows on the homepage and the archive plus the Supabase read that
+ * backed the previous render.
+ */
+export function revalidateProjectPaths(slug?: string | null) {
+  revalidatePath('/')
+  revalidatePath('/projects')
+  if (slug) revalidatePath(`/projects/${slug}`)
+  else revalidatePath('/projects/[slug]', 'page')
 }

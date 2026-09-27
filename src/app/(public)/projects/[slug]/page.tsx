@@ -34,10 +34,14 @@ interface ProjectPageProps {
  * no equivalent downside. The archive's skeleton lives in an in-page `<Suspense>`
  * rather than a segment `loading.tsx` for the same reason.
  *
- * No route segment config is declared here on purpose. This is a dynamic segment
- * with no `generateStaticParams`, which Next renders on demand by default —
- * declaring `revalidate` is what would introduce the HTTP 200 problem above.
+ * `force-dynamic` is load-bearing, not decoration. Public reads go through a
+ * cookieless Supabase client, so with the default `dynamic = 'auto'` this route
+ * is served from the Full Route Cache. A project requested while it was still a
+ * draft had its 404 written to that cache, and publishing it changed nothing —
+ * the page stayed 404 until the cache was discarded. Verified: publish a
+ * project, restart the server, and the URL is still 404.
  */
+export const dynamic = 'force-dynamic'
 
 /**
  * `getProjectBySlug` already filters on `published = true`, so an unpublished

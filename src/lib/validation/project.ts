@@ -115,8 +115,24 @@ export function toProjectRecord(values: ProjectFormValues): ProjectRecordInput {
     repository_url: values.repository_url ? values.repository_url : null,
     featured: values.featured,
     published: values.published,
-    project_date: values.project_date ? values.project_date : null,
+    project_date: toDatabaseDate(values.project_date),
   }
+}
+
+/**
+ * The editor collects a month (`<input type="month">` -> `2026-01`) but the
+ * column is a Postgres `date`, which will not parse `2026-01`:
+ *
+ *     22007 invalid input syntax for type date: "2026-01"
+ *
+ * so every save with a date failed with a 500. The day is never displayed —
+ * `formatProjectDate` renders month and year, and `toFormData` slices back to
+ * `YYYY-MM` on load — so the first of the month is stored to keep the column a
+ * real `date` and still sort correctly.
+ */
+function toDatabaseDate(value: string | undefined): string | null {
+  if (!value) return null
+  return `${value}-01`
 }
 
 export function parseTechnologies(input: string | undefined | null): string[] {

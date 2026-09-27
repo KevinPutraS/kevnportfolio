@@ -1,5 +1,11 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { getAdminClient, guardAdmin, parseJson, validationErrorResponse } from '@/lib/api/admin-guard'
+import {
+  getAdminClient,
+  guardAdmin,
+  parseJson,
+  revalidateProjectPaths,
+  validationErrorResponse,
+} from '@/lib/api/admin-guard'
 import { projectFormSchema, toProjectRecord } from '@/lib/validation/project'
 
 export const dynamic = 'force-dynamic'
@@ -73,5 +79,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: 'Could not create the project.' }, { status: 500 })
   }
 
+  revalidateProjectPaths(data.slug)
   return NextResponse.json({ project: data }, { status: 201 })
 }
