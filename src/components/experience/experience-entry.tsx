@@ -60,6 +60,15 @@ export function ExperienceEntry({ experience }: { experience: Experience }) {
         </div>
 
         <p className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+          {experience.organization_logo_url && (
+            <img
+              src={experience.organization_logo_url}
+              alt=""
+              aria-hidden="true"
+              className="h-6 w-auto shrink-0"
+              loading="lazy"
+            />
+          )}
           <span className="text-[length:var(--text-lead)] font-medium text-[rgb(var(--text-primary))]">
             {experience.organization}
           </span>
