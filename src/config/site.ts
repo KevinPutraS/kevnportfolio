@@ -49,10 +49,10 @@ export const siteConfig = {
   url: (process.env.NEXT_PUBLIC_SITE_URL?.trim() || 'https://kevnportfolio.dev').replace(/\/$/, ''),
   ogImage: '/images/og-image.png',
   /** Placeholder address — replace with the real one before deploying. */
-  email: process.env.NEXT_PUBLIC_CONTACT_EMAIL?.trim() || 'hello@example.com',
+  email: process.env.NEXT_PUBLIC_CONTACT_EMAIL?.trim() || 'kevinputras798@gmail.com',
   links: {
-    github: 'https://github.com/username',
-    twitter: 'https://twitter.com/username',
+    github: 'https://github.com/KevinPutraS',
+    twitter: 'https://x.com/KevnPutraS',
     linkedin: 'https://linkedin.com/in/username',
   },
   get contactEmail() {
