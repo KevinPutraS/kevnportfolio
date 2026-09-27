@@ -18,12 +18,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <div className="flex min-h-screen items-center justify-center bg-[rgb(var(--background))] p-6">
         <div className="card max-w-lg p-8">
           <h1 className="heading-3">Supabase is not configured</h1>
-          <p className="mt-4 text-[rgb(var(--text-secondary))]">
+          <p className="mt-4 text-[rgb(var(--text-dim))]">
             The admin dashboard needs a Supabase project. Add the following to{' '}
             <code className="font-mono text-sm text-[rgb(var(--accent))]">.env.local</code> and restart
             the dev server:
           </p>
-          <pre className="mt-6 overflow-x-auto border border-[rgb(var(--border-subtle))] bg-[rgb(var(--surface))] p-4 font-mono text-xs leading-relaxed">
+          <pre className="mt-6 overflow-x-auto border border-[rgb(var(--border))] bg-[rgb(var(--bg-elevated))] p-4 font-mono text-xs leading-relaxed">
             <code>{`NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>`}</code>
           </pre>

@@ -5,11 +5,20 @@ import { usePathname } from 'next/navigation'
 import { ExternalLink, LogOut } from 'lucide-react'
 import { siteConfig } from '@/config/site'
 
-export const adminNavigation = [
-  { label: 'Dashboard', href: '/admin' },
-  { label: 'Projects', href: '/admin/projects' },
-  { label: 'New project', href: '/admin/projects/new' },
-] as const
+/**
+ * Built from `siteConfig.adminNavigation`, which is the same list the CMS uses
+ * everywhere else. This used to be a second, hand-written array of three items
+ * — Dashboard, Projects, New project — so Experience and Certificates were
+ * unreachable from the sidebar and had to be typed as a URL. Two lists, and the
+ * stale one is always the one a visitor sees.
+ *
+ * "New project" is dropped deliberately: it is a duplicate of the button that
+ * already sits at the top of the projects page, and a nav entry that is only
+ * sometimes relevant is noise.
+ */
+const adminItems = siteConfig.adminNavigation.filter(
+  (item) => !item.href.endsWith('/new')
+)
 
 /**
  * Sidebar links. Rendered inside the admin shell on desktop and inside the
@@ -34,7 +43,7 @@ export function AdminNavLinks({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <nav aria-label="Admin">
       <ul>
-        {adminNavigation.map((item, index) => {
+        {adminItems.map((item, index) => {
           const current = isCurrent(item.href)
           return (
             <li key={item.href}>
@@ -42,18 +51,16 @@ export function AdminNavLinks({ onNavigate }: { onNavigate?: () => void }) {
                 href={item.href}
                 onClick={onNavigate}
                 aria-current={current ? 'page' : undefined}
-                className={`flex items-baseline gap-3 border-l-2 py-3 pl-4 pr-4 text-sm transition-colors ${
+                className={`flex min-h-11 items-baseline gap-3 border-l-2 py-3 pl-4 pr-4 text-[length:var(--text-sm)] transition-colors ${
                   current
-                    ? 'border-[rgb(var(--accent))] bg-[rgb(var(--surface))] text-[rgb(var(--text-primary))]'
-                    : 'border-transparent text-[rgb(var(--text-secondary))] hover:bg-[rgb(var(--surface))] hover:text-[rgb(var(--text-primary))]'
+                    ? 'border-[rgb(var(--accent))] bg-[rgb(var(--bg-elevated))] font-medium text-[rgb(var(--text))]'
+                    : 'border-transparent text-[rgb(var(--text-dim))] hover:bg-[rgb(var(--bg-elevated))] hover:text-[rgb(var(--text))]'
                 }`}
               >
                 <span
                   aria-hidden="true"
-                  className={`font-mono text-[0.625rem] tabular-nums ${
-                    current
-                      ? 'text-[rgb(var(--accent))]'
-                      : 'text-[rgb(var(--text-muted))]'
+                  className={`font-mono text-[length:var(--text-xs)] tabular-nums ${
+                    current ? 'text-[rgb(var(--accent))]' : 'text-[rgb(var(--text-muted))]'
                   }`}
                 >
                   {String(index + 1).padStart(2, '0')}
@@ -77,7 +84,7 @@ export function SignOutForm() {
     <form action="/api/auth/signout" method="POST" className="w-full">
       <button
         type="submit"
-        className="flex w-full items-center gap-3 border-l-2 border-transparent py-3 pl-4 pr-4 text-left text-sm text-[rgb(var(--text-muted))] transition-colors hover:bg-[rgb(var(--surface))] hover:text-[rgb(var(--text-primary))] focus-visible:border-[rgb(var(--accent))]"
+        className="flex min-h-11 w-full items-center gap-3 border-l-2 border-transparent py-3 pl-4 pr-4 text-left text-[length:var(--text-sm)] text-[rgb(var(--text-muted))] transition-colors hover:bg-[rgb(var(--bg-elevated))] hover:text-[rgb(var(--text))] focus-visible:border-[rgb(var(--accent))]"
       >
         <LogOut className="h-4 w-4" aria-hidden="true" />
         Sign out
@@ -89,8 +96,13 @@ export function SignOutForm() {
 export function AdminBrand() {
   return (
     <Link href="/admin" className="block px-4">
-      <p className="font-display text-sm font-bold tracking-tight">{siteConfig.name}</p>
-      <p className="caption mt-0.5 text-[rgb(var(--accent))]">Content manager</p>
+      <p className="font-display text-base font-bold tracking-[-0.03em] text-[rgb(var(--text))]">
+        {siteConfig.name}
+        <span className="text-[rgb(var(--accent))]">.</span>
+      </p>
+      <p className="mt-0.5 text-[length:var(--text-xs)] uppercase tracking-[0.14em] text-[rgb(var(--accent))]">
+        Content manager
+      </p>
     </Link>
   )
 }
@@ -101,7 +113,7 @@ export function ViewSiteLink({ onNavigate }: { onNavigate?: () => void }) {
     <Link
       href="/"
       onClick={onNavigate}
-      className="flex items-center gap-3 px-4 py-3 font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-[rgb(var(--text-muted))] transition-colors hover:text-[rgb(var(--accent))]"
+      className="flex min-h-11 items-center gap-2.5 px-4 font-mono text-[length:var(--text-xs)] uppercase tracking-[0.14em] text-[rgb(var(--text-muted))] transition-colors hover:text-[rgb(var(--accent))]"
     >
       <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
       View site

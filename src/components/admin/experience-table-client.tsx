@@ -47,18 +47,18 @@ export function ExperienceTableClient({ experiences }: { experiences: Experience
         Desktop: a real table. Below `lg` the same markup restyles into stacked
         cards, so nothing is pushed behind a horizontal scroll at 320px.
       */}
-      <div className="overflow-hidden border border-[rgb(var(--border-subtle))]">
+      <div className="overflow-hidden rounded-xl border border-[rgb(var(--border))]">
         <table className="w-full border-collapse text-left">
           <caption className="sr-only">
             All experience entries with their type, period, status and available actions
           </caption>
-          <thead className="hidden border-b border-[rgb(var(--border-subtle))] bg-[rgb(var(--surface))] lg:table-header-group">
+          <thead className="hidden border-b border-[rgb(var(--border))] bg-[rgb(var(--bg-highlight))] lg:table-header-group">
             <tr>
               {['Role', 'Type', 'Period', 'Status', 'Order', 'Actions'].map((heading) => (
                 <th
                   key={heading}
                   scope="col"
-                  className="px-4 py-3 font-mono text-[0.6875rem] font-normal uppercase tracking-[0.12em] text-[rgb(var(--text-muted))]"
+                  className="px-4 py-3 font-mono text-[length:var(--text-xs)] font-normal uppercase tracking-[0.12em] text-[rgb(var(--text-muted))]"
                 >
                   {heading}
                 </th>
@@ -74,7 +74,7 @@ export function ExperienceTableClient({ experiences }: { experiences: Experience
                 <tr
                   key={experience.id}
                   className={classNames(
-                    'block border-b border-[rgb(var(--border-subtle))] last:border-b-0 lg:table-row',
+                    'block border-b border-[rgb(var(--border))] last:border-b-0 lg:table-row',
                     isBusy && 'opacity-60'
                   )}
                 >
@@ -89,7 +89,7 @@ export function ExperienceTableClient({ experiences }: { experiences: Experience
                     </span>
                   </th>
 
-                  <td className="hidden px-4 py-4 text-sm text-[rgb(var(--text-secondary))] lg:table-cell">
+                  <td className="hidden px-4 py-4 text-sm text-[rgb(var(--text-dim))] lg:table-cell">
                     {experienceTypeLabels[experience.employment_type]}
                     {experience.organization ? (
                       <span className="mt-0.5 block text-xs text-[rgb(var(--text-muted))]">
@@ -180,7 +180,7 @@ export function ExperienceTableClient({ experiences }: { experiences: Experience
                       <Link
                         href={`/admin/experience/${experience.id}/edit`}
                         prefetch={false}
-                        className="inline-flex h-8 items-center gap-1.5 border border-[rgb(var(--border-subtle))] px-2.5 text-xs text-[rgb(var(--text-secondary))] transition-colors hover:border-[rgb(var(--text-muted))] hover:text-[rgb(var(--text-primary))]"
+                        className="inline-flex h-8 items-center gap-1.5 border border-[rgb(var(--border))] px-2.5 text-xs text-[rgb(var(--text-dim))] transition-colors hover:border-[rgb(var(--text-muted))] hover:text-[rgb(var(--text))]"
                       >
                         <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
                         Edit
