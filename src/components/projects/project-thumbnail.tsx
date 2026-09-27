@@ -46,7 +46,7 @@ export function ProjectThumbnail({
   const imageClass = zoom ? 'image-zoom object-cover' : 'object-cover'
 
   return (
-    <div className={classNames('relative overflow-hidden bg-[rgb(var(--surface-elevated))]', className)}>
+    <div className={classNames('relative overflow-hidden bg-[rgb(var(--bg-highlight))]', className)}>
       {hasImage ? (
         <Image
           src={src as string}
@@ -54,6 +54,7 @@ export function ProjectThumbnail({
           fill
           sizes={sizes}
           priority={priority}
+          quality={90}
           className={imageClass}
           onError={(event) => {
             // Swap to the bundled placeholder instead of showing a broken frame.
@@ -69,6 +70,7 @@ export function ProjectThumbnail({
           alt=""
           fill
           sizes={sizes}
+          quality={90}
           className={imageClass}
         />
       )}

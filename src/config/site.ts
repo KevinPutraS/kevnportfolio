@@ -33,15 +33,21 @@ export const siteConfig = {
    * headline.
    */
   descriptor: 'Personal Digital Portfolio',
+  /* A noun phrase, not a sentence. Used in the footer and in metadata. */
   description:
-    'The digital portfolio of Kevin — projects, experience, certificates and what he is exploring.',  /**
+    'Projects, experience and certificates.',  /**
    * One sentence that says what the visitor will find here. Deliberately
    * concrete: it names the four sections instead of describing a feeling.
    */
   heroStatement:
     'I build digital projects, explore technology, and experiment with different ideas.',
-  heroSupport:
-    'This site collects the things I have made and the things I have learned along the way. Everything is organised into four sections, and you can jump straight to whichever one interests you.',
+  /*
+   * Removed entirely. The hero already carries the statement plus a "right now"
+   * panel, and a third block of reassurance text under it read as filler. If
+   * there is ever a genuine need for more context here, it should be one line,
+   * not a paragraph.
+   */
+  heroSupport: '',
   /**
    * Public origin used for canonical URLs, Open Graph and the sitemap.
    * Override with NEXT_PUBLIC_SITE_URL so preview deployments stay correct.
@@ -145,6 +151,29 @@ export const categoryLabels: Record<ProjectCategory, string> = Object.fromEntrie
   projectCategories.map((category) => [category.value, category.label])
 ) as Record<ProjectCategory, string>
 
+/**
+ * Category to colour, so a project can be recognised by its colour alone.
+ *
+ * Kept here rather than in a component so the hue lives next to the category it
+ * belongs to, and the two cannot drift apart. The value is the token *name*, not
+ * a raw colour, so every component resolves it through the same `.cat-*` class
+ * and nothing has to know what the actual hex is.
+ */
+export const categoryColors: Record<ProjectCategory, string> = {
+  web: 'cat-web',
+  app: 'cat-app',
+  design: 'cat-design',
+  networking: 'cat-networking',
+  experiment: 'cat-experiment',
+  school: 'cat-school',
+  other: 'cat-other',
+}
+
+/** Same mapping, as a ready-made class string. */
+export function categoryColorClass(category: string): string {
+  return isProjectCategory(category) ? categoryColors[category] : 'cat-other'
+}
+
 export function isProjectCategory(value: unknown): value is ProjectCategory {
   return typeof value === 'string' && value in categoryLabels
 }
@@ -179,32 +208,25 @@ export function isExperienceType(value: unknown): value is ExperienceType {
   return typeof value === 'string' && value in experienceTypeLabels
 }
 
+/**
+ * Short label plus a tagline.
+ *
+ * `tagline` is the mid-length form: one clause, roughly 8–12 words, which fits on
+ * one or two lines inside a three-column tile. It exists because the two extremes
+ * both failed — a full `description` per tile made the homepage section three rows
+ * of dense text, and dropping the tagline entirely left six bare labels that said
+ * nothing. This is the size that carries meaning without inflating the block.
+ *
+ * `description` remains the long form, used only on /about where there is a
+ * column to itself.
+ */
 export const interests = [
-  {
-    title: 'Web',
-    description: 'Interfaces and applications that run in the browser — from static sites to real-time dashboards.',
-    icon: 'globe',
-  },
-  {
-    title: 'Software',
-    description: 'Command line tools, automations and small programs that solve a specific problem well.',
-    icon: 'cpu',
-  },
-  {
-    title: 'Networking',
-    description: 'How machines talk to each other: protocols, services, routing and the wires in between.',
-    icon: 'network',
-  },
-  {
-    title: 'Design',
-    description: 'Typography, layout and interaction — the part that decides whether an idea feels finished.',
-    icon: 'palette',
-  },
-  {
-    title: 'Experiments',
-    description: 'Generative sketches, shaders and half-finished ideas kept purely out of curiosity.',
-    icon: 'flask',
-  },
+  { title: 'Web', tagline: 'Interfaces and apps that run in the browser', description: 'Interfaces and applications that run in the browser — from static sites to real-time dashboards.', icon: 'globe' },
+  { title: 'Software', tagline: 'Tools and small programs that solve one problem', description: 'Command line tools, automations and small programs that solve a specific problem well.', icon: 'cpu' },
+  { title: 'Networking', tagline: 'How services find each other and keep talking', description: 'How machines talk to each other: protocols, services, routing and the wires in between.', icon: 'network' },
+  { title: 'Design', tagline: 'Type, layout and the details that make it feel done', description: 'Typography, layout and interaction — the part that decides whether an idea feels finished.', icon: 'palette' },
+  { title: 'Experiments', tagline: 'Sketches and ideas kept purely out of curiosity', description: 'Generative sketches, shaders and half-finished ideas kept purely out of curiosity.', icon: 'flask' },
+  { title: 'Systems', tagline: 'Runtimes, compilers and what lies underneath', description: 'Runtimes, compilers and the layer below the abstractions.', icon: 'layers' },
 ] as const
 
 export const currentlyExploring = [
@@ -238,21 +260,14 @@ export const technologies = [
   },
 ] as const
 
+/**
+ * Four beats, each one clause. These render as four numbered tiles with an icon,
+ * a title and a single line — enough to show process, not enough to read as an
+ * essay about process.
+ */
 export const projectApproach = [
-  {
-    title: 'Curiosity first',
-    description: 'Projects start from something I want to understand, not from a checklist.',
-  },
-  {
-    title: 'Learn while building',
-    description: 'Reading gets me started; finishing the thing is what actually teaches me.',
-  },
-  {
-    title: 'Small and finished',
-    description: 'A small project that ships beats a large one that never leaves a branch.',
-  },
-  {
-    title: 'Write it down',
-    description: 'Notes and a short write-up are part of the work, not an afterthought.',
-  },
+  { title: 'Curiosity first', description: 'Start from a question, not a checklist.' },
+  { title: 'Learn by building', description: 'Reading starts it; finishing it teaches you.' },
+  { title: 'Small and finished', description: 'A shipped small thing beats an unshipped big one.' },
+  { title: 'Write it down', description: 'Notes are part of the work, not an afterthought.' },
 ] as const

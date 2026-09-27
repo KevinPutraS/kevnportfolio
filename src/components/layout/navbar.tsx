@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { siteConfig } from '@/config/site'
 import { classNames, isActiveRoute } from '@/lib/utils/helpers'
 import { buttonStyles } from '@/components/ui/button-styles'
@@ -63,8 +63,39 @@ export function Navbar() {
   const pathname = usePathname()
   const wordmark = `${siteConfig.name}.`
 
+  /*
+   * Scroll-aware chrome.
+   *
+   * The header was already `sticky top-0`, but at `bg/80` with a
+   * `--border-subtle` hairline there was nothing to see: content slid behind a
+   * 20%-transparent blur and the bar read as part of the page rather than a
+   * surface floating above it. So the state is now explicit — a solid background
+   * and a shadow once the page has scrolled, which is what a sticky bar is
+   * supposed to look like when it engages.
+   *
+   * A `useState` boolean rather than the raw scroll position: the header only
+   * needs to know *whether* it is detached, and a threshold boolean means the
+   * class string does not change on every frame of a slow scroll.
+   */
+  const [lifted, setLifted] = useState(false)
+
+  useEffect(() => {
+    const onScroll = () => setLifted(window.scrollY > 8)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
   return (
-    <header className="sticky top-0 z-50 border-b border-[rgb(var(--border-subtle))] bg-[rgb(var(--background))]/80 backdrop-blur-md">
+    <header
+      data-lifted={lifted ? 'true' : undefined}
+      className={classNames(
+        'sticky top-0 z-50 border-b transition-[background-color,border-color,box-shadow,backdrop-filter] duration-300',
+        lifted
+          ? 'border-[rgb(var(--border))] bg-[rgb(var(--background))]/95 shadow-[0_10px_30px_-18px_rgb(0_0_0/0.9)] backdrop-blur-xl'
+          : 'border-[rgb(var(--border-subtle))] bg-[rgb(var(--background))]/70 backdrop-blur-md'
+      )}
+    >
       <div className="container-custom flex h-16 items-center justify-between gap-4">
         {/*
           The wordmark is the name and nothing else. It used to carry a small

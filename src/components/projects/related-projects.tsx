@@ -1,4 +1,5 @@
 import { ProjectCard } from './project-card'
+import { classNames } from '@/lib/utils/helpers'
 import type { Project } from '@/types/project'
 
 /** Renders nothing when there is nothing to relate. */
@@ -16,13 +17,15 @@ export function RelatedProjects({ projects }: { projects: Project[] }) {
             </div>
           </div>
 
-          <div className="mt-12 grid gap-x-10 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
-            {projects.map((project, index) => (
+          <div className={classNames(
+            'mt-10 grid gap-5 sm:gap-6 lg:gap-7',
+            'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+          )}>
+            {projects.map((project) => (
               <ProjectCard
                 key={project.id}
                 project={project}
-                variant="compact"
-                className={index === projects.length - 1 ? 'sm:col-span-2 lg:col-span-1' : undefined}
+                variant="standard"
               />
             ))}
           </div>

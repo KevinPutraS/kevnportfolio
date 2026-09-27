@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, ArrowUpRight, GitBranch } from 'lucide-react'
 import { getProjectBySlug, getRelatedProjects } from '@/lib/db/projects'
-import { categoryLabels, siteConfig } from '@/config/site'
+import { categoryLabels, categoryColorClass, siteConfig } from '@/config/site'
 import { formatMonth } from '@/lib/utils/helpers'
 import { ProjectGallery } from '@/components/projects/project-gallery'
 import { ProjectThumbnail } from '@/components/projects/project-thumbnail'
@@ -23,23 +23,22 @@ interface ProjectPageProps {
  *    through the static cache and comes back as **HTTP 200** containing 404
  *    markup.
  * 2. A `loading.tsx` anywhere above this route puts it in a Suspense boundary,
- *    which streams the response and locks the status to 200 before
- *    `notFound()` is ever reached.
+ *    which streams the response and locks the status to 200 before `notFound()`
+ *    is ever reached.
  *
  * Either one would make search engines treat unknown project URLs as real,
- * indexable pages. A correct 404 status matters more here than saving one
- * indexed primary-key lookup, so the route stays dynamic and always fresh.
+ * indexable pages. A correct 404 status matters more here than saving one indexed
+ * primary-key lookup, so the route stays dynamic and always fresh.
  *
- * The homepage keeps its 60s ISR window: it never calls `notFound()`, so it has
- * no equivalent downside. The archive's skeleton lives in an in-page `<Suspense>`
+ * The homepage keeps its 60s ISR window: it never calls `notFound()`, so it has no
+ * equivalent downside. The archive's skeleton lives in an in-page `<Suspense>`
  * rather than a segment `loading.tsx` for the same reason.
  *
  * `force-dynamic` is load-bearing, not decoration. Public reads go through a
- * cookieless Supabase client, so with the default `dynamic = 'auto'` this route
- * is served from the Full Route Cache. A project requested while it was still a
- * draft had its 404 written to that cache, and publishing it changed nothing —
- * the page stayed 404 until the cache was discarded. Verified: publish a
- * project, restart the server, and the URL is still 404.
+ * cookieless Supabase client, so with the default `dynamic = 'auto'` this route is
+ * served from the Full Route Cache. A project requested while it was still a draft
+ * had its 404 written to that cache, and publishing it changed nothing — the page
+ * stayed 404 until the cache was discarded.
  */
 export const dynamic = 'force-dynamic'
 
@@ -103,16 +102,21 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
   const hasDescription = Boolean(project.description?.trim())
   const technologies = project.technologies ?? []
   const hasLinks = Boolean(project.project_url || project.repository_url)
+  const catClass = categoryColorClass(project.category)
 
   return (
-    <article>
-      {/* ---- Header ------------------------------------------------------ */}
+    <article className={catClass}>
+      {/* ---- Case study header -------------------------------------------
+        * The title sits on the page with nothing beside it, and the metadata
+        * moves to a sticky rail beside the body. A sidebar next to the heading
+        * competes with the heading; a rail beside long-form content supports it.
+        */}
       <header>
         <div className="container-custom">
-          <div className="flex items-center justify-between gap-6 border-b border-[rgb(var(--border-subtle))] py-4">
+          <div className="flex items-center justify-between gap-6 border-b border-[rgb(var(--border))] py-4">
             <Link
               href="/projects"
-              className="group -ml-2 inline-flex min-h-11 items-center gap-2 px-2 text-[length:var(--text-body-sm)] font-medium text-[rgb(var(--text-secondary))] transition-colors duration-150 hover:text-[rgb(var(--text-primary))]"
+              className="group -ml-2 inline-flex min-h-11 items-center gap-2 px-2 text-[length:var(--text-body-sm)] font-medium text-[rgb(var(--text-dim))] transition-colors duration-200 hover:text-[rgb(var(--text))]"
             >
               <ArrowLeft
                 className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-1"
@@ -120,141 +124,161 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
               />
               All projects
             </Link>
-
             <p className="meta hidden sm:block">Case study</p>
           </div>
 
-          {/*
-            Title set against a metadata rail rather than stacked under it. The
-            rail is a border-left column so it reads as a caption, not a card.
-          */}
-          <div className="grid gap-x-10 gap-y-10 py-14 sm:py-20 lg:grid-cols-12 lg:py-24">
-            <div className="lg:col-span-7">
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="meta-strong">
-                  {categoryLabels[project.category] ?? project.category}
-                </span>
-                {project.project_date && (
-                  <>
-                    <span aria-hidden="true" className="h-3 w-px bg-[rgb(var(--border-subtle))]" />
-                    <time
-                      dateTime={project.project_date}
-                      className="meta tabular-nums"
-                    >
-                      {formatMonth(project.project_date)}
-                    </time>
-                  </>
+          <div className="py-14 sm:py-20 lg:py-24">
+            <span className="cat-chip inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 font-mono text-xs uppercase tracking-[0.12em]">
+              <span aria-hidden="true" className="cat-dot h-1.5 w-1.5 rounded-full" />
+              {categoryLabels[project.category] ?? project.category}
+            </span>
+
+            <h1 className="heading-1 mt-7 max-w-[16ch] text-balance">{project.title}</h1>
+
+            <p className="body-lg mt-7 max-w-2xl text-pretty text-[rgb(var(--text-dim))]">
+              {project.short_description}
+            </p>
+
+            {hasLinks && (
+              <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
+                {/* Both buttons are omitted entirely when the URL is absent. */}
+                {project.project_url && (
+                  <ButtonLink href={project.project_url} external size="lg" className="w-full sm:w-auto">
+                    Visit project
+                  </ButtonLink>
+                )}
+                {project.repository_url && (
+                  <ButtonLink
+                    href={project.repository_url}
+                    external
+                    variant="secondary"
+                    size="lg"
+                    className="w-full sm:w-auto"
+                  >
+                    View repository
+                  </ButtonLink>
                 )}
               </div>
-
-              <h1 className="heading-1 mt-6 max-w-[16ch] text-balance">{project.title}</h1>
-
-              <p className="body-lg mt-8 max-w-2xl text-pretty text-[rgb(var(--text-secondary))]">
-                {project.short_description}
-              </p>
-
-              {hasLinks && (
-                <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
-                  {/* Both buttons are omitted entirely when the URL is absent. */}
-                  {project.project_url && (
-                    <ButtonLink href={project.project_url} external size="lg" className="w-full sm:w-auto">
-                      Visit project
-                    </ButtonLink>
-                  )}
-                  {project.repository_url && (
-                    <ButtonLink
-                      href={project.repository_url}
-                      external
-                      variant="secondary"
-                      size="lg"
-                      className="w-full sm:w-auto"
-                    >
-                      View repository
-                    </ButtonLink>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {technologies.length > 0 && (
-              <aside className="lg:col-span-4 lg:col-start-9">
-                <h2 className="label">Built with</h2>
-                <ul className="mt-3 flex flex-wrap gap-x-3 gap-y-2 lg:block">
-                  {technologies.map((technology) => (
-                    <li
-                      key={technology}
-                      className="border-t border-[rgb(var(--border-subtle))] py-2.5 text-[length:var(--text-body-sm)] text-[rgb(var(--text-secondary))] lg:flex lg:items-baseline lg:gap-3"
-                    >
-                      <span
-                        aria-hidden="true"
-                        className="hidden h-1 w-1 shrink-0 bg-[rgb(var(--accent))] lg:block"
-                      />
-                      {technology}
-                    </li>
-                  ))}
-                </ul>
-              </aside>
             )}
           </div>
         </div>
+
+        {/* ---- Hero image, full bleed ---------------------------------------
+          * Escapes the container on wide screens. A case study opens on the work,
+          * and the work should be as large as the viewport allows.
+          */}
+        {project.thumbnail_url && (
+          <div className="px-5 sm:px-8 lg:px-12 xl:px-16">
+            <div className="mx-auto w-full max-w-[100rem] overflow-hidden rounded-2xl border border-[rgb(var(--cat)/0.35)]">
+              <ProjectThumbnail
+                src={project.thumbnail_url}
+                alt={`${project.title} preview`}
+                className="aspect-video"
+                priority
+                zoom={false}
+                sizes="100vw"
+              />
+            </div>
+          </div>
+        )}
       </header>
 
-      {/* ---- Hero image -------------------------------------------------- */}
-      {project.thumbnail_url && (
-        <div className="container-custom">
-          <ProjectThumbnail
-            src={project.thumbnail_url}
-            alt={`${project.title} preview`}
-            className="aspect-[16/9] border border-[rgb(var(--border-subtle))]"
-            priority
-            zoom={false}
-            sizes="(min-width: 1280px) 1200px, 100vw"
-          />
-        </div>
-      )}
+      {/* ---- Body with a sticky metadata rail ------------------------------ */}
+      <div className="container-custom">
+        <div className="grid gap-x-12 gap-y-12 py-16 lg:grid-cols-12 lg:py-20">
+          {/* Sticky rail: the facts, held in view while the prose scrolls past. */}
+          <aside className="lg:col-span-3">
+            <div className="lg:sticky lg:top-24">
+              {project.project_date && (
+                <div className="border-b border-[rgb(var(--border))] pb-5">
+                  <p className="label">Date</p>
+                  <time
+                    dateTime={project.project_date}
+                    className="mt-1 block font-mono text-sm tabular-nums text-[rgb(var(--text-dim))]"
+                  >
+                    {formatMonth(project.project_date)}
+                  </time>
+                </div>
+              )}
 
-      {/* ---- Body -------------------------------------------------------- */}
-      {hasDescription && (
-        <section className="container-custom">
-          <div className="grid gap-x-10 gap-y-6 py-16 sm:py-20 lg:grid-cols-12">
-            <div className="lg:col-span-3">
-              {/*
-               * These three are headings, not decorative labels. The rest of the
-               * site pairs an eyebrow with a real heading underneath, but here
-               * the label *is* the section title — as a <p> it was invisible to
-               * anyone navigating by heading, leaving a case study that jumped
-               * straight from the project title to "Related projects".
-               */}
-              <h2 className="eyebrow">Overview</h2>
-            </div>
-            <div className="prose-block max-w-2xl text-pretty lg:col-span-8 lg:col-start-5">
-              {project.description?.split('\n\n').map((paragraph, index) => (
-                <p key={index}>{paragraph}</p>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ---- Gallery ----------------------------------------------------- */}
-      {gallery.length > 0 && (
-        <section className="rule-top">
-          <div className="container-custom">
-            <div className="grid gap-x-10 gap-y-8 py-16 sm:py-20 lg:grid-cols-12">
-              <div className="lg:col-span-3">
-                <h2 className="eyebrow">Gallery</h2>
-                <p className="meta mt-3 tabular-nums">
-                  {String(gallery.length).padStart(2, '0')}{' '}
-                  {gallery.length === 1 ? 'image' : 'images'}
+              <div className="border-b border-[rgb(var(--border))] py-5">
+                <p className="label">Category</p>
+                <p className="mt-1 flex items-center gap-2 text-sm text-[rgb(var(--text-dim))]">
+                  <span aria-hidden="true" className="cat-dot h-2 w-2 rounded-full" />
+                  {categoryLabels[project.category] ?? project.category}
                 </p>
               </div>
-              <div className="lg:col-span-9">
-                <ProjectGallery images={gallery} title={project.title} />
-              </div>
+
+              {technologies.length > 0 && (
+                <div className="pt-5">
+                  <p className="label">Built with</p>
+                  <ul className="mt-1 space-y-1">
+                    {technologies.map((technology) => (
+                      <li
+                        key={technology}
+                        className="text-[length:var(--text-sm)] leading-relaxed text-[rgb(var(--text-dim))]"
+                      >
+                        {technology}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {project.repository_url && (
+                <a
+                  href={project.repository_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group mt-6 inline-flex min-h-11 items-center gap-2 text-[length:var(--text-sm)] font-medium text-[rgb(var(--text))] transition-colors hover:text-[rgb(var(--cat))]"
+                >
+                  <GitBranch className="h-4 w-4" aria-hidden="true" />
+                  Source
+                  <ArrowUpRight
+                    className="h-3.5 w-3.5 text-[rgb(var(--text-muted))] transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                    aria-hidden="true"
+                  />
+                  <span className="sr-only">(opens in a new tab)</span>
+                </a>
+              )}
             </div>
+          </aside>
+
+          <div className="lg:col-span-8 lg:col-start-5">
+            {hasDescription && (
+              <section>
+                <h2 className="heading-3">Overview</h2>
+                <div className="prose-block mt-5 max-w-2xl text-pretty">
+                  {project.description?.split('\n\n').map((paragraph, index) => (
+                    <p key={index}>{paragraph}</p>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {gallery.length > 0 && (
+              <section className="mt-16">
+                <div className="flex items-baseline justify-between gap-4">
+                  <h2 className="heading-3">Gallery</h2>
+                  <p className="meta tabular-nums">
+                    {String(gallery.length).padStart(2, '0')}{' '}
+                    {gallery.length === 1 ? 'image' : 'images'}
+                  </p>
+                </div>
+                <div className="mt-6">
+                  <ProjectGallery images={gallery} title={project.title} />
+                </div>
+              </section>
+            )}
+
+            {!hasDescription && gallery.length === 0 && (
+              <p className="body text-pretty text-[rgb(var(--text-muted))]">
+                A write-up for this one is on the way.
+              </p>
+            )}
           </div>
-        </section>
-      )}
+        </div>
+      </div>
 
       {/* ---- Footer nav -------------------------------------------------- */}
       <section className="rule-top">
@@ -262,7 +286,7 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
           <div className="flex flex-col gap-6 py-12 sm:flex-row sm:items-center sm:justify-between sm:py-16">
             <Link
               href="/projects"
-              className="group -ml-2 inline-flex min-h-11 items-center gap-2 px-2 text-[length:var(--text-body-sm)] font-medium text-[rgb(var(--text-secondary))] transition-colors duration-150 hover:text-[rgb(var(--text-primary))]"
+              className="group -ml-2 inline-flex min-h-11 items-center gap-2 px-2 text-[length:var(--text-body-sm)] font-medium text-[rgb(var(--text-dim))] transition-colors duration-200 hover:text-[rgb(var(--text))]"
             >
               <ArrowLeft
                 className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-1"
@@ -271,19 +295,20 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
               Back to all projects
             </Link>
 
-            {project.repository_url && (
+            {project.project_url && (
               <a
-                href={project.repository_url}
+                href={project.project_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group inline-flex min-h-11 items-center gap-2 text-[length:var(--text-body-sm)] font-medium text-[rgb(var(--text-secondary))] transition-colors duration-150 hover:text-[rgb(var(--text-primary))]"
+                className="group inline-flex min-h-11 items-center gap-2 text-[length:var(--text-body-sm)] font-medium text-[rgb(var(--text-dim))] transition-colors duration-200 hover:text-[rgb(var(--text))]"
               >
-                <GitBranch className="h-4 w-4" aria-hidden="true" />
-                Source
-                <ArrowUpRight
-                  className="h-3.5 w-3.5 text-[rgb(var(--text-muted))] transition-colors duration-150 group-hover:text-[rgb(var(--accent))]"
-                  aria-hidden="true"
-                />
+                <span className="cat-chip inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 font-mono text-xs uppercase tracking-[0.1em]">
+                  Live site
+                  <ArrowUpRight
+                    className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                    aria-hidden="true"
+                  />
+                </span>
                 <span className="sr-only">(opens in a new tab)</span>
               </a>
             )}

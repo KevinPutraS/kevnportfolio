@@ -3,6 +3,7 @@ import { Briefcase } from 'lucide-react'
 import { getPublishedExperiences } from '@/lib/db/experience'
 import { ExperienceEntry } from '@/components/experience/experience-entry'
 import { EmptyState } from '@/components/ui/empty-state'
+import { SectionShell } from '@/components/ui/section-shell'
 import { ArrowLink } from '@/components/ui/arrow-link'
 import { PageHeader } from '@/components/ui/page-header'
 import { siteConfig } from '@/config/site'
@@ -54,7 +55,7 @@ export default async function ExperiencePage() {
         />
       </div>
 
-      <section className="rule-top">
+      <SectionShell tone="section-tone-app">
         <div className="container-custom">
           {experiences.length === 0 ? (
             <EmptyState
@@ -67,14 +68,29 @@ export default async function ExperiencePage() {
               }
             />
           ) : (
-            <ol className="mt-2">
-              {experiences.map((experience) => (
-                <ExperienceEntry key={experience.id} experience={experience} />
-              ))}
-            </ol>
+            /*
+              The spine is drawn once, here, rather than per entry. Each entry
+              contributes only its node and card, so the column reads as one
+              continuous line of history instead of a stack of separate boxes.
+            */
+            <div className="relative mt-2">
+              <span
+                aria-hidden="true"
+                className="absolute bottom-6 left-[7px] top-8 w-px bg-gradient-to-b from-[rgb(var(--cat-web))] via-[rgb(var(--cat-design))] to-[rgb(var(--cat-experiment))] opacity-40"
+              />
+              <ol>
+                {experiences.map((experience, index) => (
+                  <ExperienceEntry
+                    key={experience.id}
+                    experience={experience}
+                    index={index}
+                  />
+                ))}
+              </ol>
+            </div>
           )}
         </div>
-      </section>
+      </SectionShell>
     </>
   )
 }

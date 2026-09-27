@@ -1,36 +1,31 @@
 import { ButtonLink } from '@/components/ui/button-link'
 import { ArrowLink } from '@/components/ui/arrow-link'
+import { SectionShell, SectionEyebrow } from '@/components/ui/section-shell'
 import { siteConfig, socialLinks } from '@/config/site'
 
 /**
  * Closing call to action.
  *
- * One primary action, the email as a low-weight fallback, and the social links
- * demoted to a running line. The earlier version gave "Elsewhere" a full column
- * with its own heading, which made the end of the page compete with the
- * projects above it.
+ * Heading, one action, and the social links as a running line. The previous
+ * version added a paragraph explaining that I am happy to talk about things —
+ * which is what the heading already says, and what a visitor who wants to talk
+ * already decided. The page ends; it does not need to be talked into it.
  */
 export function ContactCta() {
   return (
-    <section className="rule-top">
+    <SectionShell tone="section-tone-design">
       <div className="container-custom">
-        <div className="rhythm-xl">
-          <p className="eyebrow">Get in touch</p>
-
-          <div className="mt-8 grid gap-x-10 gap-y-12 lg:grid-cols-12 lg:items-end">
-            <div className="lg:col-span-8">
-              <h2 className="heading-1 max-w-[16ch] text-balance">
+        <div className="py-16 lg:py-24">
+          <div className="grid gap-x-12 gap-y-10 lg:grid-cols-12 lg:items-end">
+            <div className="lg:col-span-7">
+              <SectionEyebrow>Get in touch</SectionEyebrow>
+              <h2 className="heading-1 mt-6 max-w-[16ch] text-balance">
                 Got a project, a question, or a half-formed idea?
               </h2>
             </div>
 
-            <div className="lg:col-span-4">
-              <p className="body text-pretty text-[rgb(var(--text-secondary))]">
-                I&apos;m always happy to talk about what I&apos;m building, swap notes on a problem I&apos;m
-                stuck on, or dig into something interesting together.
-              </p>
-
-              <div className="mt-8 flex flex-col items-start gap-5">
+            <div className="lg:col-span-5">
+              <div className="flex flex-col items-start gap-5">
                 <ButtonLink href="/contact" size="lg" className="w-full sm:w-auto">
                   Start a conversation
                 </ButtonLink>
@@ -42,7 +37,7 @@ export function ContactCta() {
             </div>
           </div>
 
-          <ul className="mt-14 flex flex-wrap items-center gap-x-8 gap-y-3 border-t border-[rgb(var(--border-subtle))] pt-8">
+          <ul className="mt-12 flex flex-wrap items-center gap-x-8 gap-y-3 border-t border-[rgb(var(--border))] pt-8">
             <li className="caption text-[rgb(var(--text-muted))]">Elsewhere</li>
             {socialLinks.map((link) => (
               <li key={link.href}>
@@ -54,6 +49,6 @@ export function ContactCta() {
           </ul>
         </div>
       </div>
-    </section>
+    </SectionShell>
   )
 }

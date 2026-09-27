@@ -1,5 +1,9 @@
 import Link from 'next/link'
-import { projectCategories, type ProjectCategoryFilter } from '@/config/site'
+import {
+  projectCategories,
+  categoryColorClass,
+  type ProjectCategoryFilter,
+} from '@/config/site'
 import { classNames } from '@/lib/utils/helpers'
 
 export interface ProjectFilterOption {
@@ -39,15 +43,21 @@ export function ProjectFilter({ options, active }: ProjectFilterProps) {
 
   return (
     <nav aria-label="Project categories" className="relative">
-      <ul className="-mx-5 flex items-center gap-4 overflow-x-auto px-5 scrollbar-hide sm:mx-0 sm:flex-wrap sm:gap-x-7 sm:overflow-visible sm:px-0">
+      <ul className="-mx-5 flex items-center gap-3 overflow-x-auto px-5 scrollbar-hide sm:mx-0 sm:flex-wrap sm:gap-x-6 sm:overflow-visible sm:px-0">
         {entries.map((option, index) => {
           const isActive = option.value === active
           const isEmpty = option.count === 0 && option.value !== 'all'
 
           return (
-            <li key={option.value} className="flex shrink-0 items-center gap-4 sm:gap-7">
+            <li
+              key={option.value}
+              className={classNames(
+                'flex shrink-0 items-center gap-3 sm:gap-6',
+                option.value !== 'all' ? categoryColorClass(option.value) : ''
+              )}
+            >
               {index > 0 && (
-                <span aria-hidden="true" className="hidden h-3 w-px bg-[rgb(var(--border-subtle))] sm:block" />
+                <span aria-hidden="true" className="hidden h-4 w-px bg-[rgb(var(--border))] sm:block" />
               )}
 
               <Link
@@ -56,36 +66,52 @@ export function ProjectFilter({ options, active }: ProjectFilterProps) {
                 aria-current={isActive ? 'true' : undefined}
                 className={classNames(
                   // `min-h-11` keeps the tap target at 44px on a phone; the
-                  // underline is a separate `::after`-style child rather than a
-                  // border so it can animate width without moving the text.
-                  'group relative inline-flex min-h-11 items-center gap-2 whitespace-nowrap py-2 text-[length:var(--text-nav)] font-medium tracking-[-0.01em] transition-colors duration-150',
+                  // underline is a separate child rather than a border so it can
+                  // animate width without moving the text.
+                  'group relative inline-flex min-h-11 items-center gap-2 whitespace-nowrap px-1 py-2 text-[length:var(--text-nav)] font-medium tracking-[-0.01em] transition-colors duration-200',
                   isActive
-                    ? 'text-[rgb(var(--text-primary))]'
-                    : 'text-[rgb(var(--text-secondary))] hover:text-[rgb(var(--text-primary))]'
+                    ? 'text-[rgb(var(--cat,var(--text)))]'
+                    : 'text-[rgb(var(--text-dim))] hover:text-[rgb(var(--cat,var(--text)))]'
                 )}
               >
+                {option.value !== 'all' && (
+                  <span
+                    aria-hidden="true"
+                    className={classNames(
+                      'h-1.5 w-1.5 rounded-full transition-opacity',
+                      isActive ? 'cat-dot opacity-100' : 'cat-dot opacity-40'
+                    )}
+                  />
+                )}
                 {option.label}
                 {option.count !== undefined && (
-                  <span className="meta tabular-nums">{String(option.count).padStart(2, '0')}</span>
+                  <span
+                    className={classNames(
+                      'meta tabular-nums transition-colors',
+                      isActive ? 'text-[rgb(var(--cat))]' : 'text-[rgb(var(--text-muted))]'
+                    )}
+                  >
+                    {String(option.count).padStart(2, '0')}
+                  </span>
                 )}
                 {/*
-                  The active marker: a 2px accent bar, matching the header's
-                  active navigation item so the two read as the same language.
+                  The active marker: a 2px bar, matching the header's active
+                  navigation item so the two read as the same language.
                 */}
                 <span
                   aria-hidden="true"
                   className={classNames(
-                    'absolute inset-x-0 -bottom-px h-0.5 transition-colors duration-150',
+                    'absolute inset-x-0 -bottom-px h-0.5 origin-center transition-all duration-200',
                     isActive
-                      ? 'bg-[rgb(var(--accent))]'
-                      : 'bg-transparent group-hover:bg-[rgb(var(--border))]'
+                      ? 'cat-dot scale-x-100'
+                      : 'scale-x-0 bg-transparent group-hover:scale-x-100 group-hover:bg-[rgb(var(--border))]'
                   )}
                 />
                 {/*
-                  An empty category stays listed — the bar should never
-                  silently omit one — and its `00` count is the visible signal.
-                  The screen-reader text spells that out, because "00" alone
-                  reads as a number rather than as "there is nothing here".
+                  An empty category stays listed — the bar should never silently
+                  omit one — and its `00` count is the visible signal. The
+                  screen-reader text spells that out, because "00" alone reads as a
+                  number rather than as "there is nothing here".
                 */}
                 {isEmpty && <span className="sr-only"> (no projects)</span>}
               </Link>

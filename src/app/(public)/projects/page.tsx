@@ -42,7 +42,7 @@ function resolveCategory(value: string | string[] | undefined): ProjectCategoryF
   return isProjectCategory(raw) && VALID_CATEGORIES.includes(raw) ? raw : 'all'
 }
 
-export default function ProjectsPage({
+export default async function ProjectsPage({
   searchParams,
 }: {
   searchParams: { category?: string | string[]; page?: string | string[] }
@@ -51,27 +51,51 @@ export default function ProjectsPage({
   const requestedPage = Number(Array.isArray(searchParams.page) ? searchParams.page[0] : searchParams.page)
   const page = Number.isFinite(requestedPage) && requestedPage > 0 ? Math.floor(requestedPage) : 1
 
+  /*
+   * The count is read here as well as inside the results block below. The two
+   * reads are independent and cheap — the category counts are a single grouped
+   * query — and splitting them keeps the header outside the Suspense boundary so
+   * the page never renders a giant "00" placeholder while data loads.
+   */
+  const counts = await getCategoryCounts()
+  const total = counts.reduce((sum, entry) => sum + entry.count, 0)
+
   return (
     <>
       <div className="container-custom">
         {/*
-          Shared page opening. The eyebrow used to read "Archive", which named a
-          filing convention rather than anything a visitor recognises — the
-          destination is a list of projects, so it says "Projects". The copy
-          below it now states what is in the list and what a project entry
-          contains, so someone can tell whether this is the page they wanted
-          before they scroll.
+          A wide, confident opening. The previous version used the shared
+          `PageHeader`, which is right for a text page but made the projects
+          index look like every other page on the site — and this is the page
+          people actually want to see. The oversized count gives the page an
+          anchor and states the scale of the work before any card renders.
         */}
-        <PageHeader
-          eyebrow="Projects"
-          title="Things I have built."
-          lede="Every project I have made public, from coursework to longer experiments. Each entry explains what it is, what it is made of, and why I built it. Not everything here is finished — that is part of the point."
-          action={
-            <ArrowLink href="/about" direction="up">
-              How I work
-            </ArrowLink>
-          }
-        />
+        <div className="border-b border-[rgb(var(--border))] py-14 sm:py-20 lg:py-24">
+          <div className="grid gap-x-12 gap-y-10 lg:grid-cols-12">
+            <div className="lg:col-span-8">
+              <p className="eyebrow">Projects</p>
+              <h1 className="display-1 mt-6 text-[length:var(--text-h1)]">
+                Things I have built.
+              </h1>
+              <p className="body-lg mt-6 max-w-2xl text-pretty text-[rgb(var(--text-dim))]">
+                Every project I have made public, from coursework to longer experiments. Each
+                entry explains what it is, what it is made of, and why I built it. Not everything
+                here is finished — that is part of the point.
+              </p>
+            </div>
+
+            <div className="flex items-end lg:col-span-4 lg:justify-end">
+              <div className="text-left lg:text-right">
+                <p className="font-display text-6xl font-bold leading-none tracking-[-0.04em] text-[rgb(var(--text))] sm:text-7xl">
+                  {String(total).padStart(2, '0')}
+                </p>
+                <p className="meta mt-2">
+                  {total === 1 ? 'project published' : 'projects published'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/*

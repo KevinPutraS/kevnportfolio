@@ -1,41 +1,38 @@
-import { ProjectCard, type ProjectCardVariant } from './project-card'
+import { ProjectCard } from './project-card'
 import { classNames } from '@/lib/utils/helpers'
 import type { Project } from '@/types/project'
 
 /**
- * Editorial grid.
+ * Projects index.
  *
- * On wide screens a repeating 12-column rhythm is used (wide / narrow / narrow,
- * then offset) so the page reads like a laid-out spread rather than a uniform
- * card wall. On mobile and tablet everything collapses to a single column,
- * which is the only honest layout at 320px.
+ * Three columns from `lg`, four from `xl`. An earlier pass used two columns with
+ * the first card spanning both, which gave the screenshots real size but made
+ * every card a billboard — on a 1440px display a two-column card is over 600px
+ * wide and reads as a hero, so a list of projects looked like a set of
+ * one-off landings rather than an index.
+ *
+ * Three is the compromise that keeps the image legible while leaving room for
+ * two cards side by side. The double-width feature was dropped rather than moved
+ * to the first slot: repeating a wide/narrow/wide rhythm down a list is the most
+ * recognisable "designed grid" tic there is, and the same project rendered at two
+ * different sizes in one index is worse than a uniform grid.
  */
-function layoutFor(index: number): { wrapper: string; variant: ProjectCardVariant } {
-  const position = index % 4
-
-  if (position === 0) {
-    return { wrapper: 'lg:col-span-7', variant: 'feature' }
-  }
-  if (position === 1) {
-    return { wrapper: 'lg:col-span-5 lg:pt-20', variant: 'standard' }
-  }
-  if (position === 2) {
-    return { wrapper: 'lg:col-span-5', variant: 'standard' }
-  }
-  return { wrapper: 'lg:col-span-7 lg:pt-8', variant: 'standard' }
-}
-
 export function ProjectGrid({ projects, className }: { projects: Project[]; className?: string }) {
   return (
-    <div className={classNames('grid gap-x-10 gap-y-12 sm:gap-y-16 lg:grid-cols-12', className)}>
-      {projects.map((project, index) => {
-        const { wrapper, variant } = layoutFor(index)
-        return (
-          <div key={project.id} className={classNames('min-w-0', wrapper)}>
-            <ProjectCard project={project} variant={variant} priority={index < 2} />
-          </div>
-        )
-      })}
+    <div
+      className={classNames(
+        'grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3',
+        className
+      )}
+    >
+      {projects.map((project, index) => (
+        <ProjectCard
+          key={project.id}
+          project={project}
+          variant="standard"
+          priority={index < 3}
+        />
+      ))}
     </div>
   )
 }

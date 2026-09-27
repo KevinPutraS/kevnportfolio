@@ -1,15 +1,14 @@
 import Link from 'next/link'
 import { ArrowUpRight } from 'lucide-react'
-import { categoryLabels, type ProjectCategory } from '@/config/site'
+import {
+  categoryLabels,
+  categoryColorClass,
+  type ProjectCategory,
+} from '@/config/site'
 import { formatMonth, classNames } from '@/lib/utils/helpers'
 import type { Project } from '@/types/project'
 import { ProjectThumbnail } from './project-thumbnail'
 
-/**
- * `feature` spans two columns and shows the full description; `compact` is the
- * smaller tile used in dense lists. The variation is what keeps the projects
- * index from reading as a uniform card wall.
- */
 export type ProjectCardVariant = 'feature' | 'standard' | 'compact'
 
 interface ProjectCardProps {
@@ -20,13 +19,17 @@ interface ProjectCardProps {
 }
 
 /**
- * One project.
+ * One project, image first.
  *
- * Every card states its three facts in the same order — category and date,
- * title, description, technologies — and ends with a visible "View case study"
- * action. There is no `index` prop: a sequential number on a filtered, sortable
- * list is a tie-breaker that means nothing to a reader, and it was competing
- * for attention with the category label, which does mean something.
+ * The image is the thing a visitor actually reacts to, so it gets roughly half
+ * the card's height and the text is trimmed to what helps a decision: category,
+ * title, one line of what it is, and a visible action. The previous versions
+ * either buried the image behind a border and a caption, or filled the card with
+ * pills until the work was the smallest element on it.
+ *
+ * `feature` is the first project on a page and runs wider with a taller image —
+ * enough asymmetry to make an index feel laid out rather than gridded, while
+ * still fitting two per row on a laptop.
  */
 export function ProjectCard({
   project,
@@ -35,100 +38,115 @@ export function ProjectCard({
   priority,
 }: ProjectCardProps) {
   const isFeature = variant === 'feature'
-  const isCompact = variant === 'compact'
   const technologies = project.technologies ?? []
-  const visibleTechnologies = technologies.slice(0, isFeature ? 6 : isCompact ? 3 : 4)
-  const overflowCount = technologies.length - visibleTechnologies.length
+  const visible = technologies.slice(0, isFeature ? 4 : 3)
+  const category = project.category as ProjectCategory
+  const catClass = categoryColorClass(project.category)
 
   return (
-    <article className={classNames('group relative flex h-full', className)}>
+    <article
+      className={classNames(
+        'group relative isolate flex flex-col overflow-hidden rounded-2xl',
+        'border bg-[rgb(var(--bg-elevated))]',
+        catClass,
+        'cat-edge transition-[transform,border-color,box-shadow] duration-500 ease-out',
+        'hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-24px_rgb(0_0_0/0.75)]'
+      )}
+    >
       <Link
         href={`/projects/${project.slug}`}
-        className="flex w-full flex-col focus-visible:outline-none"
-        // Stretches over the whole tile so the entire card is clickable, while
-        // keeping a single tab stop and a single accessible name.
+        className="flex h-full flex-col focus-visible:outline-none"
         aria-label={`${project.title} — view case study`}
       >
-        <ProjectThumbnail
-          src={project.thumbnail_url}
-          alt={`${project.title} preview`}
-          className={classNames(
-            'border border-[rgb(var(--border-subtle))] transition-colors duration-300 group-hover:border-[rgb(var(--border))]',
-            isFeature ? 'aspect-[16/10]' : isCompact ? 'aspect-[16/9]' : 'aspect-[4/3]'
-          )}
-          priority={priority}
-          sizes={
-            isFeature
-              ? '(min-width: 1024px) 66vw, 100vw'
-              : isCompact
-                ? '(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw'
-                : '(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw'
-          }
-        />
+        {/* Image. The dominant element, and the reason to click. */}
+        <div className="relative overflow-hidden">
+          {/* A faint wash of the category colour, so the card is identifiable
+              even from the image area rather than only from the chip. */}
+          <div aria-hidden="true" className="cat-glow pointer-events-none absolute inset-0 z-10" />
 
-        {/* Category and date: the two facts that help someone decide whether to
-            keep reading. Category leads because it is the broader filter. */}
-        <div className="mt-5 flex items-center gap-3 border-t border-[rgb(var(--border-subtle))] pt-4">
-          <span className="meta-strong">
-            {categoryLabels[project.category as ProjectCategory] ?? project.category}
+          <ProjectThumbnail
+            src={project.thumbnail_url}
+            alt={`${project.title} preview`}
+            className={classNames(
+              'w-full transition-transform duration-700 ease-out group-hover:scale-[1.06]',
+              isFeature ? 'aspect-[16/10]' : 'aspect-video'
+            )}
+            priority={priority}
+            sizes={
+              isFeature
+                ? '(min-width: 1024px) 60vw, 100vw'
+                : '(min-width: 1024px) 40vw, (min-width: 640px) 50vw, 100vw'
+            }
+            zoom={false}
+          />
+
+          {/* Bottom scrim so the overlaid date stays legible on any image. */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-24 bg-gradient-to-t from-black/75 via-black/25 to-transparent"
+          />
+
+          {/* Category chip, carrying the category colour. */}
+          <span
+            className={classNames(
+              'cat-chip absolute left-4 top-4 z-20 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-mono text-xs uppercase tracking-[0.1em] backdrop-blur-md'
+            )}
+          >
+            <span aria-hidden="true" className="cat-dot h-1.5 w-1.5 rounded-full" />
+            {categoryLabels[category] ?? project.category}
           </span>
+
           {project.project_date && (
             <time
               dateTime={project.project_date}
-              className="meta ml-auto shrink-0 tabular-nums"
+              className="absolute bottom-4 left-4 z-20 font-mono text-xs tabular-nums text-white/75"
             >
               {formatMonth(project.project_date)}
             </time>
           )}
         </div>
 
-        <h3
-          className={classNames(
-            'mt-3 font-display font-bold leading-[1.15] tracking-[-0.025em] text-[rgb(var(--text-primary))] transition-colors duration-150 group-hover:text-[rgb(var(--accent))]',
-            isFeature ? 'text-3xl sm:text-4xl' : isCompact ? 'text-base' : 'text-xl'
-          )}
-        >
-          <span className="absolute inset-0" aria-hidden="true" />
-          {project.title}
-        </h3>
+        {/* Text. Compact, so the image stays the subject. */}
+        <div className="flex flex-1 flex-col p-5">
+          <h3
+            className={classNames(
+              'text-balance font-display font-bold leading-[1.12] tracking-[-0.03em]',
+              'text-[rgb(var(--text))] transition-colors duration-300 group-hover:text-[rgb(var(--accent))]',
+              isFeature ? 'text-2xl' : 'text-lg'
+            )}
+          >
+            <span className="absolute inset-0" aria-hidden="true" />
+            {project.title}
+          </h3>
 
-        <p
-          className={classNames(
-            'mt-2 text-pretty text-[rgb(var(--text-secondary))]',
-            isFeature ? 'max-w-xl text-base' : 'line-clamp-3 text-[length:var(--text-body-sm)]'
-          )}
-        >
-          {project.short_description}
-        </p>
-
-        {visibleTechnologies.length > 0 && (
-          <p className="tech-list mt-4">
-            <span className="sr-only">Built with: </span>
-            {visibleTechnologies.join(' · ')}
-            {overflowCount > 0 && <span> · +{overflowCount} more</span>}
+          <p
+            className={classNames(
+              'mt-2.5 text-pretty leading-relaxed text-[rgb(var(--text-dim))]',
+              isFeature ? 'line-clamp-2 text-base' : 'line-clamp-2 text-[length:var(--text-sm)]'
+            )}
+          >
+            {project.short_description}
           </p>
-        )}
 
-        {/*
-          The action, always visible.
-          The affordance used to be a corner arrow that only appeared on hover,
-          which meant the clickability existed only for pointer users and only
-          while hovering. A labelled link with a rule under it is legible before
-          you touch anything and says what happens next.
-        */}
-        <span className="mt-auto flex items-center gap-2 pt-6">
-          <span className="relative text-[length:var(--text-body-sm)] font-medium text-[rgb(var(--text-primary))]">
+          {visible.length > 0 && (
+            <p className="tech-list mt-4">
+              <span className="sr-only">Built with: </span>
+              {visible.join(' · ')}
+              {technologies.length > visible.length && (
+                <span> · +{technologies.length - visible.length}</span>
+              )}
+            </p>
+          )}
+
+          {/* Action. Always visible, never hover-only. */}
+          <span className="mt-6 flex items-center gap-1.5 border-t border-[rgb(var(--border))] pt-4 text-[length:var(--text-sm)] font-semibold text-[rgb(var(--text))] transition-colors duration-300 group-hover:text-[rgb(var(--accent))]">
             View case study
-            <span
+            <ArrowUpRight
+              className="h-4 w-4 shrink-0 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
               aria-hidden="true"
-              className="absolute -bottom-0.5 left-0 h-px w-full bg-[rgb(var(--border))] transition-colors duration-150 group-hover:bg-[rgb(var(--accent))]"
             />
           </span>
-          <ArrowUpRight
-            className="h-4 w-4 shrink-0 text-[rgb(var(--text-muted))] transition-[color,transform] duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[rgb(var(--accent))]"
-            aria-hidden="true"
-          />
-        </span>
+        </div>
       </Link>
     </article>
   )

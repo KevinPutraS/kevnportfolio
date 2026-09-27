@@ -3,6 +3,7 @@ import { Award } from 'lucide-react'
 import { getPublishedCertificates } from '@/lib/db/certificates'
 import { CertificateEntry } from '@/components/certificates/certificate-entry'
 import { EmptyState } from '@/components/ui/empty-state'
+import { SectionShell } from '@/components/ui/section-shell'
 import { ArrowLink } from '@/components/ui/arrow-link'
 import { PageHeader } from '@/components/ui/page-header'
 import { siteConfig } from '@/config/site'
@@ -48,7 +49,7 @@ export default async function CertificatesPage() {
         />
       </div>
 
-      <section className="rule-top">
+      <SectionShell tone="section-tone-school">
         <div className="container-custom">
           {certificates.length === 0 ? (
             <EmptyState
@@ -68,7 +69,7 @@ export default async function CertificatesPage() {
             </ul>
           )}
         </div>
-      </section>
+      </SectionShell>
     </>
   )
 }
