@@ -73,3 +73,64 @@ export function revalidateProjectPaths(slug?: string | null) {
   if (slug) revalidatePath(`/projects/${slug}`)
   else revalidatePath('/projects/[slug]', 'page')
 }
+
+/** The public pages whose cached render depends on experiences. */
+export function revalidateExperiencePaths() {
+  revalidatePath('/')
+  revalidatePath('/experience')
+  revalidatePath('/about')
+}
+
+/** The public pages whose cached render depends on certificates. */
+export function revalidateCertificatePaths() {
+  revalidatePath('/')
+  revalidatePath('/certificates')
+  revalidatePath('/about')
+}
+
+/**
+ * Recognises a PATCH body that only flips boolean switches, e.g. the publish
+ * and feature toggles in a table row.
+ *
+ * Returns `null` when the body contains anything else, which tells the caller
+ * to treat it as a full editor save instead. Checking the *value* type matters
+ * as much as the key: `{"published": "false"}` is not a toggle request, and
+ * forwarding it to Postgres would store the string.
+ *
+ * Shared because projects, experiences and certificates all expose the same
+ * status switches, and each one would otherwise re-implement this check.
+ */
+export function booleanTogglePatch(
+  patch: Record<string, unknown>,
+  allowedFields: readonly string[]
+): Record<string, boolean> | null {
+  const keys = Object.keys(patch)
+  if (keys.length === 0) return null
+  if (!keys.every((key) => allowedFields.includes(key))) return null
+  if (!Object.values(patch).every((value) => typeof value === 'boolean')) return null
+
+  return Object.fromEntries(
+    keys.map((key) => [key, patch[key] as boolean])
+  ) as Record<string, boolean>
+}
+
+/**
+ * Turns a database error into a response.
+ *
+ * 23505 is a unique violation and 23514 a CHECK violation. The latter is
+ * reachable for the month-precision date rules and the `current` / end-date
+ * rule, so a hand-written query or a client that bypasses the editor surfaces
+ * a readable message instead of a bare 500.
+ */
+export function databaseErrorResponse(error: { code?: string; message: string }, action: string) {
+  if (error.code === '23505') {
+    return NextResponse.json({ message: 'That value is already in use.' }, { status: 409 })
+  }
+  if (error.code === '23514') {
+    return NextResponse.json(
+      { message: 'Those values are not allowed together. Check the dates.' },
+      { status: 400 }
+    )
+  }
+  return NextResponse.json({ message: `Could not ${action}.` }, { status: 500 })
+}

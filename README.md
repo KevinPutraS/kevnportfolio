@@ -154,9 +154,20 @@ Discord webhook to enable real delivery. No key is ever compiled into the bundle
 
 1. `supabase/migrations/20240101000000_initial_schema.sql`
 2. `supabase/migrations/20240102000000_harden_security.sql`
+3. `supabase/migrations/20240103000000_add_experience_certificates.sql`
 
-The second file is idempotent and exists so that anyone who applied an earlier
-version of the schema still ends up with the hardened policies.
+The second and third files are idempotent and exist so that anyone who applied an
+earlier version of the schema still ends up with the current tables, policies and
+bucket. The third adds `experiences` and `certificates` for the timeline and
+credential pages; the site renders those routes as empty states until you run it.
+
+> **Hosted project status:** all three migrations have been applied to
+> `saieldbjqwagyzkienrt`. `experiences` and `certificates` exist and are empty, so
+> `/experience`, `/certificates` and the homepage preview currently show their
+> empty states. That is deliberate — the demo rows for those two tables are in
+> `supabase/seed.sql` but have not been loaded, because whether to ship placeholder
+> timeline entries is a content decision. Run the seed (or just the
+> experience/certificate inserts) when you want to see the populated layout.
 
 **Local project** — `npm run db:reset` applies migrations and the seed.
 
@@ -184,15 +195,23 @@ with a 2 MB limit and a MIME allowlist of `image/jpeg`, `image/png`, `image/webp
 
 Application-layer validation runs in addition to the bucket policy: the
 extension is derived from the validated MIME type (never the filename), the
-magic number is checked, and only two folders are writable:
+magic number is checked, and only these folders are writable:
 
 - `projects/thumbnails`
 - `projects/gallery`
+- `experiences/logos`
+- `certificates/images`
+
+The bucket is created by the first migration and re-asserted by the third, so
+running all three in order is safe.
 
 ### 5. Load the demo content
 
-`supabase/seed.sql` inserts **seven clearly-labelled placeholder projects**, so a
-fresh install does not look empty. They are easy to remove — see
+`supabase/seed.sql` inserts **seven clearly-labelled placeholder projects, three
+placeholder experience entries and three placeholder certificates**, so a fresh
+install does not look empty. Every row is prefixed `Demo ·` and uses a `Sample …`
+organization or issuer; the certificates deliberately ship without credential
+URLs. They are easy to remove — see
 [Replacing the demo content](#replacing-the-demo-content).
 
 To load them on a hosted project, paste the seed into **SQL Editor** and run it.
@@ -214,7 +233,8 @@ To load them on a hosted project, paste the seed into **SQL Editor** and run it.
 │   ├── config.toml
 │   ├── migrations/
 │   │   ├── 20240101000000_initial_schema.sql
-│   │   └── 20240102000000_harden_security.sql
+│   │   ├── 20240102000000_harden_security.sql
+│   │   └── 20240103000000_add_experience_certificates.sql
 │   └── seed.sql
 └── src/
     ├── middleware.ts               # session refresh + admin redirect
@@ -230,6 +250,8 @@ To load them on a hosted project, paste the seed into **SQL Editor** and run it.
     │   │   │   └── [slug]/
     │   │   │       ├── page.tsx
     │   │   │       └── not-found.tsx  # project-specific 404
+    │   │   ├── experience/page.tsx    # timeline
+    │   │   ├── certificates/page.tsx  # grid + lightbox
     │   │   ├── about/page.tsx
     │   │   └── contact/page.tsx
     │   ├── admin/
@@ -238,12 +260,18 @@ To load them on a hosted project, paste the seed into **SQL Editor** and run it.
     │   │       ├── layout.tsx
     │   │       ├── loading.tsx
     │   │       ├── page.tsx
-    │   │       └── projects/
-    │   │           ├── page.tsx
-    │   │           ├── new/page.tsx
-    │   │           └── [id]/edit/page.tsx
+    │   │       ├── settings/page.tsx
+    │   │       ├── projects/
+    │   │       │   ├── page.tsx
+    │   │       │   ├── new/page.tsx
+    │   │       │   └── [id]/edit/page.tsx
+    │   │       ├── experience/     # same three routes
+    │   │       └── certificates/   # same three routes
     │   ├── api/
-    │   │   ├── admin/projects/     # GET/POST, GET/PATCH/DELETE, stats
+    │   │   ├── admin/
+    │   │   │   ├── projects/       # GET/POST, GET/PATCH/DELETE, stats
+    │   │   │   ├── experience/      # + /[id], /reorder
+    │   │   │   └── certificates/    # + /[id], /reorder
     │   │   ├── auth/signin, signout
     │   │   ├── contact/
     │   │   └── upload/
@@ -255,24 +283,30 @@ To load them on a hosted project, paste the seed into **SQL Editor** and run it.
     │   │                           # select, modal, field, empty-state, …
     │   ├── layout/                 # navbar, mobile-menu, footer, skip-link
     │   ├── home/                   # hero, intro, featured-projects, interests,
-    │   │                           # currently-exploring, about-preview, contact-cta
+    │   │                           # currently-exploring, about-preview,
+    │   │                           # credentials-preview, contact-cta
     │   ├── projects/               # project-card, project-grid, project-filter,
     │   │                           # project-thumbnail, related-projects, gallery
+    │   ├── experience/             # experience-entry
+    │   ├── certificates/           # certificate-card (+ lightbox)
+    │   ├── about/                  # background-summary
     │   ├── contact/                # contact-form
     │   └── admin/                  # sidebar, header, navigation, table, form,
-    │                               # image-uploader, login-form
+    │                               # image-uploader, login-form, row-action
     ├── config/site.ts              # all site content, nav, categories
     ├── lib/
     │   ├── api/admin-guard.ts      # auth guard + validation helpers
     │   ├── auth/                   # getUser, signIn, signOut
-    │   ├── db/projects.ts          # all project queries
-    │   ├── hooks/use-focus-trap.ts
+    │   ├── db/                     # projects.ts, experience.ts, certificates.ts
+    │   ├── hooks/                  # use-focus-trap, use-row-actions
     │   ├── storage/                # images.ts (server) + image-types.ts (client-safe)
     │   ├── supabase/               # server, public, client, config
     │   ├── utils/                  # helpers, rate-limit
-    │   └── validation/             # project.ts, contact.ts
+    │   └── validation/             # fields.ts, project.ts, experience.ts,
+    │                               # certificate.ts, contact.ts
     ├── styles/globals.css          # design tokens + component classes
-    └── types/
+    └── types/                      # database, project, category, experience,
+                                    # certificate
 ```
 
 **Why two Supabase clients?** Public reads use a cookieless anonymous client
@@ -440,13 +474,55 @@ Design constraints observed:
 | `created_at` | `timestamptz` | default `now()` |
 | `note` | `text` | optional label, e.g. `owner` |
 
+`public.experiences`
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | `uuid` | PK, `gen_random_uuid()` |
+| `title` | `text` | 1–120 chars |
+| `organization` | `text` | 1–120 chars |
+| `location` | `text` | nullable, ≤120 |
+| `employment_type` | `text` | CHECK: `internship`, `part_time`, `freelance`, `organization`, `school_project`, `volunteer`, `other` |
+| `start_date` | `date` | **not null**, month precision (CHECK: day is always `01`) |
+| `end_date` | `date` | nullable, month precision |
+| `current` | `boolean` | default `false`; CHECK forces `end_date IS NULL` while `true` |
+| `description` | `text` | nullable, ≤2000 chars |
+| `responsibilities` | `text[]` | default `{}`, ≤20 entries, each ≤300 chars |
+| `technologies` | `text[]` | default `{}`, ≤20 entries, each ≤40 chars |
+| `organization_logo_url` | `text` | nullable |
+| `project_url` | `text` | nullable |
+| `sort_order` | `integer` | default `0`, **higher first** — set by the reorder route |
+| `published` | `boolean` | default `false` |
+| `created_at` | `timestamptz` | default `now()` |
+| `updated_at` | `timestamptz` | default `now()`, maintained by trigger |
+
+`public.certificates`
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | `uuid` | PK, `gen_random_uuid()` |
+| `title` | `text` | 1–120 chars |
+| `issuer` | `text` | 1–120 chars |
+| `issue_date` | `date` | **not null**, month precision |
+| `expiration_date` | `date` | nullable, month precision; CHECK ≥ `issue_date` |
+| `credential_id` | `text` | nullable, ≤120 |
+| `credential_url` | `text` | nullable |
+| `certificate_image_url` | `text` | nullable — omitted cards fall back to text only |
+| `description` | `text` | nullable, ≤1000 chars |
+| `skills` | `text[]` | default `{}`, ≤20 entries, each ≤40 chars |
+| `sort_order` | `integer` | default `0`, **higher first** |
+| `published` | `boolean` | default `false` |
+| `created_at` | `timestamptz` | default `now()` |
+| `updated_at` | `timestamptz` | default `now()`, maintained by trigger |
+
 `public.is_admin()` — `SECURITY DEFINER`, `STABLE`, pinned `search_path`. Returns
 whether `auth.uid()` is in `public.admins`. `SECURITY DEFINER` is required so the
 function can read the table it is checking without hitting its own RLS policy.
 
 Indexes cover category, published, featured, `project_date`, `created_at`, plus a
 partial index on `(project_date, created_at) WHERE published = true` for the
-public archive query.
+public archive query. `experiences` and `certificates` each get a `(published,
+sort_order, …)` public feed index plus partial admin indexes.
 
 > `technologies` and `gallery` are `text[]`, not JSON. They are only ever read as
 > whole arrays, and `text[]` gives real column validation and GIN indexing for
@@ -462,7 +538,7 @@ public archive query.
 | Route guard | `getUser()` in `(protected)/layout.tsx` → redirect to `/admin/login`. |
 | Middleware | Refreshes the session cookie; early-redirects unauthenticated `/admin` requests. UX only. |
 | Route handlers | Every `/api/admin/*` and `/api/upload` call checks configuration → authentication → validation before touching the database. |
-| Database | RLS on `projects`, `admins` and `storage.objects`, gated on `public.is_admin()`. |
+| Database | RLS on `projects`, `experiences`, `certificates`, `admins` and `storage.objects`, gated on `public.is_admin()`. |
 | Input | Zod on both client and server; length caps; URL validation rejecting `javascript:` and `data:`. |
 | Uploads | MIME allowlist, magic-number check, extension derived from the MIME type, folder allowlist, 2 MB cap, private bucket write. |
 
@@ -475,23 +551,53 @@ Validation specifics:
 - `slug` must be lowercase kebab-case; duplicates return **409** with a
   per-field message.
 - URLs must be `http(s)`, except image fields which also accept root-relative
-  paths (`/images/…`) for bundled assets.
-- The project date must be `YYYY-MM`.
-- `projectFormSchema` is the single source of truth and is shared by the editor
-  and both API routes, so they cannot drift.
+  paths (`/images/…`) for bundled assets. A protocol-relative `//host` value is
+  rejected too, because it resolves to a different origin.
+- The project date must be `YYYY-MM`. Experience and certificate dates use the
+  same `YYYY-MM` month input and are stored as the first of the month.
+- Each form has exactly one schema, shared by the editor and both API routes, so
+  they cannot drift: `projectFormSchema`, `experienceFormSchema`,
+  `certificateFormSchema`.
+- `current = true` clears `end_date` in the same statement, so the
+  `current ⇒ end_date IS NULL` CHECK can never reject a toggle as a bare 23514.
 
 ---
 
 ## Content model
 
-A project is a plain database row. Publishing a project in the CMS makes it
-appear in the archive within 60 seconds, with no redeploy.
+The CMS manages three independent content types. Each is a plain database row
+with the same shape: `published` gates visibility, `sort_order` pins manual
+position, and the type owns its own optional fields.
+
+| Type | Public route | Admin routes |
+| --- | --- | --- |
+| Project | `/projects`, `/projects/[slug]` | `/admin/projects`, `/new`, `/[id]/edit` |
+| Experience | `/experience` | `/admin/experience`, `/new`, `/[id]/edit` |
+| Certificate | `/certificates` | `/admin/certificates`, `/new`, `/[id]/edit` |
+
+Publishing in the CMS makes a record appear publicly within 60 seconds, with no
+redeploy. `/experience` and `/certificates` are ISR at `revalidate = 60`; the
+homepage and About page previews read the same tables.
+
+**Ordering.** Every listing sorts by `sort_order` descending, then falls back to
+the natural date descending and finally `created_at`, which means a freshly
+created row with the default `sort_order = 0` still lands in a sensible place
+among other unsorted rows. The reorder route writes `length - index`, so the first
+id in the submitted array ends up with the highest number and therefore sorts
+first — matching what the editor's "Higher values sit earlier" hint promises.
 
 **Optional fields are optional all the way to the UI.** If `repository_url` is
 empty, no repository button renders. If `gallery` is empty, no gallery section
 renders. If `thumbnail_url` is empty or the file 404s, a bundled placeholder is
 shown instead of a broken image. If `description` is empty, the overview section
-is omitted.
+is omitted. A certificate with no image renders a text-only card, and so does one
+whose image URL 404s at runtime.
+
+**Nothing is fabricated.** The About page states plainly that no employment or
+credentials are claimed, so its Background section renders only from published
+rows and disappears entirely when the tables are empty. The seed rows are
+labelled `Demo · …` with `Sample …` organizations, and the certificates
+deliberately carry no invented credential URLs.
 
 Categories are data-driven from `src/config/site.ts` and constrained by a
 Postgres `CHECK`, so the filter bar, the form dropdown and the database always
@@ -572,25 +678,34 @@ Covers typecheck, lint and the production build. Beyond that:
 - [ ] An unpublished project 404s for a signed-out visitor
 - [ ] `curl -o /dev/null -w "%{http_code}" /projects/does-not-exist` returns `404`
 - [ ] `/about`, `/contact` and a bogus URL (404 page) all render
+- [ ] `/experience` renders the timeline, and an empty one shows a purposeful empty state
+- [ ] `/certificates` renders the grid; a card with no image is text-only
+- [ ] Clicking a certificate image opens a focus-trapped lightbox that closes on Escape
+- [ ] About and the homepage only show Experience / Certificates once rows are published
 - [ ] Mobile navigation opens, traps focus, closes on Escape and on navigation
+- [ ] The desktop nav appears at 1024px, not below it (five items need the room)
 - [ ] No horizontal scrollbar at 320, 360, 390, 430, 768, 1024, 1280 or 1440px
 
 **CMS**
 
-- [ ] `/admin` redirects to `/admin/login` when signed out
-- [ ] Sign in with a Supabase Auth account listed in `public.admins`
+- [x] `/admin` redirects to `/admin/login` when signed out
+- [x] Sign in with a Supabase Auth account listed in `public.admins`
 - [ ] A signed-in user **not** in `public.admins` still cannot write
 - [ ] The dashboard counts drafts as well as published projects
 - [ ] Create, edit and delete a project
 - [ ] Publish / unpublish and feature / unfeature
 - [ ] A duplicate slug produces a clear inline error
 - [ ] Uploading a non-image or an oversized file is rejected
+- [x] Create, edit and delete an experience entry and a certificate
+- [x] Toggling a role to *current* clears its end date instead of erroring
+- [x] Reordering moves a row up **and down** - the first id in the array renders first
+- [x] Publish / unpublish a timeline entry and a certificate
 - [ ] Sign out returns to the login screen
 
 **Also**
 
 - [ ] `robots.txt` disallows `/admin` and `/api/`
-- [ ] `sitemap.xml` lists every published project
+- [ ] `sitemap.xml` lists every published project plus `/experience` and `/certificates`
 - [ ] No secret appears in the client bundle (`NEXT_PUBLIC_*` only)
 
 ### Verified in this environment, without Supabase
@@ -602,12 +717,14 @@ executed, not assumed.
 | --- | --- |
 | `tsc --noEmit` | clean |
 | `next lint` | no warnings or errors |
-| `next build` | 21 routes compiled |
+| `next build` | 35 routes compiled |
 | `/`, `/projects`, `/projects?category=web`, `/about`, `/contact` | `200` |
+| `/experience`, `/certificates` | `200`, empty state (no rows yet) |
 | `/robots.txt`, `/sitemap.xml` | `200` |
 | `/nope`, `/admin/does-not-exist` | `404` |
 | `/projects/does-not-exist` | `404`, project-specific page, `noindex` |
 | `/api/admin/projects`, `/api/admin/projects/list` | `503` (no Supabase configured) |
+| `/api/admin/experience`, `/api/admin/certificates` | `503` (no Supabase configured) |
 | `POST /api/contact` valid | `202` with `delivered: false` and a real message |
 | `POST /api/contact` invalid | `400` with per-field errors |
 | `POST /api/contact` honeypot filled | `400` `company: "Spam detected"` |
@@ -615,17 +732,103 @@ executed, not assumed.
 | Fixed-width overflow scan (`w-[Npx]`, `min-w-[Npx]`) in public components | none |
 | Custom classes emitted in the production CSS bundle | all present |
 
+### Verified against the live Supabase project
+
+All three migrations are applied to the hosted project. The checks below were
+run against a real Supabase Auth admin session (`test@gmail.com`, an `owner`
+row in `public.admins`) and a production `npm start` server, driving the public
+REST API. **88 assertions passed, 0 failed.**
+
+#### Schema and anonymous access
+
+| Probe | Result |
+| --- | --- |
+| `SELECT` all expected columns on both new tables | `200`, shape matches the migration |
+| `anon` INSERT into `experiences` | **401** `42501` "new row violates row-level security policy" |
+| `anon` INSERT into `certificates` | **401** `42501` "new row violates row-level security policy" |
+| `anon` UPDATE `projects` on a real row | 0 rows affected; `updated_at` unchanged, trigger never fired |
+| `anon` DELETE `projects` on a real row | 0 rows affected; row still present |
+| Database contents after the anon probes | unchanged; nothing created, changed or deleted |
+
+> The anon UPDATE/DELETE probes returned HTTP `204`, which looks like success
+> unless you check the effect. They were no-ops: PostgREST reported no affected
+> rows, the `updated_at` trigger did not fire, and a re-read confirmed the
+> original text. `Prefer: return=representation` is the reliable way to read
+> this. Do not use bare `204` as proof that a write happened.
+
+#### Authentication and authorization
+
+| Probe | Result |
+| --- | --- |
+| `POST /api/auth/signin` with valid credentials | `200`, session cookies set |
+| Unauthenticated `GET /api/admin/experience` | blocked (`401`/`403`) |
+| Unauthenticated `POST /api/admin/experience` | blocked (`401`/`403`) |
+| Unauthenticated `POST /api/admin/experience/reorder` | blocked (`401`/`403`) |
+| Unauthenticated `POST /api/upload` | blocked (`401`/`403`) |
+| Signed-out `GET /admin` | redirects to the login screen |
+| Authenticated `GET /api/admin/projects` | `200` with all 7 rows |
+| Draft visibility, authenticated vs anon | admin saw **4** rows, anon saw **3** — the `published = true` policy hides exactly the one draft |
+
+That last row is the RLS proof for the new tables: a real draft was created,
+confirmed absent for the anonymous role and present for the admin role.
+
+#### Experience and certificate CRUD
+
+| Probe | Result |
+| --- | --- |
+| Create entry | `201`, returns the row with its `id` |
+| Month input `2026-03` | stored as `2026-03-01` |
+| Newline list input | split into 2 array items |
+| Comma list input | split into 2 array items |
+| Read by id / update | `200` |
+| Toggle `current` to `true` | clears `end_date` instead of erroring |
+| Publish, then confirm anon visibility | row appears for anon |
+| Delete | accepted; follow-up `GET` is `404`; row gone from the database |
+| Delete twice | second call `404`, not a silent success |
+| `javascript:`, `data:`, `//host` URLs | `400` |
+| Missing title / organization / issue date | `400` |
+| Bad enum, malformed month, over-long title, end before start | `400` |
+| `current: true` combined with an `end_date` | `400` |
+| Array body, malformed JSON, non-UUID id | `400` |
+| Unknown UUID | `404` |
+
+#### Reordering
+
+| Probe | Result |
+| --- | --- |
+| Reorder 3 entries | `200` |
+| `sort_order` after reorder | distinct `3,2,1`; first submitted id sorts highest |
+| Admin list immediately after reorder | already in the new order |
+| `?order=sort_order.desc` read from the anon key | same row first — the public page agrees |
+| Empty array, non-UUID id | `400` |
+| Unknown but well-formed id | `404` "no longer exist. Reload and try again." |
+
+#### Public pages and regression
+
+`/`, `/projects`, `/experience`, `/certificates`, `/about`, `/contact`,
+`/robots.txt` and `/sitemap.xml` all returned `200`; an unknown project slug and
+an unknown route both returned `404`; `robots.txt` disallows `/admin`; and
+`sitemap.xml` listed `/experience`, `/certificates` and real project URLs.
+
+All rows the test created were deleted afterwards. Final state:
+`experiences` 0 rows, `certificates` 0 rows, `projects` 7 rows (unchanged,
+same UUIDs as before the run).
+
 ### Requires external configuration to verify
 
-These cannot be checked without credentials and are listed so the gap is
-explicit rather than implied:
+These cannot be checked without credentials or infrastructure, and are listed
+so the gap is explicit rather than implied:
 
-- Sign in, and the full create / edit / delete / publish / feature flow
-- RLS behaviour for a signed-in user who is *not* in `public.admins`
-- Image upload, replacement, preview and orphan cleanup
-- Contact form delivery when a webhook is configured
+- RLS behaviour for a signed-in user who is *not* in `public.admins`. Only the
+  anonymous role and a genuine admin were tested; the "authenticated but not an
+  admin" case still needs a second account.
+- Image upload, replacement, preview and orphan cleanup, including the
+  `experiences/logos` and `certificates/images` folders. Only the *rejection*
+  paths were exercised (no file, unauthenticated); a real upload was not sent.
+- Contact form delivery when a webhook is configured.
 - Visual regression at each viewport — there is no browser test suite here, so
-  the responsive checklist above is a manual pass, not an automated one
+  the responsive checklist above is a manual pass, not an automated one.
+- `npm audit` advisories — see Known limitations.
 
 ---
 
@@ -659,6 +862,12 @@ Stated plainly rather than hidden.
 5. **Single-admin model.** `public.admins` supports multiple rows, but there is
    no roles/permissions UI and no per-user authorship tracking.
 
+6. **Reorder is not atomic.** `/api/admin/*/reorder` checks that every submitted
+   id exists, then issues one `UPDATE` per row. A failure halfway through leaves
+   a partially reordered table rather than rolling back. With a single editor
+   and a handful of rows this is a reasonable trade; move it into a Postgres
+   function with an array argument if concurrent editing ever matters.
+
 ---
 
 ## Replacing the demo content
@@ -667,10 +876,12 @@ The seed data is clearly placeholder content. Once you have real projects:
 
 ```sql
 -- Remove just the samples
-DELETE FROM public.projects WHERE slug LIKE 'demo-%';
+DELETE FROM public.projects    WHERE slug LIKE 'demo-%';
+DELETE FROM public.experiences WHERE organization LIKE 'Sample%';
+DELETE FROM public.certificates WHERE issuer LIKE 'Sample%';
 
 -- Or clear everything and start fresh
-TRUNCATE public.projects RESTART IDENTITY CASCADE;
+TRUNCATE public.projects, public.experiences, public.certificates;
 ```
 
 Then update the identity in `src/config/site.ts` (name, email, social links) and

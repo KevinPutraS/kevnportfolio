@@ -78,7 +78,14 @@ export function Navbar() {
           </span>
         </Link>
 
-        <nav aria-label="Main" className="hidden md:block">
+        {/*
+          The desktop bar appears at `lg`, not `md`. Five numbered items plus the
+          wordmark need roughly 640px before the labels start wrapping or
+          colliding with the wordmark, and a tablet-width bar squeezed to fit
+          reads worse than the drawer, which has room for the same list at a
+          comfortable touch size.
+        */}
+        <nav aria-label="Main" className="hidden lg:block">
           <ul className="flex items-center gap-1">
             {siteConfig.navigation.map((item, index) => {
               const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)

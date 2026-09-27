@@ -20,13 +20,23 @@ export const siteConfig = {
   },
   navigation: [
     { label: 'Work', href: '/projects' },
+    { label: 'Experience', href: '/experience' },
+    { label: 'Certificates', href: '/certificates' },
     { label: 'About', href: '/about' },
     { label: 'Contact', href: '/contact' },
   ],
+  /**
+   * Single source of truth for the CMS sidebar. Imported by
+   * `components/admin/admin-navigation.tsx`, which used to keep its own copy
+   * while this one sat unused — two lists that drift apart the moment a
+   * section is added.
+   */
   adminNavigation: [
     { label: 'Dashboard', href: '/admin' },
     { label: 'Projects', href: '/admin/projects' },
-    { label: 'New Project', href: '/admin/projects/new' },
+    { label: 'Experience', href: '/admin/experience' },
+    { label: 'Certificates', href: '/admin/certificates' },
+    { label: 'Settings', href: '/admin/settings' },
   ],
 } as const
 
@@ -59,6 +69,36 @@ export const categoryLabels: Record<ProjectCategory, string> = Object.fromEntrie
 
 export function isProjectCategory(value: unknown): value is ProjectCategory {
   return typeof value === 'string' && value in categoryLabels
+}
+
+/**
+ * Data-driven experience types, for the same reason `projectCategories` is:
+ * the database CHECK constraint, the editor's `<select>` and the public labels
+ * are all generated from this one list, so they cannot drift apart.
+ *
+ * `school_project` and `organization` are intentionally present. School
+ * projects with a meaningful role and committee or student-organisation work
+ * are exactly the kind of experience this portfolio wants to show, and forcing
+ * them into "other" would flatten them.
+ */
+export const experienceTypes = [
+  { value: 'internship', label: 'Internship' },
+  { value: 'part_time', label: 'Part-time' },
+  { value: 'freelance', label: 'Freelance' },
+  { value: 'organization', label: 'Organization' },
+  { value: 'school_project', label: 'School project' },
+  { value: 'volunteer', label: 'Volunteer' },
+  { value: 'other', label: 'Other' },
+] as const
+
+export type ExperienceType = (typeof experienceTypes)[number]['value']
+
+export const experienceTypeLabels: Record<ExperienceType, string> = Object.fromEntries(
+  experienceTypes.map((type) => [type.value, type.label])
+) as Record<ExperienceType, string>
+
+export function isExperienceType(value: unknown): value is ExperienceType {
+  return typeof value === 'string' && value in experienceTypeLabels
 }
 
 export const interests = [

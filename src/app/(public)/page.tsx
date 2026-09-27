@@ -1,6 +1,7 @@
 import { AboutPreview } from '@/components/home/about-preview'
 import { ContactCta } from '@/components/home/contact-cta'
 import { CurrentlyExploring } from '@/components/home/currently-exploring'
+import { CredentialsPreview } from '@/components/home/credentials-preview'
 import { FeaturedProjects } from '@/components/home/featured-projects'
 import { Hero } from '@/components/home/hero'
 import { Interests } from '@/components/home/interests'
@@ -29,6 +30,7 @@ export default async function HomePage() {
       <Hero />
       <Intro />
       <FeaturedProjects projects={featured} />
+      <CredentialsPreview />
       <Interests />
       <CurrentlyExploring />
       <AboutPreview />

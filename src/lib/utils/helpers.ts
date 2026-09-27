@@ -42,8 +42,13 @@ function toDate(value: string): Date | null {
   return Number.isNaN(parsed.getTime()) ? null : parsed
 }
 
-/** Formats a month-precision project date, e.g. `2024-03` -> "March 2024". */
-export function formatProjectDate(value: string | null | undefined): string {
+/**
+ * Formats a month-precision date, e.g. `2024-03-01` -> "March 2024".
+ *
+ * Named for the precision rather than the caller: projects, experience entries
+ * and certificates all store month-precision dates in a Postgres `date`.
+ */
+export function formatMonth(value: string | null | undefined): string {
   if (!value) return ''
   const date = toDate(value)
   return date ? MONTH_YEAR_FORMATTER.format(date) : value
@@ -78,6 +83,25 @@ export function formatRelativeTime(value: string | null | undefined): string {
     }
   }
   return RELATIVE_FORMATTER.format(0, 'day')
+}
+
+/**
+ * True when a month-precision date has not passed yet.
+ *
+ * Because the stored value is a month rather than a day, a certificate with an
+ * expiry of `2026-03` is treated as valid until April begins — expiring it on
+ * the 1st of its final month would be wrong for a month-granular credential.
+ *
+ * A missing or unparseable value returns `true` so malformed data is shown
+ * rather than hidden.
+ */
+export function isMonthCurrent(value: string | null | undefined): boolean {
+  if (!value) return true
+  const date = toDate(value)
+  if (!date) return true
+
+  const endOfMonth = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 1))
+  return endOfMonth.getTime() > Date.now()
 }
 
 export function truncate(text: string, length: number): string {

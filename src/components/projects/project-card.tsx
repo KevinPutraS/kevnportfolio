@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { ArrowUpRight } from 'lucide-react'
 import { categoryLabels, type ProjectCategory } from '@/config/site'
-import { formatProjectDate, classNames } from '@/lib/utils/helpers'
+import { formatMonth, classNames } from '@/lib/utils/helpers'
 import type { Project } from '@/types/project'
 import { ProjectThumbnail } from './project-thumbnail'
 
@@ -78,7 +78,7 @@ export function ProjectCard({
               dateTime={project.project_date}
               className="ml-auto shrink-0 font-mono text-[0.6875rem] tabular-nums text-[rgb(var(--text-muted))]"
             >
-              {formatProjectDate(project.project_date)}
+              {formatMonth(project.project_date)}
             </time>
           )}
         </div>

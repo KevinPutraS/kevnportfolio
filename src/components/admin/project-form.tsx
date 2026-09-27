@@ -12,11 +12,11 @@ import { ImageUploader } from './image-uploader'
 import { projectCategories, type ProjectCategory } from '@/config/site'
 import { classNames } from '@/lib/utils/helpers'
 import {
-  formatTechnologies,
-  generateSlug,
-  parseTechnologies,
-  projectFormSchema,
-} from '@/lib/validation/project'
+  formatList,
+  parseList,
+  toMonthInput,
+} from '@/lib/validation/fields'
+import { generateSlug, projectFormSchema } from '@/lib/validation/project'
 import type { Project, ProjectFieldErrors, ProjectFormData } from '@/types/project'
 
 const CATEGORY_OPTIONS = projectCategories.map((category) => ({
@@ -47,10 +47,10 @@ function toFormData(project: Project): ProjectFormData {
     short_description: project.short_description,
     description: project.description ?? '',
     category: project.category,
-    technologies: formatTechnologies(project.technologies),
+    technologies: formatList(project.technologies),
     // `project_date` is a Postgres DATE, so trim it back to month precision
     // for the `<input type="month">` control.
-    project_date: project.project_date ? project.project_date.slice(0, 7) : '',
+    project_date: toMonthInput(project.project_date),
     thumbnail_url: project.thumbnail_url ?? '',
     gallery: project.gallery ?? [],
     project_url: project.project_url ?? '',
@@ -144,7 +144,7 @@ export function ProjectForm({ project }: { project?: Project }) {
     }
   }
 
-  const technologyList = parseTechnologies(values.technologies)
+  const technologyList = parseList(values.technologies)
 
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-8">
@@ -252,7 +252,7 @@ export function ProjectForm({ project }: { project?: Project }) {
                   onClick={() =>
                     update(
                       'technologies',
-                      parseTechnologies(values.technologies)
+                      parseList(values.technologies)
                         .filter((item) => item !== technology)
                         .join(', ')
                     )

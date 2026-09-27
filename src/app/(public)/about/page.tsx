@@ -1,8 +1,12 @@
 import type { Metadata } from 'next'
 import { ButtonLink } from '@/components/ui/button-link'
 import { ArrowLink } from '@/components/ui/arrow-link'
+import { BackgroundSummary } from '@/components/about/background-summary'
 import { ExploringList } from '@/components/home/exploring-list'
 import { projectApproach, technologies } from '@/config/site'
+
+/** ISR, so published records reach this page without a redeploy. */
+export const revalidate = 60
 
 export const metadata: Metadata = {
   title: 'About',
@@ -198,6 +202,12 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
+
+      {/*
+        Real records only. This renders nothing until something is published, so
+        the page never implies experience or credentials it does not have.
+      */}
+      <BackgroundSummary />
 
       {/* ---- Currently exploring ------------------------------------------ */}
       <section className="rule-top">

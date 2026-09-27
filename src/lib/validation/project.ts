@@ -1,5 +1,13 @@
 import { z } from 'zod'
 import { projectCategories } from '@/config/site'
+import {
+  mediaReferenceSchema,
+  optionalHttpUrlField,
+  optionalMediaField,
+  optionalMonthField,
+  parseList,
+  toDatabaseMonth,
+} from './fields'
 
 const categoryValues = projectCategories.map((category) => category.value) as [
   (typeof projectCategories)[number]['value'],
@@ -7,28 +15,6 @@ const categoryValues = projectCategories.map((category) => category.value) as [
 ]
 
 export const projectCategorySchema = z.enum(categoryValues)
-
-/**
- * Accepts absolute http(s) URLs and root-relative paths (used by the bundled
- * placeholder images in `public/images`). Anything else is rejected so a
- * `javascript:` or `data:` URL can never reach the database.
- */
-const imageOrUrlSchema = z
-  .string()
-  .trim()
-  .min(1)
-  .refine((value) => {
-    if (value.startsWith('/')) return !value.startsWith('//')
-    try {
-      const url = new URL(value)
-      return url.protocol === 'http:' || url.protocol === 'https:'
-    } catch {
-      return false
-    }
-  }, 'Must be an http(s) URL or a root-relative path starting with /')
-
-/** Same rules, but the field is optional and an empty string means "unset". */
-const optionalMediaField = z.union([imageOrUrlSchema, z.literal('')])
 
 export const projectFormSchema = z.object({
   title: z.string().trim().min(1, 'Title is required').max(100, 'Title must be 100 characters or less'),
@@ -57,23 +43,11 @@ export const projectFormSchema = z.object({
     .max(500, 'Technologies must be 500 characters or less')
     .optional()
     .or(z.literal('')),
-  project_date: z
-    .string()
-    .regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'Project date must be in YYYY-MM format')
-    .optional()
-    .or(z.literal('')),
+  project_date: optionalMonthField,
   thumbnail_url: optionalMediaField,
-  gallery: z.array(imageOrUrlSchema).max(12, 'A project can have at most 12 gallery images'),
-  project_url: z
-    .union([imageOrUrlSchema, z.literal('')])
-    .refine((value) => value === '' || value.startsWith('https://') || value.startsWith('http://'), {
-      message: 'Must be an http(s) URL',
-    }),
-  repository_url: z
-    .union([imageOrUrlSchema, z.literal('')])
-    .refine((value) => value === '' || value.startsWith('https://') || value.startsWith('http://'), {
-      message: 'Must be an http(s) URL',
-    }),
+  gallery: z.array(mediaReferenceSchema).max(12, 'A project can have at most 12 gallery images'),
+  project_url: optionalHttpUrlField,
+  repository_url: optionalHttpUrlField,
   featured: z.boolean(),
   published: z.boolean(),
 })
@@ -108,45 +82,15 @@ export function toProjectRecord(values: ProjectFormValues): ProjectRecordInput {
     short_description: values.short_description,
     description: values.description ? values.description : null,
     category: values.category,
-    technologies: parseTechnologies(values.technologies),
+    technologies: parseList(values.technologies),
     thumbnail_url: values.thumbnail_url ? values.thumbnail_url : null,
     gallery: values.gallery,
     project_url: values.project_url ? values.project_url : null,
     repository_url: values.repository_url ? values.repository_url : null,
     featured: values.featured,
     published: values.published,
-    project_date: toDatabaseDate(values.project_date),
+    project_date: toDatabaseMonth(values.project_date),
   }
-}
-
-/**
- * The editor collects a month (`<input type="month">` -> `2026-01`) but the
- * column is a Postgres `date`, which will not parse `2026-01`:
- *
- *     22007 invalid input syntax for type date: "2026-01"
- *
- * so every save with a date failed with a 500. The day is never displayed —
- * `formatProjectDate` renders month and year, and `toFormData` slices back to
- * `YYYY-MM` on load — so the first of the month is stored to keep the column a
- * real `date` and still sort correctly.
- */
-function toDatabaseDate(value: string | undefined): string | null {
-  if (!value) return null
-  return `${value}-01`
-}
-
-export function parseTechnologies(input: string | undefined | null): string[] {
-  if (!input) return []
-  const seen = new Set<string>()
-  for (const part of input.split(',')) {
-    const value = part.trim()
-    if (value && !seen.has(value)) seen.add(value)
-  }
-  return [...seen]
-}
-
-export function formatTechnologies(technologies: readonly string[] | null | undefined): string {
-  return technologies?.join(', ') ?? ''
 }
 
 export function generateSlug(title: string): string {

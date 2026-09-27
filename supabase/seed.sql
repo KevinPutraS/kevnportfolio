@@ -206,15 +206,143 @@ It has an empty gallery and a description but no live URL, so the "Visit project
 ON CONFLICT (slug) DO NOTHING;
 
 -- ===========================================================================
+-- Demo experience entries
+--
+-- PLACEHOLDER CONTENT, same as the projects above. These describe no real
+-- employer, school or committee. They exist so /experience and the homepage
+-- preview have something to render, and they are written as obvious samples
+-- ("Demo · …", a generic organization, no invented achievements) so nobody
+-- mistakes them for a CV.
+--
+-- `start_date` and `end_date` are stored as the first of the month, matching
+-- the CHECK constraint and the `<input type="month">` editors.
+-- ===========================================================================
+
+INSERT INTO public.experiences (
+  title, organization, location, employment_type,
+  start_date, end_date, "current", description,
+  responsibilities, technologies, project_url,
+  sort_order, published
+) VALUES
+(
+  'Demo · Web Project Team',
+  'Sample University',
+  'Remote',
+  'school_project',
+  DATE '2025-09-01',
+  DATE '2026-01-01',
+  false,
+  'Placeholder entry. A sample team project used to demonstrate how a timeline entry with a fixed period renders.',
+  ARRAY[
+    'Placeholder: built the front end of a group coursework project',
+    'Placeholder: wrote setup documentation so other students could run it'
+  ],
+  ARRAY['TypeScript', 'Next.js', 'Tailwind CSS'],
+  NULL,
+  3,
+  true
+),
+(
+  'Demo · Systems Club',
+  'Sample Tech Society',
+  'Remote',
+  'organization',
+  DATE '2024-10-01',
+  NULL,
+  true,
+  'Placeholder entry. A sample ongoing involvement, used to demonstrate how a current role is displayed without an end date.',
+  ARRAY[
+    'Placeholder: ran weekly study sessions on networking fundamentals',
+    'Placeholder: maintained the club website'
+  ],
+  ARRAY['Linux', 'TCP/IP', 'Bash'],
+  NULL,
+  2,
+  true
+),
+(
+  'Demo · Short Coursework',
+  'Sample Course Provider',
+  'Remote',
+  'other',
+  DATE '2024-02-01',
+  DATE '2024-06-01',
+  false,
+  'Placeholder entry. Short self-directed study, included to show a timeline entry with no bullet points.',
+  ARRAY[]::TEXT[],
+  ARRAY['Python'],
+  NULL,
+  1,
+  true
+)
+ON CONFLICT DO NOTHING;
+
+-- ===========================================================================
+-- Demo certificates
+--
+-- PLACEHOLDER CONTENT. No real credential is described, and no credential ID
+-- or verification URL is invented, because a fake verification link is worse
+-- than no link at all.
+-- ===========================================================================
+
+INSERT INTO public.certificates (
+  title, issuer, issue_date, expiration_date,
+  credential_id, credential_url, certificate_image_url,
+  description, skills, sort_order, published
+) VALUES
+(
+  'Demo · Foundations of Networking',
+  'Sample Course Provider',
+  DATE '2025-11-01',
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  'Placeholder certificate. Demonstrates a card with no image, which falls back to a text-only layout.',
+  ARRAY['Networking', 'TCP/IP'],
+  3,
+  true
+),
+(
+  'Demo · Web Fundamentals',
+  'Sample Learning Platform',
+  DATE '2025-04-01',
+  DATE '2027-04-01',
+  'DEMO-0000-0000',
+  NULL,
+  NULL,
+  'Placeholder certificate with a demo credential id and an expiry date, to show how validity is labelled.',
+  ARRAY['HTML', 'CSS', 'Accessibility'],
+  2,
+  true
+),
+(
+  'Demo · Intro to Databases',
+  'Sample Course Provider',
+  DATE '2024-05-01',
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  'Placeholder certificate. Demonstrates the simplest possible card.',
+  ARRAY['SQL', 'PostgreSQL'],
+  1,
+  true
+)
+ON CONFLICT DO NOTHING;
+
+-- ===========================================================================
 -- REMINDER: this is demo content.
 --
 -- Clear it whenever you are ready to publish your own work:
 --
---   TRUNCATE public.projects RESTART IDENTITY CASCADE;
+--   TRUNCATE public.projects, public.experiences, public.certificates;
 --
--- Or remove individual rows by slug:
+-- Or remove individual rows:
 --
---   DELETE FROM public.projects WHERE slug LIKE 'demo-%';
+--   DELETE FROM public.projects         WHERE slug LIKE 'demo-%';
+--   DELETE FROM public.experiences      WHERE organization LIKE 'Sample%';
+--   DELETE FROM public.certificates     WHERE issuer LIKE 'Sample%';
 --
 -- To grant yourself admin access, create a user in Supabase Auth first, then:
 --

@@ -1,6 +1,8 @@
 import Link from 'next/link'
-import { ArrowUpRight, FileText, Star, EyeOff } from 'lucide-react'
+import { Award, ArrowUpRight, Briefcase, FileText, Star, EyeOff } from 'lucide-react'
 import { getProjects } from '@/lib/db/projects'
+import { getAllExperiencesForAdmin } from '@/lib/db/experience'
+import { getAllCertificatesForAdmin } from '@/lib/db/certificates'
 import { getUser } from '@/lib/auth'
 import { ButtonLink } from '@/components/ui/button-link'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -14,11 +16,13 @@ export const metadata = {
 }
 
 export default async function AdminDashboardPage() {
-  const [user, { projects, total }] = await Promise.all([
+  const [user, { projects, total }, experiences, certificates] = await Promise.all([
     getUser(),
     // `published: null` is essential here: the default filters to published
     // rows only, which previously hid every draft from the dashboard.
     getProjects({ page: 1, published: null, pageSize: 5 }),
+    getAllExperiencesForAdmin(),
+    getAllCertificatesForAdmin(),
   ])
 
   const published = projects.filter((project) => project.published).length
@@ -30,6 +34,25 @@ export default async function AdminDashboardPage() {
     { label: 'Published', value: published },
     { label: 'Drafts', value: drafts },
     { label: 'Featured', value: featured },
+  ]
+
+  const collections = [
+    {
+      label: 'Experience entries',
+      icon: <Briefcase className="h-4 w-4" aria-hidden="true" />,
+      total: experiences.length,
+      live: experiences.filter((item) => item.published).length,
+      href: '/admin/experience',
+      emptyLabel: 'No experience entries yet',
+    },
+    {
+      label: 'Certificates',
+      icon: <Award className="h-4 w-4" aria-hidden="true" />,
+      total: certificates.length,
+      live: certificates.filter((item) => item.published).length,
+      href: '/admin/certificates',
+      emptyLabel: 'No certificates yet',
+    },
   ]
 
   return (
@@ -59,6 +82,36 @@ export default async function AdminDashboardPage() {
         <p className="mt-3 text-xs text-[rgb(var(--text-muted))]">
           Summary of the {projects.length} most recent projects.
         </p>
+      </section>
+
+      <section aria-label="Other content">
+        <ul className="grid gap-px border border-[rgb(var(--border-subtle))] bg-[rgb(var(--border-subtle))] sm:grid-cols-2">
+          {collections.map((collection) => (
+            <li key={collection.label} className="bg-[rgb(var(--surface))] p-5">
+              <p className="flex items-center gap-2 text-[rgb(var(--text-muted))]">
+                {collection.icon}
+                <span className="caption">{collection.label}</span>
+              </p>
+              {collection.total === 0 ? (
+                <p className="mt-3 text-sm text-[rgb(var(--text-muted))]">{collection.emptyLabel}</p>
+              ) : (
+                <p className="mt-3 text-sm text-[rgb(var(--text-secondary))]">
+                  {collection.live} of {collection.total} published
+                </p>
+              )}
+              <Link
+                href={collection.href}
+                className="group mt-4 inline-flex items-center gap-2 text-sm text-[rgb(var(--text-secondary))] transition-colors hover:text-[rgb(var(--accent))]"
+              >
+                Manage
+                <ArrowUpRight
+                  className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                  aria-hidden="true"
+                />
+              </Link>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <section>

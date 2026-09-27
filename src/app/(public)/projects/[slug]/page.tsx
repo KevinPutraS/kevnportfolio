@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { ArrowLeft, ArrowUpRight, GitBranch } from 'lucide-react'
 import { getProjectBySlug, getRelatedProjects } from '@/lib/db/projects'
 import { categoryLabels, siteConfig } from '@/config/site'
-import { formatProjectDate } from '@/lib/utils/helpers'
+import { formatMonth } from '@/lib/utils/helpers'
 import { ProjectGallery } from '@/components/projects/project-gallery'
 import { ProjectThumbnail } from '@/components/projects/project-thumbnail'
 import { RelatedProjects } from '@/components/projects/related-projects'
@@ -143,7 +143,7 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
                       dateTime={project.project_date}
                       className="font-mono text-[0.6875rem] tabular-nums text-[rgb(var(--text-muted))]"
                     >
-                      {formatProjectDate(project.project_date)}
+                      {formatMonth(project.project_date)}
                     </time>
                   </>
                 )}

@@ -27,7 +27,12 @@ export type AllowedImageType = keyof typeof ALLOWED_IMAGE_TYPES
 export const ACCEPTED_IMAGE_TYPES = Object.keys(ALLOWED_IMAGE_TYPES) as AllowedImageType[]
 
 /** Only these folders may be written to, preventing path traversal. */
-export const ALLOWED_UPLOAD_FOLDERS = ['projects/thumbnails', 'projects/gallery'] as const
+export const ALLOWED_UPLOAD_FOLDERS = [
+  'projects/thumbnails',
+  'projects/gallery',
+  'experiences/logos',
+  'certificates/images',
+] as const
 
 export type UploadFolder = (typeof ALLOWED_UPLOAD_FOLDERS)[number]
 

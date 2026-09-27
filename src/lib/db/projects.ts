@@ -3,6 +3,7 @@ import { requirePublicClient } from '@/lib/supabase/public'
 import type { Project, ProjectCategory, PaginatedProjects, CategoryCount } from '@/types/project'
 import type { ProjectCategoryFilter } from '@/config/site'
 import { isSupabaseConfigured } from '@/lib/supabase/config'
+import { isUuid } from '@/lib/utils/validation'
 
 export const PROJECTS_PAGE_SIZE = 12
 
@@ -42,7 +43,17 @@ export async function getProjects({
 }: GetProjectsOptions = {}): Promise<PaginatedProjects> {
   if (!isSupabaseConfigured()) return emptyResult(page)
 
-  const supabase = await requirePublicClient()
+  // Asking for every status is the admin listing, and it *must* go through the
+  // session client. The cookieless public client runs as `anon`, whose RLS
+  // policy is `published = true`, so it silently hides every draft — the
+  // "including drafts" list would only ever show published rows and the
+  // unpublish action would have nothing to act on.
+  //
+  // Cost of the session client is `cookies()`, which opts the route out of
+  // static rendering. Admin routes are already `force-dynamic`, so nothing is
+  // lost; the public path below keeps the cacheable cookieless client.
+  const isAdminListing = published === null
+  const supabase = isAdminListing ? await requireClient() : requirePublicClient()
   const safePage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1
   const safePageSize = Math.min(100, Math.max(1, Math.floor(pageSize) || PROJECTS_PAGE_SIZE))
 
@@ -214,8 +225,4 @@ export async function getPublishedProjectIndex(): Promise<
   const rows: Array<{ slug: string; updated_at: string | null }> = data ?? []
 
   return rows.map((row) => ({ slug: row.slug, updatedAt: row.updated_at ?? null }))
-}
-
-function isUuid(value: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
 }

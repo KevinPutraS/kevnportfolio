@@ -38,13 +38,13 @@ export function MobileMenu() {
         aria-expanded={isOpen}
         aria-controls="mobile-navigation"
         aria-label="Open menu"
-        className="inline-flex h-10 w-10 items-center justify-center text-[rgb(var(--text-primary))] transition-colors duration-150 hover:text-[rgb(var(--accent))] md:hidden"
+        className="inline-flex h-10 w-10 items-center justify-center text-[rgb(var(--text-primary))] transition-colors duration-150 hover:text-[rgb(var(--accent))] lg:hidden"
       >
         <Menu className="h-5 w-5" aria-hidden="true" />
       </button>
 
       {isOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
+        <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 animate-fade-in bg-black/80" onClick={close} aria-hidden="true" />
 
           <div
