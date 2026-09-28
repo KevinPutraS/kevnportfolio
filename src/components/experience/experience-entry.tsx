@@ -94,7 +94,7 @@ export function ExperienceEntry({
             className="pointer-events-none absolute -right-24 -top-28 h-64 w-64 rounded-full bg-[rgb(var(--cat)/0.09)] blur-3xl"
           />
 
-          <div className="relative flex gap-4 sm:gap-5">
+          <div className="relative flex flex-wrap items-start gap-x-4 gap-y-3 sm:gap-x-5">
             {/* 64px on desktop, up from 56px. The logo is the only non-text
                 element in the row and it is what lets a visitor scan the column
                 instead of reading it, so it gets the room. */}
@@ -109,49 +109,65 @@ export function ExperienceEntry({
                 {experience.title}
               </h3>
 
-              {/*
-                Organisation and period share one wrapping row, rather than the
-                period sharing the title's baseline. That arrangement was a real
-                bug and this is the fix: on a 390px screen the text column is
-                about 238px once the logo and the card padding have taken theirs,
-                and a `shrink-0 whitespace-nowrap` date needs roughly 160px of
-                that. The title was left about 60px, so it wrapped one or two
-                characters per line and the card's own `overflow-hidden` — there
-                to clip the background wash — took the rest. A date does not get
-                to negotiate with the job title for width.
+              <p className="mt-1.5 break-words font-medium text-[rgb(var(--text-dim))]">
+                {experience.organization}
+                {experience.location && <span className="meta"> · {experience.location}</span>}
+              </p>
+            </div>
 
-                The missing `min-w-0` on the paragraph is load-bearing. Without it
-                the paragraph's automatic minimum size is its longest word, so
-                when the pair does not fit the date wraps down whole instead of
-                compressing the organisation name into a column of syllables.
-                `break-words` covers the last case, a single word longer than the
-                column, which would otherwise be clipped rather than broken.
-              */}
-              <div className="mt-1.5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                <p className="break-words font-medium text-[rgb(var(--text-dim))]">
-                  {experience.organization}
-                  {experience.location && (
-                    <span className="meta"> · {experience.location}</span>
-                  )}
-                </p>
-                {/*
-                  `whitespace-nowrap` and `shrink-0` so a range never breaks
-                  mid-date, and `ml-auto` so it sits against the right edge —
-                  whether it shares the line with the organisation or has wrapped
-                  onto one of its own.
-                */}
-                <time className="meta-strong ml-auto shrink-0 whitespace-nowrap tabular-nums">
-                  {period || 'Date not set'}
-                </time>
-              </div>
+            {/*
+              The period and the chips, in their own row.
 
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                {isCurrent && <span className="badge-primary">Current</span>}
-                <span className="cat-chip inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-mono text-xs uppercase tracking-[0.1em]">
-                  <span aria-hidden="true" className="cat-dot h-1.5 w-1.5 rounded-full" />
-                  {experienceTypeLabels[experience.employment_type]}
-                </span>
-              </div>
+              This is the third attempt at this row, and the arithmetic is worth
+              writing down because the failure is invisible until it is not. The
+              text column beside a 56px logo, on a 320px screen, is:
+
+                  320 viewport
+                  − 40  container-custom padding-inline
+                  − 32  the timeline's pl-8 indent
+                  − 40  the card's p-5
+                  − 56  the logo
+                  − 16  the gap
+                  = 136px
+
+              And the period is not the string it looks like. `formatMonth` uses
+              `month: 'long'`, rendered through `meta-strong` — 12px mono,
+              uppercase, 0.14em of tracking — so it arrives as:
+
+                  "SEPTEMBER 2021 — PRESENT"        23 chars ≈ 204px
+                  "SEPTEMBER 2021 — DECEMBER 2026"  29 chars ≈ 258px
+
+              Two conclusions. `w-full` below `sm` is worth having: 208px instead
+              of 136px keeps the common range on one line. But 208px is not
+              enough for the longest one, and no font size or tracking value
+              fixes that within a 136px budget — so this row wraps, deliberately,
+              onto a second line at the space before the end date.
+
+              That is why the `<time>` has no `whitespace-nowrap` and no
+              `shrink-0` any more. Both were what made the range unbreakable, and
+              an unbreakable string with nowhere to fit has exactly one outcome:
+              it overruns the card and `overflow-hidden` — which is there to clip
+              the background wash — trims the end of it. `min-w-0` lets it shrink
+              to its longest word and wrap there instead, so the whole range is
+              always readable. A two-line date is a normal thing to see on a
+              phone. A date missing its year is not.
+
+              At `sm` the row is content-sized with `sm:ml-auto` setting it
+              against the right edge, beside the identity block, where there are
+              hundreds of pixels and no constraint left to reason about.
+            */}
+            <div className="flex w-full min-w-0 flex-wrap items-center gap-x-3 gap-y-2 sm:ml-auto sm:w-auto">
+              {/* `tabular-nums` so the months line up when several cards are read
+                  against each other. No `nowrap`: see above. */}
+              <time className="meta-strong min-w-0 tabular-nums">
+                {period || 'Date not set'}
+              </time>
+
+              {isCurrent && <span className="badge-primary">Current</span>}
+              <span className="cat-chip inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-mono text-xs uppercase tracking-[0.1em]">
+                <span aria-hidden="true" className="cat-dot h-1.5 w-1.5 rounded-full" />
+                {experienceTypeLabels[experience.employment_type]}
+              </span>
             </div>
           </div>
 
