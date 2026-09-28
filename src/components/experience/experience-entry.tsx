@@ -105,28 +105,45 @@ export function ExperienceEntry({
             />
 
             <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                <h3 className="min-w-0 text-balance font-display text-xl font-bold leading-[1.15] tracking-[-0.025em] text-[rgb(var(--text))] transition-colors duration-300 group-hover:text-[rgb(var(--cat))] sm:text-2xl">
-                  {experience.title}
-                </h3>
+              <h3 className="text-balance break-words font-display text-xl font-bold leading-[1.15] tracking-[-0.025em] text-[rgb(var(--text))] transition-colors duration-300 group-hover:text-[rgb(var(--cat))] sm:text-2xl">
+                {experience.title}
+              </h3>
 
+              {/*
+                Organisation and period share one wrapping row, rather than the
+                period sharing the title's baseline. That arrangement was a real
+                bug and this is the fix: on a 390px screen the text column is
+                about 238px once the logo and the card padding have taken theirs,
+                and a `shrink-0 whitespace-nowrap` date needs roughly 160px of
+                that. The title was left about 60px, so it wrapped one or two
+                characters per line and the card's own `overflow-hidden` — there
+                to clip the background wash — took the rest. A date does not get
+                to negotiate with the job title for width.
+
+                The missing `min-w-0` on the paragraph is load-bearing. Without it
+                the paragraph's automatic minimum size is its longest word, so
+                when the pair does not fit the date wraps down whole instead of
+                compressing the organisation name into a column of syllables.
+                `break-words` covers the last case, a single word longer than the
+                column, which would otherwise be clipped rather than broken.
+              */}
+              <div className="mt-1.5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <p className="break-words font-medium text-[rgb(var(--text-dim))]">
+                  {experience.organization}
+                  {experience.location && (
+                    <span className="meta"> · {experience.location}</span>
+                  )}
+                </p>
                 {/*
-                  `whitespace-nowrap` so a range never breaks across two lines, and
-                  `shrink-0` so it stays whole. `meta-strong` is the same small
-                  uppercase mono used for other dates in the site, which keeps a
-                  date looking like a date wherever it appears.
+                  `whitespace-nowrap` and `shrink-0` so a range never breaks
+                  mid-date, and `ml-auto` so it sits against the right edge —
+                  whether it shares the line with the organisation or has wrapped
+                  onto one of its own.
                 */}
-                <time className="meta-strong shrink-0 whitespace-nowrap tabular-nums">
+                <time className="meta-strong ml-auto shrink-0 whitespace-nowrap tabular-nums">
                   {period || 'Date not set'}
                 </time>
               </div>
-
-              <p className="mt-1.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                <span className="font-medium text-[rgb(var(--text-dim))]">
-                  {experience.organization}
-                </span>
-                {experience.location && <span className="meta">· {experience.location}</span>}
-              </p>
 
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 {isCurrent && <span className="badge-primary">Current</span>}
@@ -164,8 +181,13 @@ export function ExperienceEntry({
           )}
 
           <div className="relative mt-6 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t border-[rgb(var(--border))] pt-4">
+            {/*
+              `break-words` for the same reason as the organisation above: a
+              single long technology name is the one string here that can exceed
+              the column, and the card clips rather than scrolls.
+            */}
             {technologies.length > 0 ? (
-              <p className="tech-list">
+              <p className="tech-list break-words">
                 <span className="sr-only">Technologies used: </span>
                 {technologies.join(' · ')}
               </p>
