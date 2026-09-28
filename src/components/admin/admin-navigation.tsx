@@ -26,16 +26,20 @@ import { classNames, isActiveRoute } from '@/lib/utils/helpers'
  * already sits at the top of the projects page, and a nav entry that is only
  * sometimes relevant is noise.
  */
-const adminItems = siteConfig.adminNavigation.filter((item) => !item.href.endsWith('/new'))
+export const adminItems = siteConfig.adminNavigation.filter((item) => !item.href.endsWith('/new'))
 
 /**
  * Section icon, keyed by the `icon` name in `siteConfig.adminNavigation`.
+ *
+ * Exported because the mobile tab bar maps the same five sections. Desktop gets
+ * a sidebar list, mobile gets a bottom bar, and neither is allowed to invent its
+ * own items or its own glyphs.
  *
  * A map with a `Record` type rather than a bare object so that adding a section
  * to the config without adding its glyph here is a type error instead of a
  * section that renders with no icon.
  */
-const ICONS: Record<(typeof adminItems)[number]['icon'], LucideIcon> = {
+export const ICONS: Record<(typeof adminItems)[number]['icon'], LucideIcon> = {
   dashboard: LayoutDashboard,
   projects: FolderKanban,
   experience: Briefcase,
@@ -44,8 +48,11 @@ const ICONS: Record<(typeof adminItems)[number]['icon'], LucideIcon> = {
 }
 
 /**
- * Sidebar links. Rendered inside the admin shell on desktop and inside the
- * mobile drawer on small screens, so the list is defined once.
+ * Sidebar links, for the desktop shell only.
+ *
+ * Below `md` the same five sections are rendered by `AdminTabBar` as a bottom
+ * bar, so this list no longer needs an `onNavigate` callback to close a drawer
+ * behind it.
  *
  * The active section is marked with `aria-current`, an accent rule and a filled
  * tile behind the icon — three signals, so it does not depend on colour alone.
@@ -54,11 +61,11 @@ const ICONS: Record<(typeof adminItems)[number]['icon'], LucideIcon> = {
  * primary action on the page.
  *
  * The `01`–`05` markers that used to lead each row are gone. On a desktop
- * sidebar they looked like an index, but on a phone they were a two-character
- * ornament in front of a five-word label, and the same list had to serve both.
- * An icon is recognisable at both sizes.
+ * sidebar they looked like an index, but the same list also had to serve a
+ * phone, where they were a two-character ornament in front of a five-word
+ * label. An icon is recognisable at both sizes.
  */
-export function AdminNavLinks({ onNavigate }: { onNavigate?: () => void }) {
+export function AdminNavLinks() {
   const pathname = usePathname()
 
   return (
@@ -72,7 +79,6 @@ export function AdminNavLinks({ onNavigate }: { onNavigate?: () => void }) {
             <li key={item.href}>
               <Link
                 href={item.href}
-                onClick={onNavigate}
                 aria-current={current ? 'page' : undefined}
                 className={classNames(
                   'group relative flex min-h-11 items-center gap-3 border-l-2 py-2.5 pl-3 pr-4 text-[length:var(--text-sm)] transition-colors',
@@ -125,16 +131,28 @@ export function useAdminSection(): string {
 /**
  * Sign-out is a POST form, not a link, so the session cannot be cleared by a
  * prefetch or a cross-site request.
+ *
+ * `compact` is the header variant for small screens: a labelled row is the
+ * right affordance in the sidebar, where it is one of three stacked actions, but
+ * in a 64px bar the label is the first thing to be sacrificed so the current
+ * section and the two icons fit on a 360px line. The `aria-label` keeps the
+ * button's name for assistive tech after the text is gone.
  */
-export function SignOutForm() {
+export function SignOutForm({ compact = false }: { compact?: boolean }) {
   return (
-    <form action="/api/auth/signout" method="POST" className="w-full">
+    <form action="/api/auth/signout" method="POST" className={compact ? 'shrink-0' : 'w-full'}>
       <button
         type="submit"
-        className="flex min-h-11 w-full items-center gap-3 rounded-[var(--radius-md)] px-3 py-2.5 text-left text-[length:var(--text-sm)] text-[rgb(var(--text-muted))] transition-colors hover:bg-[rgb(var(--error)/0.12)] hover:text-[rgb(var(--error))]"
+        aria-label={compact ? 'Sign out' : undefined}
+        className={classNames(
+          'flex w-full items-center rounded-[var(--radius-md)] text-left text-[length:var(--text-sm)] transition-colors',
+          compact
+            ? 'h-11 w-11 justify-center text-[rgb(var(--text-dim))] hover:bg-[rgb(var(--error)/0.12)] hover:text-[rgb(var(--error))]'
+            : 'min-h-11 gap-3 px-3 py-2.5 text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--error)/0.12)] hover:text-[rgb(var(--error))]'
+        )}
       >
-        <LogOut className="h-4 w-4 shrink-0" aria-hidden="true" />
-        Sign out
+        <LogOut className={compact ? 'h-5 w-5' : 'h-4 w-4'} aria-hidden="true" />
+        {compact ? null : 'Sign out'}
       </button>
     </form>
   )
@@ -157,16 +175,23 @@ export function AdminBrand({ compact = false }: { compact?: boolean }) {
 }
 
 /** Escape hatch back to the public site, which the sidebar otherwise blocks. */
-export function ViewSiteLink({ onNavigate }: { onNavigate?: () => void }) {
+export function ViewSiteLink({ compact = false }: { compact?: boolean }) {
   return (
     <Link
       href="/"
-      onClick={onNavigate}
-      className="flex min-h-11 items-center gap-2.5 rounded-[var(--radius-md)] px-3 py-2.5 text-[length:var(--text-sm)] text-[rgb(var(--text-dim))] transition-colors hover:bg-[rgb(var(--bg-elevated))] hover:text-[rgb(var(--accent))]"
+      aria-label={compact ? 'View public site' : undefined}
+      className={classNames(
+        'flex items-center rounded-[var(--radius-md)] text-[length:var(--text-sm)] transition-colors',
+        compact
+          ? 'h-11 w-11 justify-center text-[rgb(var(--text-dim))] hover:bg-[rgb(var(--bg-highlight))] hover:text-[rgb(var(--accent))]'
+          : 'min-h-11 gap-2.5 px-3 py-2.5 text-[rgb(var(--text-dim))] hover:bg-[rgb(var(--bg-elevated))] hover:text-[rgb(var(--accent))]'
+      )}
     >
-      <ExternalLink className="h-4 w-4 shrink-0" aria-hidden="true" />
-      View site
-      <span className="sr-only">(opens the public site in this tab)</span>
+      <ExternalLink className={compact ? 'h-5 w-5' : 'h-4 w-4'} aria-hidden="true" />
+      {compact ? null : 'View site'}
+      {compact ? null : (
+        <span className="sr-only">(opens the public site in this tab)</span>
+      )}
     </Link>
   )
 }

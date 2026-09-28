@@ -3,6 +3,7 @@ import { getUser } from '@/lib/auth'
 import { isSupabaseConfigured } from '@/lib/supabase/config'
 import { AdminSidebar } from '@/components/admin/admin-sidebar'
 import { AdminHeader } from '@/components/admin/admin-header'
+import { AdminTabBar } from '@/components/admin/admin-tab-bar'
 
 /**
  * Guards every admin route except /admin/login, which sits in its own route
@@ -55,14 +56,27 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>`}</code>
 
         The sticky mobile header is a normal-flow sibling above `<main>`, so it
         needs no reserved padding — `sticky` still occupies its own space, which
-        is the difference between `sticky` and `fixed`.
+        is the difference between `sticky` and `fixed`. The bottom padding is
+        the exception: `AdminTabBar` *is* `fixed`, so it floats over the last
+        screenful of every page and would sit on top of the final form button
+        otherwise.
+
+        That padding is written as `pt`/`pb` rather than `py` on purpose. A
+        `py-8` and a `pb-28` in the same class list is a coin toss — CSS
+        resolves the conflict by stylesheet order, not by the order the classes
+        appear in the attribute — so the two are never asked to compete.
       */}
       <div className="md:pl-64">
-        <AdminHeader email={user.email} />
-        <main id="main-content" className="px-5 py-8 sm:px-8 sm:py-10 lg:px-10">
+        <AdminHeader />
+        <main
+          id="main-content"
+          className="px-5 pt-8 pb-28 sm:px-8 sm:pt-10 sm:pb-28 md:pb-10 lg:px-10"
+        >
           {children}
         </main>
       </div>
+
+      <AdminTabBar />
     </div>
   )
 }

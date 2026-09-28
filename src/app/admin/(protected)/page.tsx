@@ -39,10 +39,10 @@ export default async function AdminDashboardPage() {
   // certificates amber — the same mapping the public site uses, so the dashboard
   // and the site it manages read as one thing.
   const stats = [
-    { label: 'Total projects', value: total, tone: 'cat-web', icon: <FolderOpen className="h-3.5 w-3.5" aria-hidden="true" /> },
-    { label: 'Published', value: published, tone: 'cat-app', icon: <Eye className="h-3.5 w-3.5" aria-hidden="true" /> },
-    { label: 'Drafts', value: drafts, tone: 'cat-networking', icon: <EyeOff className="h-3.5 w-3.5" aria-hidden="true" /> },
-    { label: 'Featured', value: featured, tone: 'cat-experiment', icon: <Star className="h-3.5 w-3.5" aria-hidden="true" /> },
+    { label: 'Total projects', value: total, tone: 'cat-web', icon: <FolderOpen className="h-4 w-4" aria-hidden="true" /> },
+    { label: 'Published', value: published, tone: 'cat-app', icon: <Eye className="h-4 w-4" aria-hidden="true" /> },
+    { label: 'Drafts', value: drafts, tone: 'cat-networking', icon: <EyeOff className="h-4 w-4" aria-hidden="true" /> },
+    { label: 'Featured', value: featured, tone: 'cat-experiment', icon: <Star className="h-4 w-4" aria-hidden="true" /> },
   ]
 
   const collections = [
@@ -67,16 +67,24 @@ export default async function AdminDashboardPage() {
   ]
 
   return (
-    <div className="space-y-10">
-      <header className="flex flex-wrap items-end justify-between gap-6">
-        <div>
+    <div className="space-y-8 sm:space-y-10">
+      <header className="flex flex-wrap items-end justify-between gap-4 sm:gap-6">
+        <div className="min-w-0">
           <SectionEyebrow>Dashboard</SectionEyebrow>
           <h1 className="heading-2 mt-4">Welcome back</h1>
-          <p className="mt-2 text-[length:var(--text-sm)] text-[rgb(var(--text-dim))]">
+          <p className="mt-2 break-all text-[length:var(--text-sm)] text-[rgb(var(--text-dim))]">
             <span className="font-mono">{user?.email}</span>
           </p>
         </div>
-        <ButtonLink href="/admin/projects/new">New project</ButtonLink>
+        {/*
+          Full width below `sm`. The sidebar's primary action is one of five
+          stacked rows; on a phone the primary action of the page should be the
+          easiest thing on the page to hit, and a 44px-wide button next to a
+          heading is neither easy nor obviously tappable.
+        */}
+        <ButtonLink href="/admin/projects/new" className="w-full sm:w-auto">
+          New project
+        </ButtonLink>
       </header>
 
       {/*
@@ -85,28 +93,36 @@ export default async function AdminDashboardPage() {
         experience pink, certificates amber. The old version was a single grey
         grid of four identical numbers, which is the most "spreadsheet" thing on
         the screen.
+
+        `grid-cols-2` from 320px, not `sm:grid-cols-2`. One column on a phone
+        meant four cards of nothing but a number and a label before the page
+        reached anything actionable, and the numbers are short enough that two
+        per row cost nothing in legibility. The label sits under the value rather
+        than beside the icon, because at two columns a label sharing a line with
+        its icon has about 120px to say "Total projects" in and wraps to two
+        ragged lines.
       */}
       <section aria-label="Summary">
-        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <ul className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {stats.map((stat) => (
             <li
               key={stat.label}
               className={classNames(
-                'rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--bg-elevated))] p-5 transition-[transform,border-color] duration-300 hover:-translate-y-1',
+                'rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--bg-elevated))] p-4 transition-[transform,border-color] duration-300 hover:-translate-y-1 sm:p-5',
                 stat.tone
               )}
             >
-              <p className="flex items-center gap-2 text-[length:var(--text-xs)] uppercase tracking-[0.12em] text-[rgb(var(--text-muted))]">
-                <span
-                  aria-hidden="true"
-                  className="flex h-6 w-6 items-center justify-center rounded-md border border-[rgb(var(--cat)/0.4)] bg-[rgb(var(--cat)/0.14)] text-[rgb(var(--cat))]"
-                >
-                  {stat.icon}
-                </span>
-                {stat.label}
-              </p>
-              <p className="mt-3 font-display text-4xl font-bold leading-none tracking-[-0.04em] text-[rgb(var(--text))] tabular-nums">
+              <span
+                aria-hidden="true"
+                className="flex h-7 w-7 items-center justify-center rounded-md border border-[rgb(var(--cat)/0.4)] bg-[rgb(var(--cat)/0.14)] text-[rgb(var(--cat))] sm:h-8 sm:w-8"
+              >
+                {stat.icon}
+              </span>
+              <p className="mt-3 font-display text-3xl font-bold leading-none tracking-[-0.04em] text-[rgb(var(--text))] tabular-nums sm:text-4xl">
                 {String(stat.value).padStart(2, '0')}
+              </p>
+              <p className="mt-2 text-[0.625rem] uppercase leading-tight tracking-[0.1em] text-[rgb(var(--text-muted))] sm:text-[length:var(--text-xs)]">
+                {stat.label}
               </p>
             </li>
           ))}
@@ -123,14 +139,14 @@ export default async function AdminDashboardPage() {
             <li
               key={collection.label}
               className={classNames(
-                'rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--bg-elevated))] p-5 transition-[border-color] duration-300 hover:border-[rgb(var(--cat)/0.5)]',
+                'rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--bg-elevated))] p-4 transition-[border-color] duration-300 hover:border-[rgb(var(--cat)/0.5)] sm:p-5',
                 collection.tone
               )}
             >
               <p className="flex items-center gap-2.5">
                 <span
                   aria-hidden="true"
-                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-[rgb(var(--cat)/0.4)] bg-[rgb(var(--cat)/0.14)] text-[rgb(var(--cat))]"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[rgb(var(--cat)/0.4)] bg-[rgb(var(--cat)/0.14)] text-[rgb(var(--cat))]"
                 >
                   {collection.icon}
                 </span>
@@ -147,7 +163,7 @@ export default async function AdminDashboardPage() {
 
               <Link
                 href={collection.href}
-                className="group mt-4 inline-flex min-h-11 items-center gap-1.5 text-[length:var(--text-sm)] font-medium text-[rgb(var(--cat))]"
+                className="group mt-4 inline-flex min-h-11 w-full items-center gap-1.5 text-[length:var(--text-sm)] font-medium text-[rgb(var(--cat))] sm:w-auto"
               >
                 Manage
                 <ArrowUpRight
@@ -208,24 +224,47 @@ export default async function AdminDashboardPage() {
                     ) : null}
                   </span>
 
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[length:var(--text-sm)] font-medium text-[rgb(var(--text))]">
-                      {project.title}
-                    </span>
-                    <span className="mt-0.5 block font-mono text-[length:var(--text-xs)] text-[rgb(var(--text-muted))]">
-                      {project.updated_at
-                        ? `Updated ${formatRelativeTime(project.updated_at)}`
-                        : 'Just created'}
-                    </span>
-                  </span>
+                  {/*
+                    One instance of the badges, positioned by wrapping rather than
+                    duplicated for a second breakpoint.
 
-                  <span className="hidden shrink-0 items-center gap-2 sm:flex">
-                    {project.featured && <span className="badge-primary">Featured</span>}
-                    {project.published ? (
-                      <span className="badge-success">Published</span>
-                    ) : (
-                      <span className="badge-neutral">Draft</span>
-                    )}
+                    The row's text column is `flex-1 basis-auto`: it takes its
+                    content width, grows into whatever space is left on a wide
+                    screen so the badges sit hard right, and pushes them onto a
+                    second line when the two together no longer fit. `flex-1` alone
+                    would be `flex-basis: 0`, which never overflows and therefore
+                    never wraps — it would just squeeze the title down to its
+                    minimum.
+
+                    These were `hidden sm:flex`, which meant that on a phone, in
+                    the one list whose entire purpose is knowing what is live, a
+                    draft and a published project looked identical.
+                  */}
+                  <span className="flex min-w-0 flex-1 basis-auto flex-wrap items-center gap-x-3 gap-y-2">
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[length:var(--text-sm)] font-medium text-[rgb(var(--text))]">
+                        {project.title}
+                      </span>
+                      <span className="mt-0.5 block font-mono text-[length:var(--text-xs)] text-[rgb(var(--text-muted))]">
+                        {project.updated_at
+                          ? `Updated ${formatRelativeTime(project.updated_at)}`
+                          : 'Just created'}
+                      </span>
+                    </span>
+
+                    {/*
+                      The badge font size is left alone. It is 12px, and 10px
+                      would have saved a few pixels at the cost of the one thing
+                      this change is for: being readable on a phone.
+                    */}
+                    <span className="flex shrink-0 flex-wrap items-center gap-1.5">
+                      {project.featured && <span className="badge-primary">Featured</span>}
+                      {project.published ? (
+                        <span className="badge-success">Published</span>
+                      ) : (
+                        <span className="badge-neutral">Draft</span>
+                      )}
+                    </span>
                   </span>
 
                   <Pencil
