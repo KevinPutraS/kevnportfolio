@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Select } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Button } from '@/components/ui/button'
+import { FormJumpNav, FormSection, FormStickyActions } from '@/components/ui/form-layout'
 import { ImageUploader } from '@/components/admin/image-uploader'
 import { experienceTypes } from '@/config/site'
 import {
@@ -102,28 +102,37 @@ export function ExperienceForm({ experience, returnTo = '/admin/experience' }: E
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-10">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       {message ? (
         <p
           role="status"
           aria-live="polite"
-          className={`border p-3 text-sm ${
+          className={
             message.tone === 'error'
-              ? 'border-[rgb(var(--error))]/40 bg-[rgb(var(--error))]/5'
-              : 'border-[rgb(var(--success))]/40 bg-[rgb(var(--success))]/5'
-          }`}
+              ? 'border border-[rgb(var(--error)/0.4)] bg-[rgb(var(--error)/0.05)] p-3 text-sm text-[rgb(var(--error))]'
+              : 'border border-[rgb(var(--success)/0.4)] bg-[rgb(var(--success)/0.05)] p-3 text-sm text-[rgb(var(--success))]'
+          }
         >
           {message.text}
         </p>
       ) : null}
 
-      <section className="space-y-6">
-        <div>
-          <p className="eyebrow">Basics</p>
-          <h2 className="heading-3 mt-3">Overview</h2>
-        </div>
+      <FormJumpNav
+        items={[
+          { id: 'experience-overview', label: 'Overview' },
+          { id: 'experience-details', label: 'What I did' },
+          { id: 'experience-context', label: 'Context' },
+          { id: 'experience-visibility', label: 'Visibility' },
+        ]}
+      />
 
-        <div className="grid gap-6 md:grid-cols-2">
+      <FormSection
+        id="experience-overview"
+        eyebrow="Basics"
+        title="Overview"
+        description="The role and the dates. Title, organization and start date are what appear in the timeline header, so they are the three worth getting right."
+      >
+        <div className="grid gap-5 sm:grid-cols-2">
           <Input
             label="Title"
             required
@@ -161,7 +170,9 @@ export function ExperienceForm({ experience, returnTo = '/admin/experience' }: E
               update('employment_type', event.target.value as ExperienceFormData['employment_type'])
             }
           />
+        </div>
 
+        <div className="grid gap-5 sm:grid-cols-2">
           <Input
             label="Start date"
             type="month"
@@ -195,7 +206,14 @@ export function ExperienceForm({ experience, returnTo = '/admin/experience' }: E
             if (next) update('end_date', '')
           }}
         />
+      </FormSection>
 
+      <FormSection
+        id="experience-details"
+        eyebrow="The work"
+        title="What I did"
+        description="This is the part a reader actually reads. One bullet per line, and lead each with the outcome rather than the activity."
+      >
         <Textarea
           label="Description"
           rows={4}
@@ -224,15 +242,15 @@ export function ExperienceForm({ experience, returnTo = '/admin/experience' }: E
           onChange={(event) => update('technologies', event.target.value)}
           placeholder="TypeScript, Next.js, Supabase"
         />
-      </section>
+      </FormSection>
 
-      <section className="space-y-6">
-        <div>
-          <p className="eyebrow">Links &amp; media</p>
-          <h2 className="heading-3 mt-3">Context</h2>
-        </div>
-
-        <div className="grid gap-6 md:grid-cols-2">
+      <FormSection
+        id="experience-context"
+        eyebrow="Links &amp; media"
+        title="Context"
+        description="Everything that helps a reader judge the entry: a link to the work, a logo, and where it sits in the order."
+      >
+        <div className="grid gap-5 sm:grid-cols-2">
           <Input
             label="Related link"
             type="url"
@@ -260,25 +278,27 @@ export function ExperienceForm({ experience, returnTo = '/admin/experience' }: E
           onChange={(url) => update('organization_logo_url', url)}
           hint="Optional. Shown beside the organization name."
         />
-      </section>
+      </FormSection>
 
-      <section className="space-y-4">
+      <FormSection
+        id="experience-visibility"
+        eyebrow="Publishing"
+        title="Visibility"
+        description="Drafts stay hidden from the public timeline until this is on."
+      >
         <Checkbox
           label="Publish this experience entry"
-          description="Drafts stay private until you switch this on."
+          description="Turn this on to make it visible on the Experience page."
           checked={form.published}
           onChange={(event) => update('published', event.target.checked)}
         />
-      </section>
+      </FormSection>
 
-      <div className="flex flex-wrap items-center justify-end gap-3">
-        <Button type="button" variant="ghost" onClick={() => router.push(returnTo)} disabled={isPending}>
-          Cancel
-        </Button>
-        <Button type="submit" loading={isPending}>
-          {experience ? 'Save changes' : 'Create entry'}
-        </Button>
-      </div>
+      <FormStickyActions
+        onCancel={() => router.push(returnTo)}
+        saveLabel={experience ? 'Save changes' : 'Create entry'}
+        isPending={isPending}
+      />
     </form>
   )
 }

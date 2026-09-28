@@ -6,11 +6,17 @@
  * a visitor to take. It is declared here rather than hard-coded in the navbar as
  * a `href === '/contact'` comparison, so adding or moving the primary action is
  * a data change and cannot silently promote two links at once.
+ *
+ * `tone` is the `cat-*` class that gives the destination its hue in the mobile
+ * drawer. It lives here for the same reason: the drawer used to keep its own
+ * hard-coded `Map` of href to colour, so reordering or renaming a nav item left
+ * a silently mismatched hue behind.
  */
 export type NavItem = {
   readonly label: string
   readonly href: string
   readonly emphasis?: 'primary'
+  readonly tone?: string
 }
 
 export const siteConfig = {
@@ -75,12 +81,12 @@ export const siteConfig = {
    * `pathname.startsWith('/')` is true on every route.
    */
   navigation: [
-    { label: 'Home', href: '/' },
-    { label: 'Projects', href: '/projects' },
-    { label: 'Experience', href: '/experience' },
-    { label: 'Certificates', href: '/certificates' },
-    { label: 'About', href: '/about' },
-    { label: 'Contact', href: '/contact', emphasis: 'primary' },
+    { label: 'Home', href: '/', tone: 'cat-web' },
+    { label: 'Projects', href: '/projects', tone: 'cat-app' },
+    { label: 'Experience', href: '/experience', tone: 'cat-design' },
+    { label: 'Certificates', href: '/certificates', tone: 'cat-networking' },
+    { label: 'About', href: '/about', tone: 'cat-experiment' },
+    { label: 'Contact', href: '/contact', tone: 'cat-school', emphasis: 'primary' },
   ] as readonly NavItem[],
   /**
    * The four content sections, each with a one-line description of what the
@@ -114,13 +120,18 @@ export const siteConfig = {
    * `components/admin/admin-navigation.tsx`, which used to keep its own copy
    * while this one sat unused — two lists that drift apart the moment a
    * section is added.
+   *
+   * `icon` is the name of an entry in that component's icon map. It lives here
+   * so the sidebar, the drawer and the mobile header can never disagree about
+   * which glyph belongs to which section, and so adding a section means adding
+   * one row rather than finding the three places that render a nav list.
    */
   adminNavigation: [
-    { label: 'Dashboard', href: '/admin' },
-    { label: 'Projects', href: '/admin/projects' },
-    { label: 'Experience', href: '/admin/experience' },
-    { label: 'Certificates', href: '/admin/certificates' },
-    { label: 'Settings', href: '/admin/settings' },
+    { label: 'Dashboard', href: '/admin', icon: 'dashboard' },
+    { label: 'Projects', href: '/admin/projects', icon: 'projects' },
+    { label: 'Experience', href: '/admin/experience', icon: 'experience' },
+    { label: 'Certificates', href: '/admin/certificates', icon: 'certificates' },
+    { label: 'Settings', href: '/admin/settings', icon: 'settings' },
   ],
 } as const
 

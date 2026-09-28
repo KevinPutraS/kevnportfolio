@@ -35,6 +35,24 @@ const VALID_CATEGORIES: ProjectCategoryFilter[] = [
  * `window`. That was the original crash: a Server Component called
  * `window.location.search`, which only works for the first 12 results and
  * throws on the server otherwise.
+ *
+ * Reading `searchParams` in a Server Component is also what makes this route
+ * **dynamic**, and the build output confirms it — `/projects` is listed as
+ * `ƒ`, while `/`, `/about`, `/experience` and `/certificates` are `○`. The
+ * other three carry `revalidate = 60` and are genuinely ISR.
+ *
+ * So do not add `export const revalidate = 60` here hoping to fix that. It would
+ * be silently ignored: any `searchParams` access opts the page out of static
+ * rendering regardless, and adding the export would only make the page *look*
+ * cached while behaving differently from what the constant says.
+ *
+ * Making this ISR would mean reading the category on the client with
+ * `useSearchParams` and rendering the grid from a cached fetch. That is a real
+ * trade, not a free win: the current version serves a correct, fully rendered
+ * page for every category URL with JavaScript disabled and gives each category
+ * its own server-rendered document. For a portfolio this size, a cookieless
+ * `count: 'exact'` read per request is not the bottleneck worth optimising
+ * away at the cost of no-JS filtering.
  */
 function resolveCategory(value: string | string[] | undefined): ProjectCategoryFilter {
   const raw = Array.isArray(value) ? value[0] : value
@@ -64,38 +82,28 @@ export default async function ProjectsPage({
     <>
       <div className="container-custom">
         {/*
-          A wide, confident opening. The previous version used the shared
-          `PageHeader`, which is right for a text page but made the projects
-          index look like every other page on the site — and this is the page
-          people actually want to see. The oversized count gives the page an
-          anchor and states the scale of the work before any card renders.
+          The shared `PageHeader`, with the published count supplied as its
+          `meta` slot. This page used to hand-roll its own opening — an
+          `Archive` eyebrow over "Things I have built." — which is exactly the
+          kind of one-off that makes a site stop feeling like one site. Putting
+          the count in the header's meta slot keeps the scale of the work
+          stated up front, which is the one thing this page wants to say, without
+          a second layout to maintain.
         */}
-        <div className="border-b border-[rgb(var(--border))] py-14 sm:py-20 lg:py-24">
-          <div className="grid gap-x-12 gap-y-10 lg:grid-cols-12">
-            <div className="lg:col-span-8">
-              <p className="eyebrow">Projects</p>
-              <h1 className="display-1 mt-6 text-[length:var(--text-h1)]">
-                Things I have built.
-              </h1>
-              <p className="body-lg mt-6 max-w-2xl text-pretty text-[rgb(var(--text-dim))]">
-                Every project I have made public, from coursework to longer experiments. Each
-                entry explains what it is, what it is made of, and why I built it. Not everything
-                here is finished — that is part of the point.
-              </p>
-            </div>
-
-            <div className="flex items-end lg:col-span-4 lg:justify-end">
-              <div className="text-left lg:text-right">
-                <p className="font-display text-6xl font-bold leading-none tracking-[-0.04em] text-[rgb(var(--text))] sm:text-7xl">
-                  {String(total).padStart(2, '0')}
-                </p>
-                <p className="meta mt-2">
-                  {total === 1 ? 'project published' : 'projects published'}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <PageHeader
+          eyebrow="Projects"
+          title="Things I have built."
+          lede="Every project I have made public, from coursework to longer experiments. Each entry explains what it is, what it is made of, and why I built it. Not everything here is finished — that is part of the point."
+          tone="section-tone-app"
+          meta={
+            <p className="inline-flex items-baseline gap-3">
+              <span className="font-display text-5xl font-bold leading-none tracking-[-0.04em] text-[rgb(var(--text))] sm:text-6xl">
+                {String(total).padStart(2, '0')}
+              </span>
+              <span className="meta">{total === 1 ? 'project published' : 'projects published'}</span>
+            </p>
+          }
+        />
       </div>
 
       {/*
@@ -118,8 +126,8 @@ function ProjectsSkeleton() {
   return (
     <section className="rhythm-lg">
       <div className="container-custom">
-        <div className="h-10 w-full max-w-3xl animate-pulse bg-[rgb(var(--surface))]" />
-        <div className="mt-6 h-3 w-40 animate-pulse bg-[rgb(var(--surface-elevated))]" />
+        <div className="h-10 w-full max-w-3xl animate-pulse rounded-[var(--radius-sm)] bg-[rgb(var(--surface))]" />
+        <div className="mt-6 h-3 w-40 animate-pulse rounded-[var(--radius-sm)] bg-[rgb(var(--surface-elevated))]" />
         <GridSkeleton count={6} />
       </div>
     </section>
@@ -151,7 +159,7 @@ async function ProjectResults({
           the same line as the filter means the reader can see both what they
           selected and how much it returned without a second block.
         */}
-        <div className="flex flex-col gap-4 border-y border-[rgb(var(--border-subtle))] py-5 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
+        <div className="flex flex-col gap-4 border-y border-[rgb(var(--border))] py-5 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
           <ProjectFilter options={filterOptions} active={category} />
 
           <p className="meta shrink-0 text-[rgb(var(--text-muted))]" aria-live="polite">
@@ -167,7 +175,7 @@ async function ProjectResults({
             {totalPages > 1 && (
               <nav
                 aria-label="Pagination"
-                className="mt-16 flex items-center justify-between border-t border-[rgb(var(--border-subtle))] pt-8"
+                className="mt-16 flex items-center justify-between border-t border-[rgb(var(--border))] pt-8"
               >
                 {page > 1 ? (
                   <ButtonLink
@@ -181,7 +189,7 @@ async function ProjectResults({
                   <span />
                 )}
 
-                <span className="font-mono text-xs text-[rgb(var(--text-muted))]">
+                <span className="meta">
                   Page {page} / {totalPages}
                 </span>
 

@@ -37,6 +37,7 @@ export default async function CertificatesPage() {
               Where I applied them
             </ArrowLink>
           }
+          tone="section-tone-school"
           meta={
             <p className="meta">
               {certificates.length === 0

@@ -83,8 +83,15 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* ---- Focus areas, one line each ----------------------------------- */}
-      <SectionShell tone="section-tone-experiment">
+      {/*
+        ---- Focus areas, one line each -----------------------------------
+        The three sections below this point each take a *different* tone. They
+        were all `section-tone-experiment`, which meant three consecutive tinted
+        washes with a hairline between them — one long band that reads as a
+        single section, and quietly undoes the point of `SectionShell`. Varying
+        the hue is what makes each read as its own room.
+      */}
+      <SectionShell tone="section-tone-web">
         <div className="container-custom py-16 lg:py-20">
           <div className="grid gap-x-12 gap-y-10 lg:grid-cols-12">
             <div className="lg:col-span-4">
@@ -123,7 +130,7 @@ export default function AboutPage() {
       </SectionShell>
 
       {/* ---- Toolkit, as chips -------------------------------------------- */}
-      <SectionShell tone="section-tone-experiment">
+      <SectionShell tone="section-tone-networking">
         <div className="container-custom py-16 lg:py-20">
           <div className="grid gap-x-12 gap-y-10 lg:grid-cols-12">
             <div className="lg:col-span-4">

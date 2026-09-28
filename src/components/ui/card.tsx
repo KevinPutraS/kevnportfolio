@@ -1,16 +1,21 @@
 import type { HTMLAttributes } from 'react'
 import { classNames } from '@/lib/utils/helpers'
 
-export type CardVariant = 'default' | 'hover' | 'elevated'
+export type CardVariant = 'default' | 'hover' | 'elevated' | 'glass'
 
 const VARIANTS: Record<CardVariant, string> = {
   default: 'card',
   hover: 'card-hover',
-  elevated: 'card border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))]',
+  elevated: 'surface-strong rounded-[var(--radius-xl)]',
+  glass: 'surface-glass rounded-[var(--radius-xl)]',
 }
 
-/** Square-cornered hairline panel. No client boundary: safe in Server Components. */
-export function Card({ className, variant = 'default', ...props }: HTMLAttributes<HTMLDivElement> & { variant?: CardVariant }) {
+/** Panel primitive. No client boundary: safe in Server Components. */
+export function Card({
+  className,
+  variant = 'default',
+  ...props
+}: HTMLAttributes<HTMLDivElement> & { variant?: CardVariant }) {
   return <div className={classNames(VARIANTS[variant], className)} {...props} />
 }
 
@@ -26,7 +31,7 @@ export function CardFooter({ className, ...props }: HTMLAttributes<HTMLDivElemen
   return (
     <div
       className={classNames(
-        'flex items-center border-t border-[rgb(var(--border-subtle))] px-5 py-4 sm:px-6',
+        'flex flex-wrap items-center gap-3 border-t border-[rgb(var(--border))] px-5 py-4 sm:px-6',
         className
       )}
       {...props}

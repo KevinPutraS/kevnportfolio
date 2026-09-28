@@ -42,14 +42,21 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>`}</code>
   }
 
   return (
-    <div className="min-h-screen bg-[rgb(var(--background))]">
+    <div className="min-h-screen bg-[rgb(var(--bg))]">
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:bg-[rgb(var(--accent))] focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-[rgb(var(--accent-contrast))]"
+        className="sr-only rounded-[var(--radius-md)] focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[90] focus:bg-[rgb(var(--accent))] focus:px-4 focus:py-2.5 focus:text-sm focus:font-medium focus:text-[rgb(var(--accent-contrast))] focus:shadow-lg"
       >
         Skip to content
       </a>
       <AdminSidebar email={user.email} />
+      {/*
+        `md:pl-64` matches the sidebar's `w-64`.
+
+        The sticky mobile header is a normal-flow sibling above `<main>`, so it
+        needs no reserved padding — `sticky` still occupies its own space, which
+        is the difference between `sticky` and `fixed`.
+      */}
       <div className="md:pl-64">
         <AdminHeader email={user.email} />
         <main id="main-content" className="px-5 py-8 sm:px-8 sm:py-10 lg:px-10">

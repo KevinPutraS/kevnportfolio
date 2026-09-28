@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
-import { classNames } from '@/lib/utils/helpers'
 import { buttonStyles, type ButtonSize, type ButtonVariant } from './button-styles'
 
 interface ButtonLinkProps extends Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> {
@@ -18,7 +17,7 @@ function content(children: ReactNode, external?: boolean) {
       {children}
       {external && (
         <svg
-          className="h-3.5 w-3.5 shrink-0 opacity-70"
+          className="h-4 w-4 shrink-0 opacity-80"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -52,7 +51,7 @@ export function ButtonLink({
 }: ButtonLinkProps) {
   const classes = buttonStyles({ variant, size, className })
 
-  if (external || /^(https?:|mailto:)/.test(href)) {
+  if (external || /^(https?:|mailto:|tel:)/.test(href)) {
     return (
       <a href={href} className={classes} rel="noopener noreferrer" target="_blank" {...props}>
         {content(children, true)}

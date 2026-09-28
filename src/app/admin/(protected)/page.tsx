@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { Award, ArrowUpRight, Briefcase, Eye, EyeOff, FileText, FolderOpen, Pencil, Star } from 'lucide-react'
-import { getProjects } from '@/lib/db/projects'
+import { getProjects, getProjectStatusCounts } from '@/lib/db/projects'
 import { getAllExperiencesForAdmin } from '@/lib/db/experience'
 import { getAllCertificatesForAdmin } from '@/lib/db/certificates'
 import { getUser } from '@/lib/auth'
@@ -19,18 +19,21 @@ export const metadata = {
 }
 
 export default async function AdminDashboardPage() {
-  const [user, { projects, total }, experiences, certificates] = await Promise.all([
+  const [user, { projects }, counts, experiences, certificates] = await Promise.all([
     getUser(),
     // `published: null` is essential here: the default filters to published
     // rows only, which previously hid every draft from the dashboard.
     getProjects({ page: 1, published: null, pageSize: 5 }),
+    getProjectStatusCounts(),
     getAllExperiencesForAdmin(),
     getAllCertificatesForAdmin(),
   ])
 
-  const published = projects.filter((project) => project.published).length
-  const drafts = projects.filter((project) => !project.published).length
-  const featured = projects.filter((project) => project.featured).length
+  // Counters come from exact counts rather than from filtering the five rows
+  // above. Deriving them from a page of five made the "Drafts" tile describe the
+  // five newest projects rather than every draft, so the tiles disagreed with
+  // each other and with the projects list.
+  const { total, published, drafts, featured } = counts
 
   // Each counter carries a hue and an icon. Projects are blue, experience pink,
   // certificates amber — the same mapping the public site uses, so the dashboard
@@ -109,7 +112,8 @@ export default async function AdminDashboardPage() {
           ))}
         </ul>
         <p className="mt-3 text-[length:var(--text-xs)] text-[rgb(var(--text-muted))]">
-          Summary of the {projects.length} most recent projects.
+          Counts cover every project. The list below shows the{' '}
+          {projects.length === 1 ? 'single' : `${projects.length} most recent`}.
         </p>
       </section>
 

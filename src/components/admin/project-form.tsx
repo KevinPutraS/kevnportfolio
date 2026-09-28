@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Select } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
+import { FormJumpNav, FormSection, FormStickyActions } from '@/components/ui/form-layout'
 import { ImageUploader } from './image-uploader'
 import { projectCategories, type ProjectCategory } from '@/config/site'
 import { classNames } from '@/lib/utils/helpers'
@@ -147,17 +148,32 @@ export function ProjectForm({ project }: { project?: Project }) {
   const technologyList = parseList(values.technologies)
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="space-y-8">
+    <form onSubmit={handleSubmit} noValidate className="space-y-6">
       {formError && (
-        <div role="alert" className="border border-[rgb(var(--error))]/40 bg-[rgb(var(--error))]/5 p-4">
-          <p className="text-sm text-[rgb(var(--text-primary))]">{formError}</p>
+        <div
+          role="alert"
+          className="border border-[rgb(var(--error)/0.4)] bg-[rgb(var(--error)/0.05)] p-4"
+        >
+          <p className="text-sm text-[rgb(var(--error))]">{formError}</p>
         </div>
       )}
 
-      {/* ---- Details ----------------------------------------------------- */}
-      <fieldset className="space-y-6">
-        <legend className="heading-4">Details</legend>
+      <FormJumpNav
+        items={[
+          { id: 'project-details', label: 'Details' },
+          { id: 'project-technologies', label: 'Technologies' },
+          { id: 'project-images', label: 'Images' },
+          { id: 'project-links', label: 'Links' },
+          { id: 'project-visibility', label: 'Visibility' },
+        ]}
+      />
 
+      <FormSection
+        id="project-details"
+        eyebrow="The project"
+        title="Details"
+        description="What it is, what kind of project it is, and the one-line summary that appears on the card. The slug becomes the page URL, so it is generated from the title until you edit it yourself."
+      >
         <Input
           id="project-title"
           label="Title"
@@ -168,29 +184,31 @@ export function ProjectForm({ project }: { project?: Project }) {
           required
         />
 
-        <Input
-          id="project-slug"
-          label="Slug"
-          value={values.slug}
-          onChange={(event) => {
-            slugManuallyEdited.current = true
-            update('slug', generateSlug(event.target.value))
-          }}
-          error={errors.slug}
-          hint="Lowercase letters, numbers and hyphens. Used in the page URL."
-          maxLength={100}
-          required
-        />
+        <div className="grid gap-5 sm:grid-cols-2">
+          <Input
+            id="project-slug"
+            label="Slug"
+            value={values.slug}
+            onChange={(event) => {
+              slugManuallyEdited.current = true
+              update('slug', generateSlug(event.target.value))
+            }}
+            error={errors.slug}
+            hint="Lowercase letters, numbers and hyphens."
+            maxLength={100}
+            required
+          />
 
-        <Select
-          id="project-category"
-          label="Category"
-          value={values.category}
-          onChange={(event) => update('category', event.target.value as ProjectCategory)}
-          error={errors.category}
-          options={CATEGORY_OPTIONS}
-          required
-        />
+          <Select
+            id="project-category"
+            label="Category"
+            value={values.category}
+            onChange={(event) => update('category', event.target.value as ProjectCategory)}
+            error={errors.category}
+            options={CATEGORY_OPTIONS}
+            required
+          />
+        </div>
 
         <Input
           id="project-project_date"
@@ -224,11 +242,14 @@ export function ProjectForm({ project }: { project?: Project }) {
           rows={10}
           maxLength={10000}
         />
-      </fieldset>
+      </FormSection>
 
-      {/* ---- Technologies ------------------------------------------------ */}
-      <fieldset className="space-y-4">
-        <legend className="heading-4">Technologies</legend>
+      <FormSection
+        id="project-technologies"
+        eyebrow="Stack"
+        title="Technologies"
+        description="What it is built with. Rendered as tags on the project page, so short and recognisable beats complete."
+      >
         <Input
           id="project-technologies"
           label="Technologies"
@@ -244,9 +265,14 @@ export function ProjectForm({ project }: { project?: Project }) {
             {technologyList.map((technology) => (
               <li
                 key={technology}
-                className="inline-flex items-center gap-1.5 border border-[rgb(var(--border-subtle))] px-2.5 py-1 font-mono text-xs text-[rgb(var(--text-secondary))]"
+                className="inline-flex items-center gap-1 rounded-[var(--radius-full)] border border-[rgb(var(--border))] bg-[rgb(var(--bg-highlight))] py-1 pl-3 pr-1.5 font-mono text-[length:var(--text-xs)] text-[rgb(var(--text-dim))]"
               >
                 {technology}
+                {/*
+                  The chip's own height is the target, not just the glyph. A 16px
+                  `X` in a 24px pill is unclickable on a phone, and this is the
+                  one control in the form a thumb has to aim at.
+                */}
                 <button
                   type="button"
                   onClick={() =>
@@ -258,20 +284,22 @@ export function ProjectForm({ project }: { project?: Project }) {
                     )
                   }
                   aria-label={`Remove ${technology}`}
-                  className="text-[rgb(var(--text-muted))] transition-colors hover:text-[rgb(var(--error))]"
+                  className="-mr-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[rgb(var(--text-muted))] transition-colors hover:bg-[rgb(var(--error)/0.14)] hover:text-[rgb(var(--error))]"
                 >
-                  <X className="h-3 w-3" aria-hidden="true" />
+                  <X className="h-3.5 w-3.5" aria-hidden="true" />
                 </button>
               </li>
             ))}
           </ul>
         )}
-      </fieldset>
+      </FormSection>
 
-      {/* ---- Images ------------------------------------------------------ */}
-      <fieldset className="space-y-8">
-        <legend className="heading-4">Images</legend>
-
+      <FormSection
+        id="project-images"
+        eyebrow="Media"
+        title="Images"
+        description="The thumbnail is what appears on every card, so it is the only image that is effectively required. Gallery images are optional and the gallery is hidden when empty."
+      >
         <ImageUploader
           id="project-thumbnail_url"
           label="Thumbnail"
@@ -290,12 +318,14 @@ export function ProjectForm({ project }: { project?: Project }) {
             error={errors.gallery}
           />
         </div>
-      </fieldset>
+      </FormSection>
 
-      {/* ---- Links ------------------------------------------------------- */}
-      <fieldset className="space-y-6">
-        <legend className="heading-4">Links</legend>
-
+      <FormSection
+        id="project-links"
+        eyebrow="Outbound"
+        title="Links"
+        description="Both are optional, and each button is hidden from the public page when its field is empty, so there is no downside to leaving one blank."
+      >
         <Input
           id="project-project_url"
           label="Live project URL"
@@ -319,11 +349,14 @@ export function ProjectForm({ project }: { project?: Project }) {
           hint="Optional. The button is hidden when this is empty."
           placeholder="https://github.com/you/project"
         />
-      </fieldset>
+      </FormSection>
 
-      {/* ---- Visibility -------------------------------------------------- */}
-      <fieldset className="space-y-4">
-        <legend className="heading-4">Visibility</legend>
+      <FormSection
+        id="project-visibility"
+        eyebrow="Publishing"
+        title="Visibility"
+        description="Publishing controls whether the project appears on the public site at all. Featuring is a separate, narrower switch: it decides which projects the homepage leads with."
+      >
         <Checkbox
           id="project-published"
           label="Published"
@@ -338,17 +371,13 @@ export function ProjectForm({ project }: { project?: Project }) {
           checked={values.featured}
           onChange={(event) => update('featured', event.target.checked)}
         />
-      </fieldset>
+      </FormSection>
 
-      {/* ---- Actions ----------------------------------------------------- */}
-      <div className="flex flex-col gap-3 border-t border-[rgb(var(--border-subtle))] pt-6 sm:flex-row sm:items-center sm:justify-end">
-        <Button type="button" variant="ghost" onClick={() => router.back()}>
-          Cancel
-        </Button>
-        <Button type="submit" loading={isSaving} className="w-full sm:w-auto">
-          {isEditing ? 'Save changes' : 'Create project'}
-        </Button>
-      </div>
+      <FormStickyActions
+        onCancel={() => router.back()}
+        saveLabel={isEditing ? 'Save changes' : 'Create project'}
+        isPending={isSaving}
+      />
     </form>
   )
 }
@@ -431,16 +460,26 @@ function GalleryManager({
       </p>
 
       {images.length > 0 && (
-        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {images.map((image, index) => (
-            <li key={`${image}-${index}`} className="relative aspect-[16/9] overflow-hidden border border-[rgb(var(--border-subtle))]">
+            <li
+              key={`${image}-${index}`}
+              className="relative aspect-[16/9] overflow-hidden rounded-[var(--radius-lg)] border border-[rgb(var(--border))]"
+            >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={image} alt="" className="h-full w-full object-cover" />
+              {/*
+                40px rather than the 28px a thumbnail-scale target would want:
+                this is the *only* way to remove a gallery image, and it sits on
+                top of another control, so it has to be findable by thumb rather
+                than by pointer. The position is nudged inward on a phone so the
+                target is not flush against the tile edge.
+              */}
               <button
                 type="button"
                 onClick={() => onChange(images.filter((_, position) => position !== index))}
                 aria-label={`Remove gallery image ${index + 1}`}
-                className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center border border-[rgb(var(--border))] bg-[rgb(var(--background))]/90 text-[rgb(var(--text-primary))] transition-colors hover:border-[rgb(var(--error))] hover:text-[rgb(var(--error))]"
+                className="absolute right-1.5 top-1.5 inline-flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] border border-[rgb(var(--border-strong))] bg-[rgb(var(--bg)/0.85)] text-[rgb(var(--text))] backdrop-blur transition-colors hover:border-[rgb(var(--error))] hover:text-[rgb(var(--error))]"
               >
                 <X className="h-4 w-4" aria-hidden="true" />
               </button>

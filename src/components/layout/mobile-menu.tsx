@@ -1,10 +1,10 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createPortal } from 'react-dom'
 import { usePathname } from 'next/navigation'
-import { Menu, X, ArrowUpRight } from 'lucide-react'
+import { Menu, X, ArrowUpRight, Mail } from 'lucide-react'
 import { siteConfig, socialLinks, type NavItem } from '@/config/site'
 import { classNames, isActiveRoute } from '@/lib/utils/helpers'
 import { useFocusTrap } from '@/lib/hooks/use-focus-trap'
@@ -12,41 +12,51 @@ import { useFocusTrap } from '@/lib/hooks/use-focus-trap'
 /**
  * Mobile navigation drawer.
  *
- * Redesigned around one observation: the previous version gave every item a
- * one-line description, so the drawer needed three or four screens of scrolling
- * before the social links at the bottom were even reachable. A menu is a way out
- * of a page, not a page — it should be readable in one glance and dismissed just
- * as fast. The descriptions moved to the hero, which is where a visitor actually
- * decides where to go.
+ * A full-height sheet rather than a panel that drops in from the top edge. The
+ * top-panel version had to guess a height, capped itself with `max-h`, and on a
+ * short phone the social links fell below the fold of a menu — which is a
+ * terrible ratio. A full-height drawer has room for every destination at a
+ * genuinely comfortable row height plus the contact details, with no scrolling
+ * and no guessing.
  *
- * What replaced them: an icon and a hue per destination, so each row is
- * identifiable at a glance and the whole menu fits without scrolling. The hues
- * are the same category palette used by the section cards, so the menu reads as
- * part of the site rather than a separate component.
+ * The descriptions that used to sit under each label are gone. They made the
+ * list three screens long, and a menu is a way out of a page, not a page. The
+ * copy they carried moved to the hero, which is where a visitor actually
+ * decides where to go. What replaces them is an icon and a hue per destination
+ * — the same category palette the section cards use, so the menu reads as part
+ * of the site rather than a separate component.
  *
- * Accessibility contract, unchanged and not traded away for the compactness:
+ * Accessibility contract, not traded away for the compactness:
  * - the trigger is a real `<button>` with `aria-expanded` + `aria-controls`
- * - the panel is a labelled dialog inside a focus trap, so Tab cannot wander into
- *   the obscured page
+ * - the panel is a labelled dialog inside a focus trap, so Tab cannot wander
+ *   into the obscured page
  * - Escape closes it and focus returns to the trigger
  * - `body` scroll is locked while open and restored on close
  * - the panel is unmounted when closed, so its links are not tabbable
  *
  * Why a portal. The header is `sticky` with `backdrop-blur`, and a
  * `backdrop-filter` (like `transform` or `filter`) establishes a **containing
- * block for fixed-position descendants**. A `fixed inset-0` panel rendered inside
- * the header was therefore laid out relative to the header, not the viewport: the
- * drawer was clipped to the 64px header strip and the page behind stayed visible
- * and scrollable. `createPortal` to `document.body` puts it outside that
- * containing block. `mounted` guards SSR, where `document` does not exist.
+ * block for fixed-position descendants**. A `fixed inset-0` panel rendered
+ * inside the header was therefore laid out relative to the header, not the
+ * viewport: the drawer was clipped to the 64px header strip and the page behind
+ * stayed visible and scrollable. `createPortal` to `document.body` puts it
+ * outside that containing block. `mounted` guards SSR, where `document` does
+ * not exist.
  */
 export function MobileMenu() {
   const [isOpen, setIsOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const pathname = usePathname()
-  const panelRef = useFocusTrap<HTMLDivElement>(isOpen, () => setIsOpen(false))
-
   const close = useCallback(() => setIsOpen(false), [])
+  /*
+    `close` is passed to the trap, not an inline `() => setIsOpen(false)`. The
+    hook lists `onClose` in its effect dependencies, so a fresh arrow function
+    every render would tear the trap down and rebuild it on each render — which
+    re-locks the scroll, re-runs the listener and, worst of all, yanks focus
+    back to the panel. `useCallback` gives it a stable identity so the effect
+    only runs when the drawer actually opens or closes.
+  */
+  const panelRef = useFocusTrap<HTMLDivElement>(isOpen, close)
 
   useEffect(() => {
     setMounted(true)
@@ -58,19 +68,6 @@ export function MobileMenu() {
     setIsOpen(false)
   }, [pathname])
 
-  const toneFor = useMemo(
-    () =>
-      new Map<string, string>([
-        ['/', 'cat-web'],
-        ['/projects', 'cat-app'],
-        ['/experience', 'cat-design'],
-        ['/certificates', 'cat-networking'],
-        ['/about', 'cat-experiment'],
-        ['/contact', 'cat-school'],
-      ]),
-    []
-  )
-
   return (
     <>
       <button
@@ -79,7 +76,7 @@ export function MobileMenu() {
         aria-expanded={isOpen}
         aria-controls="mobile-navigation"
         aria-label="Open menu"
-        className="-mr-1 inline-flex h-11 w-11 items-center justify-center rounded-sm text-[rgb(var(--text))] transition-colors duration-150 hover:text-[rgb(var(--accent))] lg:hidden"
+        className="-mr-2 inline-flex h-11 w-11 items-center justify-center rounded-[var(--radius-md)] text-[rgb(var(--text))] transition-colors duration-200 hover:bg-[rgb(var(--bg-highlight))] lg:hidden"
       >
         <Menu className="h-6 w-6" aria-hidden="true" />
       </button>
@@ -87,8 +84,12 @@ export function MobileMenu() {
       {isOpen &&
         mounted &&
         createPortal(
-          <div className="fixed inset-0 z-[60] lg:hidden">
-            <div className="absolute inset-0 animate-fade-in bg-black/80" onClick={close} aria-hidden="true" />
+          <div className="fixed inset-0 z-[70] lg:hidden">
+            <div
+              className="animate-fade-in absolute inset-0 bg-[rgb(0_0_0/0.65)] backdrop-blur-sm"
+              onClick={close}
+              aria-hidden="true"
+            />
 
             <div
               ref={panelRef}
@@ -97,10 +98,10 @@ export function MobileMenu() {
               aria-modal="true"
               aria-label="Site navigation"
               tabIndex={-1}
-              className="absolute inset-x-0 top-0 flex max-h-[100dvh] animate-slide-down flex-col overflow-y-auto overscroll-contain border-b border-[rgb(var(--border))] bg-[rgb(var(--background))] focus:outline-none"
+              className="surface-glass absolute inset-y-0 right-0 flex w-[min(21rem,88vw)] animate-slide-in-right flex-col border-l border-[rgb(var(--border))] shadow-[-24px_0_60px_-20px_rgb(0_0_0/0.8)] focus:outline-none"
             >
-              <div className="container-custom flex h-16 shrink-0 items-center justify-between border-b border-[rgb(var(--border))]">
-                <span className="font-display text-lg font-bold tracking-[-0.035em]">
+              <div className="flex h-16 shrink-0 items-center justify-between border-b border-[rgb(var(--border))] px-4">
+                <span className="font-display text-lg font-bold tracking-[-0.04em] text-[rgb(var(--text))]">
                   {siteConfig.name}
                   <span className="text-[rgb(var(--accent))]">.</span>
                 </span>
@@ -108,55 +109,54 @@ export function MobileMenu() {
                   type="button"
                   onClick={close}
                   aria-label="Close menu"
-                  className="-mr-1 inline-flex h-11 w-11 items-center justify-center rounded-sm text-[rgb(var(--text))] transition-colors duration-150 hover:text-[rgb(var(--accent))]"
+                  className="-mr-2 inline-flex h-11 w-11 items-center justify-center rounded-[var(--radius-md)] text-[rgb(var(--text))] transition-colors duration-200 hover:bg-[rgb(var(--bg-highlight))]"
                 >
-                  <X className="h-6 w-6" aria-hidden="true" />
+                  <X className="h-5 w-5" aria-hidden="true" />
                 </button>
               </div>
 
-              <nav aria-label="Mobile" className="container-custom flex-1 py-4">
-                <ul className="space-y-1">
+              <nav aria-label="Mobile" className="flex-1 overflow-y-auto overscroll-contain px-3 py-4">
+                <ul className="flex flex-col gap-1.5">
                   {siteConfig.navigation.map((item) => (
                     <MenuRow
                       key={item.href}
                       item={item}
-                      tone={toneFor.get(item.href) ?? 'cat-other'}
                       active={isActiveRoute(pathname, item.href)}
                       onNavigate={close}
                     />
                   ))}
                 </ul>
-
-                <div className="mt-5 space-y-3 border-t border-[rgb(var(--border))] pt-5">
-                  <a
-                    href={siteConfig.contactEmail}
-                    className="flex min-h-11 items-center gap-2.5 text-[length:var(--text-sm)] text-[rgb(var(--text-dim))] transition-colors duration-200 hover:text-[rgb(var(--accent))]"
-                  >
-                    <MenuIcon name="mail" className="h-4 w-4 text-[rgb(var(--text-muted))]" />
-                    <span className="truncate">{siteConfig.email}</span>
-                  </a>
-
-                  <ul className="flex flex-wrap gap-x-5">
-                    {socialLinks.map((link) => (
-                      <li key={link.href}>
-                        <a
-                          href={link.href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="group inline-flex min-h-11 items-center gap-1 text-[length:var(--text-sm)] text-[rgb(var(--text-muted))] transition-colors duration-200 hover:text-[rgb(var(--accent))]"
-                        >
-                          {link.label}
-                          <ArrowUpRight
-                            className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                            aria-hidden="true"
-                          />
-                          <span className="sr-only">(opens in a new tab)</span>
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
               </nav>
+
+              <div className="shrink-0 space-y-4 border-t border-[rgb(var(--border))] px-4 py-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+                <a
+                  href={siteConfig.contactEmail}
+                  className="flex min-h-11 items-center gap-2.5 text-[length:var(--text-sm)] text-[rgb(var(--text-dim))] transition-colors duration-200 hover:text-[rgb(var(--accent))]"
+                >
+                  <Mail className="h-4 w-4 shrink-0 text-[rgb(var(--text-muted))]" aria-hidden="true" />
+                  <span className="truncate">{siteConfig.email}</span>
+                </a>
+
+                <ul className="flex flex-wrap gap-x-5 gap-y-1">
+                  {socialLinks.map((link) => (
+                    <li key={link.href}>
+                      <a
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group inline-flex min-h-11 items-center gap-1 text-[length:var(--text-sm)] text-[rgb(var(--text-muted))] transition-colors duration-200 hover:text-[rgb(var(--accent))]"
+                      >
+                        {link.label}
+                        <ArrowUpRight
+                          className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                          aria-hidden="true"
+                        />
+                        <span className="sr-only">(opens in a new tab)</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           </div>,
           document.body
@@ -169,45 +169,46 @@ export function MobileMenu() {
  * One destination: icon tile, label, and its hue. No description — see the note
  * on the drawer. The active row is marked three ways, so it does not rely on
  * colour alone: a filled tile, primary text, and `aria-current`.
+ *
+ * The whole row is one link with a 56px minimum height, so the tap target is
+ * the full width of the drawer rather than the width of the word.
  */
 function MenuRow({
   item,
-  tone,
   active,
   onNavigate,
 }: {
   item: NavItem
-  tone: string
   active: boolean
   onNavigate: () => void
 }) {
   return (
-    <li className={tone}>
+    <li className={item.tone ?? 'cat-other'}>
       <Link
         href={item.href}
         onClick={onNavigate}
         aria-current={active ? 'page' : undefined}
         className={classNames(
-          'flex min-h-14 items-center gap-3.5 rounded-xl border px-3 transition-[background-color,border-color] duration-200',
+          'flex min-h-14 items-center gap-3.5 rounded-[var(--radius-lg)] border px-3 transition-[background-color,border-color] duration-200',
           active
-            ? 'border-[rgb(var(--cat)/0.5)] bg-[rgb(var(--cat)/0.12)]'
+            ? 'border-[rgb(var(--cat)/0.55)] bg-[rgb(var(--cat)/0.14)]'
             : 'border-transparent hover:border-[rgb(var(--border))] hover:bg-[rgb(var(--bg-elevated))]'
         )}
       >
         <span
           className={classNames(
-            'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-colors duration-200',
+            'flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] border transition-colors duration-200',
             active
-              ? 'border-[rgb(var(--cat))] bg-[rgb(var(--cat))] text-[rgb(var(--bg))]'
+              ? 'border-transparent bg-[rgb(var(--cat))] text-[rgb(var(--bg))]'
               : 'border-[rgb(var(--cat)/0.35)] bg-[rgb(var(--cat)/0.12)] text-[rgb(var(--cat))]'
           )}
         >
-          <MenuIcon name={item.label} />
+          <NavIcon name={item.label} />
         </span>
 
         <span
           className={classNames(
-            'font-display text-lg font-bold tracking-[-0.02em] transition-colors duration-200',
+            'font-display text-[length:var(--text-base)] font-bold tracking-[-0.02em] transition-colors duration-200',
             active ? 'text-[rgb(var(--cat))]' : 'text-[rgb(var(--text))]'
           )}
         >
@@ -225,7 +226,7 @@ function MenuRow({
 }
 
 /** Inline icons keyed by the nav label, so no icon package grows for six items. */
-function MenuIcon({ name, className }: { name: string; className?: string }) {
+function NavIcon({ name }: { name: string }) {
   const shared = {
     viewBox: '0 0 24 24',
     fill: 'none',
@@ -233,7 +234,7 @@ function MenuIcon({ name, className }: { name: string; className?: string }) {
     strokeWidth: 1.75,
     strokeLinecap: 'round' as const,
     strokeLinejoin: 'round' as const,
-    className: className ?? 'h-[18px] w-[18px]',
+    className: 'h-5 w-5',
     'aria-hidden': true,
   }
 
@@ -277,13 +278,6 @@ function MenuIcon({ name, className }: { name: string; className?: string }) {
         </svg>
       )
     case 'Contact':
-      return (
-        <svg {...shared}>
-          <rect x="3" y="5" width="18" height="14" rx="2" />
-          <path d="m3 7 9 6 9-6" />
-        </svg>
-      )
-    case 'mail':
       return (
         <svg {...shared}>
           <rect x="3" y="5" width="18" height="14" rx="2" />

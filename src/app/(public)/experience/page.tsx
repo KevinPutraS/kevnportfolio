@@ -43,6 +43,7 @@ export default async function ExperiencePage() {
               See the projects
             </ArrowLink>
           }
+          tone="section-tone-design"
           meta={
             <p className="meta">
               {experiences.length === 0
@@ -55,7 +56,8 @@ export default async function ExperiencePage() {
         />
       </div>
 
-      <SectionShell tone="section-tone-app">
+      {/* Same hue as the header above, so the page reads as one section. */}
+      <SectionShell tone="section-tone-design">
         <div className="container-custom">
           {experiences.length === 0 ? (
             <EmptyState

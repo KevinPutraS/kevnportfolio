@@ -13,7 +13,7 @@ import { MobileMenu } from './mobile-menu'
  *
  * Rendered as a 1px rule pinned to the bottom edge of the header and scaled
  * horizontally, so the whole thing is a single compositor transform with no
- * layout or paint work per frame. The listener is passive and the state is
+ * layout or paint work per frame. The listener is passive and the value is
  * written straight to the element through a ref, so scrolling never triggers a
  * React render.
  */
@@ -52,7 +52,7 @@ function ScrollProgress() {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none absolute inset-x-0 bottom-0 h-px origin-left bg-[rgb(var(--accent))] opacity-70"
+      className="pointer-events-none absolute inset-x-0 bottom-0 h-px origin-left bg-[rgb(var(--accent))]"
       style={{ transform: 'scaleX(0)' }}
       ref={barRef}
     />
@@ -66,16 +66,17 @@ export function Navbar() {
   /*
    * Scroll-aware chrome.
    *
-   * The header was already `sticky top-0`, but at `bg/80` with a
-   * `--border-subtle` hairline there was nothing to see: content slid behind a
-   * 20%-transparent blur and the bar read as part of the page rather than a
-   * surface floating above it. So the state is now explicit — a solid background
-   * and a shadow once the page has scrolled, which is what a sticky bar is
-   * supposed to look like when it engages.
+   * `lifted` becomes true once the page has moved, at which point the bar
+   * gains a near-opaque background and a shadow. A `useState` boolean rather
+   * than the raw scroll offset: the header only needs to know *whether* it is
+   * detached, and a threshold means the class string does not change on every
+   * frame of a slow scroll.
    *
-   * A `useState` boolean rather than the raw scroll position: the header only
-   * needs to know *whether* it is detached, and a threshold boolean means the
-   * class string does not change on every frame of a slow scroll.
+   * The translucent states are written as `rgb(var(--bg) / 0.7)` — the slash
+   * inside the brackets. The `bg-[rgb(var(--bg))]/70` spelling looks equivalent
+   * and compiles to *nothing at all*, which is why this bar used to be fully
+   * transparent: content slid visibly behind it and the header read as part of
+   * the page rather than a surface floating above it.
    */
   const [lifted, setLifted] = useState(false)
 
@@ -90,13 +91,13 @@ export function Navbar() {
     <header
       data-lifted={lifted ? 'true' : undefined}
       className={classNames(
-        'sticky top-0 z-50 border-b transition-[background-color,border-color,box-shadow,backdrop-filter] duration-300',
+        'sticky top-0 z-50 border-b transition-[background-color,border-color,box-shadow] duration-300',
         lifted
-          ? 'border-[rgb(var(--border))] bg-[rgb(var(--background))]/95 shadow-[0_10px_30px_-18px_rgb(0_0_0/0.9)] backdrop-blur-xl'
-          : 'border-[rgb(var(--border-subtle))] bg-[rgb(var(--background))]/70 backdrop-blur-md'
+          ? 'border-[rgb(var(--border))] bg-[rgb(var(--bg)/0.85)] shadow-[0_10px_30px_-18px_rgb(0_0_0/0.9)] backdrop-blur-xl'
+          : 'border-transparent bg-[rgb(var(--bg)/0.6)] backdrop-blur-md'
       )}
     >
-      <div className="container-custom flex h-16 items-center justify-between gap-4">
+      <div className="container-custom flex h-16 items-center justify-between gap-3">
         {/*
           The wordmark is the name and nothing else. It used to carry a small
           "portfolio" label beside it, which was both below the readable size
@@ -105,11 +106,14 @@ export function Navbar() {
         */}
         <Link
           href="/"
-          className="-ml-1 flex min-h-11 min-w-0 items-center px-1"
+          className="-ml-1 flex min-h-11 min-w-0 items-center gap-1.5 px-1"
           aria-label={`${siteConfig.name} — home`}
         >
-          <span className="font-display text-lg font-bold tracking-[-0.035em] text-[rgb(var(--text-primary))]">
-            {wordmark}
+          <span className="font-display text-lg font-bold tracking-[-0.04em] text-[rgb(var(--text))]">
+            {wordmark.slice(0, -1)}
+          </span>
+          <span aria-hidden="true" className="text-[rgb(var(--accent))]">
+            .
           </span>
         </Link>
 
@@ -134,7 +138,7 @@ export function Navbar() {
                     <Link
                       href={item.href}
                       aria-current={isActive ? 'page' : undefined}
-                      className={buttonStyles({ variant: 'primary', size: 'md' })}
+                      className={buttonStyles({ variant: 'primary', size: 'sm', className: 'h-10 px-4' })}
                     >
                       {item.label}
                     </Link>

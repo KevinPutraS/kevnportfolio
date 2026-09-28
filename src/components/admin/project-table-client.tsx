@@ -187,7 +187,7 @@ export function ProjectTableClient({ projects }: { projects: Project[] }) {
                       <Link
                         href={`/admin/projects/${project.id}/edit`}
                         prefetch={false}
-                        className="inline-flex h-8 items-center gap-1.5 border border-[rgb(var(--border-subtle))] px-2.5 text-xs text-[rgb(var(--text-secondary))] transition-colors hover:border-[rgb(var(--text-muted))] hover:text-[rgb(var(--text-primary))]"
+                        className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-[var(--radius-md)] border border-[rgb(var(--border))] px-3 text-xs text-[rgb(var(--text-dim))] transition-colors hover:border-[rgb(var(--border-strong))] hover:bg-[rgb(var(--bg-highlight))] hover:text-[rgb(var(--text))] sm:h-[34px]"
                       >
                         <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
                         Edit
@@ -222,7 +222,13 @@ export function ProjectTableClient({ projects }: { projects: Project[] }) {
         }
       >
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-          <Button type="button" variant="ghost" onClick={actions.cancelDelete}>
+          {/* `data-modal-initial` puts focus on Cancel the moment this opens. */}
+          <Button
+            type="button"
+            variant="ghost"
+            data-modal-initial
+            onClick={actions.cancelDelete}
+          >
             Cancel
           </Button>
           <Button

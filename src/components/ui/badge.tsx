@@ -1,14 +1,14 @@
 import type { HTMLAttributes } from 'react'
 import { classNames } from '@/lib/utils/helpers'
 
-export type BadgeVariant = 'primary' | 'secondary' | 'success' | 'warning' | 'error'
+export type BadgeVariant = 'primary' | 'success' | 'warning' | 'error' | 'neutral'
 
 const VARIANTS: Record<BadgeVariant, string> = {
   primary: 'badge-primary',
-  secondary: 'badge-secondary',
   success: 'badge-success',
   warning: 'badge-warning',
   error: 'badge-error',
+  neutral: 'badge-neutral',
 }
 
 export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
@@ -16,9 +16,9 @@ export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
 }
 
 /**
- * Status pill. Deliberately square-cornered to match the editorial panel
- * language instead of the rounded-pill look of a typical template.
+ * Status pill. The `badge` base is always included because it carries the
+ * padding, radius and type size — a variant class on its own is only colours.
  */
-export function Badge({ className, variant = 'secondary', ...props }: BadgeProps) {
-  return <span className={classNames(VARIANTS[variant], className)} {...props} />
+export function Badge({ className, variant = 'neutral', ...props }: BadgeProps) {
+  return <span className={classNames('badge', VARIANTS[variant], className)} {...props} />
 }

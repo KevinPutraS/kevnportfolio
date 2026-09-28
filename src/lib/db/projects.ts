@@ -93,6 +93,50 @@ export async function getProjects({
   }
 }
 
+/**
+ * Exact published / draft / featured counts, for the admin dashboard.
+ *
+ * The dashboard used to derive its counters by filtering the five most recent
+ * projects and calling the result "Drafts". With more than five projects in the
+ * system that number was simply wrong — it counted drafts *among the five
+ * newest* — so the four tiles could not add up to the "Total projects" tile
+ * beside them, which came from a real `count: 'exact'`. Somebody checking the
+ * dashboard against the projects list saw a contradiction and had no way to
+ * tell which figure was lying.
+ *
+ * `getProjects` already returns an exact `total`, so this reuses it three times
+ * with `pageSize: 1`: the count is correct regardless of page size, so one row
+ * back per query is all that is needed. Three narrow index-backed counts are
+ * far cheaper than shipping every project row to the server just to count them
+ * in JavaScript.
+ *
+ * Uses the session client (`published: null`) so drafts are visible at all —
+ * the cookieless public client runs as `anon` under a `published = true` RLS
+ * policy and would report zero drafts forever.
+ */
+export async function getProjectStatusCounts(): Promise<{
+  total: number
+  published: number
+  drafts: number
+  featured: number
+}> {
+  if (!isSupabaseConfigured()) return { total: 0, published: 0, drafts: 0, featured: 0 }
+
+  const [all, live, unpublished, starred] = await Promise.all([
+    getProjects({ page: 1, pageSize: 1, published: null }),
+    getProjects({ page: 1, pageSize: 1, published: true }),
+    getProjects({ page: 1, pageSize: 1, published: false }),
+    getProjects({ page: 1, pageSize: 1, published: null, featured: true }),
+  ])
+
+  return {
+    total: all.total,
+    published: live.total,
+    drafts: unpublished.total,
+    featured: starred.total,
+  }
+}
+
 export async function getProjectBySlug(slug: string): Promise<Project | null> {
   if (!isSupabaseConfigured()) return null
 

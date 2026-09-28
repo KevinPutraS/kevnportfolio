@@ -2,74 +2,114 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ==========================================================================
+ * DESIGN TOKENS
+ * --------------------------------------------------------------------------
+ * Every colour in the app resolves through this block. Components never hard-code
+ * a hex value; they address a token, which is what makes the whole surface
+ * re-themeable from one place.
+ *
+ * A note on opacity, because it is the single easiest thing to get wrong here:
+ * `rgb(var(--x))` is a *comma-less* colour function, and Tailwind's `/opacity`
+ * modifier cannot inject an alpha channel into it. Writing
+ * `bg-[rgb(var(--accent))]/50` therefore produces **no CSS at all** — not an
+ * invalid rule, no rule. The working form puts the slash inside the brackets:
+ *
+ *     bg-[rgb(var(--accent)/0.5)]      ✅ compiles
+ *     bg-[rgb(var(--accent))]/50        ❌ silently dropped
+ *
+ * Wherever a translucent surface is needed, prefer the dedicated classes at the
+ * bottom of this file (`.surface-glass`, `.accent-tint`, `.cat-tint`, …), which
+ * cannot be got wrong, over an inline arbitrary value.
+ * ========================================================================== */
 @layer base {
   :root {
-    /*
-     * Base. Not pure black — pure black on a large dark page is harsh and makes
-     * every surface above it look like a hole. This is a soft, slightly plum
-     * charcoal, which lets the coloured elements sit on it without vibrating.
+    /* ---- Canvas --------------------------------------------------------
+     * Not pure black. Pure black under a large dark page makes every raised
+     * surface read as a hole punched through it; these are soft, slightly
+     * blue-violet charcoals so the coloured elements sit *on* the page.
      */
-    --bg: 14 13 18;
-    --bg-elevated: 22 21 28;
-    --bg-highlight: 30 29 38;
-    --bg-accent: 38 36 47;
+    --bg: 9 9 15;
+    --bg-elevated: 17 17 25;
+    --bg-highlight: 25 25 36;
+    --bg-accent: 34 33 47;
 
-    --border: 42 40 51;
-    --border-strong: 58 55 70;
+    /* ---- Lines --------------------------------------------------------- */
+    --border: 39 39 52;
+    --border-strong: 60 60 78;
 
-    --text: 244 242 247;
-    --text-dim: 168 164 180;
-    --text-muted: 118 114 131;
+    /* ---- Type ---------------------------------------------------------- */
+    --text: 244 244 250;
+    --text-dim: 169 170 186;
+    --text-muted: 116 117 136;
+    /* Text placed *on top of* an accent fill. Dark, so it clears 10:1. */
+    --text-inverse: 7 9 14;
 
-    /*
-     * Accent. One signature colour for interface chrome — buttons, active nav,
-     * links, focus rings. Cool ice blue so it never reads as "warning".
+    /* ---- Accent --------------------------------------------------------
+     * Electric cyan. Chosen because no category hue uses it (the seven below
+     * are spread to skip the cyan band entirely), so the interface colour and
+     * the informational colour can never be confused for one another.
      */
-    --accent: 125 211 252;
-    --accent-bright: 186 230 253;
-    --accent-dim: 56 163 220;
-    --accent-bg: 125 211 252 / 0.14;
-    --accent-bg-strong: 125 211 252 / 0.24;
+    --accent: 34 211 238;
+    --accent-bright: 103 232 249;
+    --accent-dim: 14 165 190;
+    --accent-hover: 56 226 245;
+    --accent-contrast: 7 9 14;
+    --accent-bg: 34 211 238 / 0.12;
+    --accent-bg-strong: 34 211 238 / 0.2;
+    --accent-glow: 34 211 238 / 0.35;
 
-    /*
-     * Category hues.
-     *
-     * Seven colours, spaced around the wheel, all at similar lightness and
-     * saturation so they read as one family rather than a paint chart. They are
-     * used for exactly one job: identifying a project category. That is the whole
-     * trick to a colourful page that is not noisy — colour carries information,
-     * so it is never spent on decoration, and a visitor learns the mapping once
-     * and then recognises a project from the colour alone.
-     *
-     * All clear 4.5:1 against `--bg-elevated`.
+    /* ---- Category hues -------------------------------------------------
+     * Seven colours for exactly one job: identifying a project category.
+     * Spaced around the wheel at similar lightness and saturation so they read
+     * as one family. Because colour here is never decorative, a visitor learns
+     * the mapping once and then recognises a project from the colour alone.
      */
     --cat-web: 96 165 250;
     --cat-app: 52 211 153;
     --cat-design: 244 114 182;
     --cat-networking: 251 191 36;
     --cat-experiment: 167 139 250;
-    --cat-school: 34 211 238;
+    --cat-school: 251 146 60;
     --cat-other: 148 163 184;
 
+    /* ---- Status --------------------------------------------------------
+     * Green / amber / red. Deliberately distinct from every category hue at
+     * the point of use — a status badge never sits inside a category-tinted
+     * card, so the two never have to be told apart in the same element.
+     */
     --success: 52 211 153;
     --warning: 251 191 36;
     --error: 248 113 113;
 
-    --font-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
+    /* ---- Fonts --------------------------------------------------------- */
+    --font-sans: var(--font-inter), system-ui, -apple-system, 'Segoe UI', sans-serif;
     --font-display: var(--font-grotesk), var(--font-inter), system-ui, sans-serif;
     --font-mono: ui-monospace, 'SFMono-Regular', 'Cascadia Code', Menlo, monospace;
 
-    --text-display: clamp(2.75rem, 7vw, 6.5rem);
-    --text-h1: clamp(2rem, 4.5vw, 3.75rem);
-    --text-h2: clamp(1.625rem, 3vw, 2.5rem);
-    --text-h3: clamp(1.375rem, 2.2vw, 1.75rem);
-    --text-h4: clamp(1.125rem, 1.5vw, 1.25rem);
-    --text-lead: clamp(1.125rem, 1.4vw, 1.25rem);
+    /* ---- Type scale ----------------------------------------------------
+     * Fluid, mobile-first: every clamp starts at its 360px value and only
+     * grows from there, so a heading is correctly sized on the smallest phone
+     * in the matrix and never needs a breakpoint of its own.
+     */
+    --text-display: clamp(2.5rem, 1.1rem + 6.2vw, 6rem);
+    --text-h1: clamp(2rem, 1.35rem + 3vw, 3.5rem);
+    --text-h2: clamp(1.5rem, 1.22rem + 1.4vw, 2.25rem);
+    --text-h3: clamp(1.25rem, 1.13rem + 0.6vw, 1.625rem);
+    --text-h4: clamp(1.0625rem, 1rem + 0.3vw, 1.25rem);
+    --text-lead: clamp(1.0625rem, 1rem + 0.45vw, 1.3125rem);
     --text-base: 1rem;
-    --text-sm: 0.9rem;
+    --text-body-sm: 0.9375rem;
+    --text-sm: 0.875rem;
     --text-xs: 0.75rem;
-    --text-nav: 0.875rem;
+    --text-nav: 0.9375rem;
+    --text-meta: 0.75rem;
 
+    /* ---- Space ---------------------------------------------------------
+     * The vertical rhythm of every page. Section padding is fluid so the gap
+     * between sections breathes on a desktop without pushing content off a
+     * phone screen.
+     */
     --space-xs: 0.375rem;
     --space-sm: 0.625rem;
     --space-md: 1rem;
@@ -77,38 +117,34 @@
     --space-xl: 2rem;
     --space-2xl: 3rem;
     --space-3xl: 4.5rem;
-    --space-4xl: clamp(5rem, 8vw, 7rem);
+    --space-4xl: clamp(4rem, 2rem + 8vw, 7rem);
 
-    --radius-none: 0;
-    --radius-sm: 2px;
-    --radius-md: 6px;
-    --radius-lg: 10px;
-    --radius-xl: 14px;
+    /* ---- Radii --------------------------------------------------------- */
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 18px;
+    --radius-2xl: 24px;
     --radius-full: 9999px;
 
-    --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+    /* ---- Motion -------------------------------------------------------- */
+    --ease: cubic-bezier(0.22, 0.8, 0.28, 1);
     --ease-out: cubic-bezier(0, 0, 0.2, 1);
-    --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+    --ease-spring: cubic-bezier(0.34, 1.36, 0.64, 1);
     --dur-fast: 120ms;
     --dur: 200ms;
-    --dur-slow: 300ms;
-    --dur-slower: 450ms;
+    --dur-slow: 380ms;
 
-    --nav-h: 4.5rem;
+    /* ---- Chrome -------------------------------------------------------- */
+    /* Must match the header's real height (see `.site-header`). Used by
+     * `scroll-padding-top` so an anchor never lands under the sticky bar. */
+    --nav-h: 4rem;
     --container-max: 72rem;
 
-    /*
-     * Previous token names, kept as aliases.
-     *
-     * The palette was renamed to `--bg` / `--text` / `--text-dim`, but 52 files
-     * still address the old names — 234 references in total, across public
-     * pages, the CMS and the shared UI. Every one of them was resolving to
-     * nothing, so text fell back to an inherited colour and borders simply were
-     * not drawn. That is what made the site look unfinished at every stage.
-     *
-     * Aliasing the five names here repairs all of them at once. When the call
-     * sites are migrated these can be deleted; until then they are the only
-     * thing standing between the codebase and 234 silent no-op styles.
+    /* ---- Semantic aliases ----------------------------------------------
+     * Two names for the same surface. `--bg-elevated` and `--surface` are both
+     * in active use across the codebase; aliasing them here means the two can
+     * never drift apart, and a rename stays a one-line change.
      */
     --background: var(--bg);
     --surface: var(--bg-elevated);
@@ -116,26 +152,42 @@
     --border-subtle: var(--border);
     --text-primary: var(--text);
     --text-secondary: var(--text-dim);
+    --accent-hover-soft: var(--accent-hover);
+    --accent-muted: var(--accent);
   }
 
-  * { border-color: rgb(var(--border)); }
+  /* ---- Base ------------------------------------------------------------
+   * Border colour is set globally so a bare `border` class is always visible
+   * without every component having to remember the colour.
+   */
+  * {
+    border-color: rgb(var(--border));
+  }
 
   html {
     scroll-behavior: smooth;
-    scroll-padding-top: calc(var(--nav-h) + 2rem);
+    scroll-padding-top: calc(var(--nav-h) + 1.5rem);
+    -webkit-text-size-adjust: 100%;
   }
 
   body {
     background: rgb(var(--bg));
     color: rgb(var(--text));
     font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
   }
 
+  /* Long words and URLs must never push a layout wider than the viewport. */
   h1, h2, h3, h4, h5, h6, p, li, dd, dt, figcaption {
     overflow-wrap: break-word;
+  }
+
+  img, svg, video, canvas {
+    max-width: 100%;
   }
 
   ::selection {
@@ -143,12 +195,33 @@
     color: rgb(var(--text-inverse));
   }
 
+  /* ---- Focus ----------------------------------------------------------
+   * A single visible ring for every focusable element, keyboard-only via
+   * `:focus-visible`. This must not be overridden with a blanket
+   * `outline: none` — that is what previously left every button in the admin
+   * with no keyboard focus indicator at all. Controls that draw their own ring
+   * (`.input`, `.textarea`, `.select`) opt out explicitly and only then.
+   */
   :focus-visible {
     outline: 2px solid rgb(var(--accent));
-    outline-offset: 3px;
+    outline-offset: 2px;
   }
 
-  input:focus, textarea:focus, select:focus, button:focus { outline: none; }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: rgb(var(--bg));
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgb(var(--border-strong));
+    border: 2px solid rgb(var(--bg));
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgb(var(--text-muted));
+  }
 
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
@@ -161,422 +234,123 @@
 }
 
 /* ==========================================================================
- * COMPONENTS - Plain CSS (no @layer components, no @apply with raw values)
+ * LAYOUT
  * ========================================================================== */
 
-.container {
-  @apply mx-auto w-full max-w-[72rem] px-5 sm:px-8 lg:px-12 xl:px-16;
+/* One container definition. `container-custom` is the historical name and is
+ * kept as the same declaration so existing call sites need not change. */
+.container,
+.container-custom {
+  margin-inline: auto;
+  width: 100%;
+  max-width: var(--container-max);
+  padding-inline: 1.25rem;
+}
+@media (min-width: 640px) {
+  .container, .container-custom { padding-inline: 2rem; }
+}
+@media (min-width: 1024px) {
+  .container, .container-custom { padding-inline: 3rem; }
+}
+@media (min-width: 1280px) {
+  .container, .container-custom { padding-inline: 3.5rem; }
 }
 
 .section { padding-block: var(--space-4xl); }
 .section-lg { padding-block: var(--space-3xl); }
 .section-md { padding-block: var(--space-2xl); }
 .section-sm { padding-block: var(--space-xl); }
-
-.rule { border-top: 1px solid rgb(var(--border)); }
-
-.page-header { padding-block: var(--space-4xl); }
-.page-header-title { @apply mt-6 max-w-3xl text-balance; }
-.page-header-lede { @apply mt-6 max-w-prose text-pretty; color: rgb(var(--text-dim)); }
-
-.page-depth {
-  position: fixed; inset: 0; z-index: 0; pointer-events: none;
-}
-.page-depth::before {
-  content: '';
-  position: absolute; inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
-  opacity: 0.015;
-}
-.page-depth::after {
-  content: '';
-  position: absolute; inset-inline: 0; top: 0; height: 100vh;
-  background: radial-gradient(70% 55% at 25% 0%, rgb(var(--bg-elevated) / 0.5) 0%, transparent 70%);
-}
-
-.display {
-  font-family: var(--font-display);
-  font-size: var(--text-display);
-  line-height: 0.92;
-  letter-spacing: -0.045em;
-  font-weight: 700;
-}
-
-.h1 { @apply font-display; font-size: var(--text-h1); line-height: 1; letter-spacing: -0.04em; font-weight: 700; }
-.h2 { @apply font-display; font-size: var(--text-h2); line-height: 1.02; letter-spacing: -0.035em; font-weight: 700; }
-.h3 { @apply font-display; font-size: var(--text-h3); line-height: 1.08; letter-spacing: -0.025em; font-weight: 600; }
-.h4 { @apply font-display; font-size: var(--text-h4); line-height: 1.15; letter-spacing: -0.02em; font-weight: 600; }
-
-.lead { font-size: var(--text-lead); line-height: 1.65; }
-.body { font-size: var(--text-base); line-height: 1.7; }
-.body-sm { font-size: var(--text-sm); line-height: 1.65; }
-
-.meta {
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  line-height: 1.6;
-  color: rgb(var(--text-muted));
-}
-
-  /*
-   * Not `@apply meta ...`: Tailwind cannot @apply a class declared in the same
-   * stylesheet, so the meta base is spelled out here and `.meta` above stays the
-   * single source of the size/colour values.
-   */
-  .meta-strong {
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    line-height: 1.6;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.14em;
-    color: rgb(var(--text-dim));
-  }
-
-.eyebrow {
-  @apply font-mono text-[var(--text-xs)] uppercase tracking-[0.16em];
-  color: rgb(var(--text-muted));
-}
-
-.prose { color: rgb(var(--text-dim)); }
-.prose > * + * { margin-top: 1.5rem; }
-.prose p { line-height: 1.8; }
-.prose ul, .prose ol { margin-left: 1.5rem; }
-.prose ul { list-style: disc; }
-.prose ol { list-style: decimal; }
-.prose strong { font-weight: 600; color: rgb(var(--text)); }
-.prose a { 
-  color: rgb(var(--accent)); 
-  text-decoration: underline; 
-  text-underline-offset: 3px; 
-  text-decoration-color: rgb(var(--accent) / 0.4); 
-  transition: color 200ms cubic-bezier(0.2,0.8,0.2,1); 
-}
-.prose a:hover { color: rgb(var(--accent-bright)); }
-
-.link-underline { 
-  position: relative; 
-  color: rgb(var(--text)); 
-  transition: color 200ms cubic-bezier(0.2,0.8,0.2,1); 
-}
-.link-underline::after { 
-  content: ''; 
-  position: absolute; 
-  left: 0; 
-  bottom: -3px; 
-  width: 100%; 
-  height: 1px; 
-  background: rgb(var(--border)); 
-  transition: background-color 200ms cubic-bezier(0.2,0.8,0.2,1); 
-}
-.link-underline:hover { color: rgb(var(--accent)); }
-.link-underline:hover::after { background: rgb(var(--accent)); }
-
-.nav-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  border-radius: 2px;
-  padding: 0.5rem 0.75rem;
-  font-size: var(--text-nav);
-  font-weight: 500;
-  letter-spacing: -0.01em;
-  transition: color 200ms cubic-bezier(0.2,0.8,0.2,1);
-}
-.nav-link-active { color: rgb(var(--text)); }
-.nav-link-idle { color: rgb(var(--text-dim)); }
-.nav-link-idle:hover { color: rgb(var(--text)); }
-.nav-link-active::after {
-  content: ''; position: absolute; left: 0.75rem; right: 0.75rem; bottom: 0.125rem; height: 2px;
-  background: rgb(var(--accent));
-}
-
-.field-label {
-  @apply mb-2 block font-mono text-xs uppercase tracking-[0.1em];
-  color: rgb(var(--text-dim));
-}
-
-.input {
-  @apply w-full rounded-md px-4 py-3 duration-200 transition-all;
-  background: rgb(var(--bg-elevated));
-  color: rgb(var(--text));
-  border: 1px solid rgb(var(--border));
-}
-.input::placeholder { color: rgb(var(--text-muted)); }
-.input:hover:not(:disabled) { border-color: rgb(var(--border-strong)); }
-.input:focus { outline: none; border-color: rgb(var(--accent)); box-shadow: 0 0 0 3px rgb(var(--accent) / 0.12); }
-.input[aria-invalid="true"] { border-color: rgb(var(--error)); }
-.input[aria-invalid="true"]:focus { box-shadow: 0 0 0 3px rgb(var(--error) / 0.12); }
-
-.textarea {
-  @apply w-full min-h-[9rem] resize-y rounded-md px-4 py-3 leading-relaxed duration-200 transition-all;
-  background: rgb(var(--bg-elevated));
-  color: rgb(var(--text));
-  border: 1px solid rgb(var(--border));
-}
-.textarea::placeholder { color: rgb(var(--text-muted)); }
-.textarea:hover:not(:disabled) { border-color: rgb(var(--border-strong)); }
-.textarea:focus { outline: none; border-color: rgb(var(--accent)); box-shadow: 0 0 0 3px rgb(var(--accent) / 0.12); }
-
-.field-error {
-  @apply mt-1.5 text-sm;
-  color: rgb(var(--error));
-}
-.field-hint {
-  @apply mt-1.5 text-sm;
-  color: rgb(var(--text-muted));
-}
-
-.btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-md px-5 py-3 font-medium text-sm duration-200 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--accent))] focus-visible:ring-offset-2 focus-visible:ring-offset-[rgb(var(--bg))] disabled:opacity-40 disabled:cursor-not-allowed;
-}
-.btn-primary {
-  background: rgb(var(--accent)); color: rgb(var(--text-inverse));
-  transition: background 200ms cubic-bezier(0.2,0.8,0.2,1), transform 120ms cubic-bezier(0.2,0.8,0.2,1);
-}
-.btn-primary:hover:not(:disabled) { background: rgb(var(--accent-bright)); }
-.btn-primary:active:not(:disabled) { background: rgb(var(--accent-dim)); transform: scale(0.98); }
-
-.btn-secondary {
-  background: rgb(var(--bg-highlight)); color: rgb(var(--text));
-  border: 1px solid rgb(var(--border));
-  transition: background 200ms cubic-bezier(0.2,0.8,0.2,1), border-color 200ms cubic-bezier(0.2,0.8,0.2,1);
-}
-.btn-secondary:hover:not(:disabled) { background: rgb(var(--bg-accent)); border-color: rgb(var(--border-strong)); }
-.btn-secondary:active:not(:disabled) { background: rgb(var(--bg)); }
-
-.btn-ghost {
-  background: transparent; color: rgb(var(--text-dim));
-  transition: color 200ms cubic-bezier(0.2,0.8,0.2,1), background 200ms cubic-bezier(0.2,0.8,0.2,1);
-}
-.btn-ghost:hover:not(:disabled) { color: rgb(var(--text)); background: rgb(var(--bg-highlight)); }
-.btn-ghost:active:not(:disabled) { background: rgb(var(--bg-elevated)); }
-
-.btn-link {
-  @apply inline-flex items-center gap-2 text-sm font-medium duration-200 transition-colors;
-  color: rgb(var(--text));
-}
-.btn-link:hover { color: rgb(var(--accent)); }
-
-.badge {
-  @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-mono text-xs uppercase tracking-[0.1em] duration-200 transition-all;
-}
-.badge-primary { background: rgb(var(--accent-bg)); color: rgb(var(--accent)); border: 1px solid rgb(var(--accent) / 0.3); }
-.badge-success { background: rgb(var(--success) / 0.12); color: rgb(var(--success)); border: 1px solid rgb(var(--success) / 0.3); }
-.badge-warning { background: rgb(var(--warning) / 0.12); color: rgb(var(--warning)); border: 1px solid rgb(var(--warning) / 0.3); }
-.badge-error { background: rgb(var(--error) / 0.12); color: rgb(var(--error)); border: 1px solid rgb(var(--error) / 0.3); }
-.badge-neutral { background: rgb(var(--bg-highlight)); color: rgb(var(--text-dim)); border: 1px solid rgb(var(--border)); }
-.badge-accent { background: rgb(var(--accent-bg-strong)); color: rgb(var(--accent)); border: 1px solid rgb(var(--accent) / 0.4); }
-
-.surface { background: rgb(var(--bg-elevated)); border: 1px solid rgb(var(--border)); }
-.surface-strong { background: rgb(var(--bg-highlight)); border: 1px solid rgb(var(--border-strong)); }
-
-  .card {
-    @apply rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--bg-elevated))] transition-all;
-    transition-duration: 450ms;
-  }
-  .card-hover {
-    @apply rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--bg-elevated))] transition-all;
-    transition-duration: 450ms;
-  }
-.card-hover:hover {
-  border-color: rgb(var(--accent) / 0.5);
-  box-shadow: 0 20px 40px -12px rgb(0 0 0 / 0.4), 0 0 0 1px rgb(var(--accent) / 0.3);
-  transform: translateY(-3px);
-}
-
-  .skeleton { @apply bg-[rgb(var(--bg-highlight))] animate-pulse rounded; }
-  .skeleton-text { @apply h-4 w-full rounded-sm bg-[rgb(var(--bg-highlight))] animate-pulse; }
-  .skeleton-title { @apply h-8 w-3/4 rounded-sm bg-[rgb(var(--bg-highlight))] animate-pulse; }
-  .skeleton-card { @apply aspect-[4/3] w-full rounded-xl bg-[rgb(var(--bg-highlight))] animate-pulse; }
-  .skeleton-avatar { @apply h-10 w-10 rounded-full bg-[rgb(var(--bg-highlight))] animate-pulse; }
-
-  .img-zoom {
-    transition: transform 450ms cubic-bezier(0,0,0.2,1);
-    will-change: transform;
-  }
-  .group:hover .img-zoom,
-  .group:focus-within .img-zoom { transform: scale(1.025); }
-
-  /* ---- Category colour utilities ----------------------------------------
-   * One class per category so a colour is never hard-coded into a component.
-   * `cat-*` sets the colour, `cat-chip` supplies the tinted background and
-   * border, and a component composes them: `className="cat-chip cat-web"`.
-   * Adding a category means adding a token and one entry in `categoryLabels`,
-   * not editing every card.
-   */
-  .cat-web { --cat: var(--cat-web); }
-  .cat-app { --cat: var(--cat-app); }
-  .cat-design { --cat: var(--cat-design); }
-  .cat-networking { --cat: var(--cat-networking); }
-  .cat-experiment { --cat: var(--cat-experiment); }
-  .cat-school { --cat: var(--cat-school); }
-  .cat-other { --cat: var(--cat-other); }
-
-  .cat-chip {
-    background-color: rgb(var(--cat) / 0.16);
-    border-color: rgb(var(--cat) / 0.4);
-    color: rgb(var(--cat));
-  }
-
-  .cat-dot {
-    background-color: rgb(var(--cat));
-  }
-
-  /* A hairline that carries the category colour, for card edges. */
-  .cat-edge {
-    border-color: rgb(var(--cat) / 0.35);
-  }
-  .group:hover .cat-edge,
-  .group:hover .cat-edge {
-    border-color: rgb(var(--cat) / 0.8);
-  }
-
-  .cat-glow {
-    background: radial-gradient(
-      ellipse 60% 60% at 50% 0%,
-      rgb(var(--cat) / 0.18) 0%,
-      transparent 70%
-    );
-  }
-
-  /* ---- Section identity -------------------------------------------------
-   * Each major section carries a hue, so scrolling the page is a sequence of
-   * distinct rooms rather than one long column of identical grey bands. The
-   * previous version separated every section with the same 1px grey rule, which
-   * is the reason the page read as one undifferentiated block no matter how it
-   * was arranged.
-   *
-   * Three signals per section, all from the one colour:
-   *   - `section-tone-*`  sets the hue
-   *   - `section-rule`    a gradient hairline that fades out to the right
-   *   - `section-wash`    a very low-opacity tint, so alternating sections are
-   *                       separable at a glance without banding
-   */
-  .section-tone-web { --tone: var(--cat-web); }
-  .section-tone-app { --tone: var(--cat-app); }
-  .section-tone-design { --tone: var(--cat-design); }
-  .section-tone-networking { --tone: var(--cat-networking); }
-  .section-tone-experiment { --tone: var(--cat-experiment); }
-  .section-tone-school { --tone: var(--cat-school); }
-
-  .section-rule {
-    height: 2px;
-    background: linear-gradient(
-      to right,
-      rgb(var(--tone) / 0.9) 0%,
-      rgb(var(--tone) / 0.35) 38%,
-      transparent 100%
-    );
-  }
-
-  .section-wash {
-    background: linear-gradient(
-      to bottom,
-      rgb(var(--tone) / 0.07) 0%,
-      rgb(var(--tone) / 0.02) 45%,
-      transparent 100%
-    );
-  }
-
-  /* The eyebrow carries a small colour chip, so a section's identity is
-     readable from the label alone before its heading is. */
-  .section-eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.625rem;
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.16em;
-    color: rgb(var(--tone));
-  }
-
-  .section-eyebrow::before {
-    content: '';
-    width: 1.5rem;
-    height: 2px;
-    background-color: rgb(var(--tone));
-    flex-shrink: 0;
-  }
-
-
-.aspect-square { aspect-ratio: 1 / 1; }
-.aspect-video { aspect-ratio: 16 / 9; }
-.aspect-photo { aspect-ratio: 4 / 3; }
-.aspect-tall { aspect-ratio: 3 / 4; }
-
-/* ==========================================================================
- * COMPATIBILITY ALIASES
- * --------------------------------------------------------------------------
- * The components still address the previous design system's class names.
- * Rather than edit thirty files twice, the old names are mapped onto the new
- * ones here, in one place.
- *
- * These are real rules on purpose. Tailwind cannot `@apply` a class declared in
- * the same stylesheet, and attempting it is what broke the previous build.
- * ========================================================================== */
-
-.container-custom {
-  @apply mx-auto w-full max-w-[72rem] px-5 sm:px-8 lg:px-12 xl:px-16;
-}
-
 .rhythm-xl { padding-block: var(--space-4xl); }
 .rhythm-lg { padding-block: var(--space-3xl); }
 .rhythm-md { padding-block: var(--space-2xl); }
 .rhythm-sm { padding-block: var(--space-xl); }
 
+.rule { border-top: 1px solid rgb(var(--border)); }
 .rule-top { border-top: 1px solid rgb(var(--border)); }
 
+/* ==========================================================================
+ * TYPE
+ * ========================================================================== */
+
+.display,
 .display-1 {
   font-family: var(--font-display);
   font-size: var(--text-display);
-  line-height: 0.92;
+  line-height: 0.94;
   letter-spacing: -0.045em;
   font-weight: 700;
 }
 
-.heading-1 { font-family: var(--font-display); font-size: var(--text-h1); line-height: 1; letter-spacing: -0.04em; font-weight: 700; }
-.heading-2 { font-family: var(--font-display); font-size: var(--text-h2); line-height: 1.02; letter-spacing: -0.035em; font-weight: 700; }
-.heading-3 { font-family: var(--font-display); font-size: var(--text-h3); line-height: 1.08; letter-spacing: -0.025em; font-weight: 600; }
-.heading-4 { font-family: var(--font-display); font-size: var(--text-h4); line-height: 1.15; letter-spacing: -0.02em; font-weight: 600; }
-
-.body-lg { font-size: var(--text-lead); line-height: 1.65; }
-
-.caption {
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  line-height: 1.4;
+.h1, .heading-1 {
+  font-family: var(--font-display);
+  font-size: var(--text-h1);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  font-weight: 700;
 }
 
-.tech-list {
+.h2, .heading-2 {
+  font-family: var(--font-display);
+  font-size: var(--text-h2);
+  line-height: 1.08;
+  letter-spacing: -0.032em;
+  font-weight: 700;
+}
+
+.h3, .heading-3 {
+  font-family: var(--font-display);
+  font-size: var(--text-h3);
+  line-height: 1.18;
+  letter-spacing: -0.022em;
+  font-weight: 650;
+}
+
+.h4, .heading-4 {
+  font-family: var(--font-display);
+  font-size: var(--text-h4);
+  line-height: 1.25;
+  letter-spacing: -0.014em;
+  font-weight: 600;
+}
+
+.lead, .body-lg {
+  font-size: var(--text-lead);
+  line-height: 1.6;
+}
+
+.body { font-size: var(--text-base); line-height: 1.7; }
+.body-sm { font-size: var(--text-body-sm); line-height: 1.65; }
+
+.caption,
+.meta {
   font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  line-height: 1.65;
+  font-size: var(--text-meta);
+  line-height: 1.5;
+  letter-spacing: 0.1em;
   color: rgb(var(--text-muted));
 }
+.caption { text-transform: uppercase; }
 
-.label {
-  display: block;
-  margin-bottom: 0.625rem;
+/* Small all-caps label used for column heads and section eyebrows. Spelled
+ * out rather than `@apply`-ing `.meta`, because Tailwind cannot `@apply` a
+ * class declared in the same stylesheet. */
+.meta-strong {
   font-family: var(--font-mono);
   font-size: var(--text-xs);
+  line-height: 1.5;
+  font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.14em;
   color: rgb(var(--text-dim));
 }
 
-.link {
-  color: rgb(var(--accent));
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  text-decoration-color: rgb(var(--accent) / 0.4);
-  transition: color 200ms cubic-bezier(0.2,0.8,0.2,1);
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: rgb(var(--text-muted));
 }
-.link:hover { color: rgb(var(--accent-bright)); }
 
 .index-marker {
   font-family: var(--font-mono);
@@ -586,21 +360,125 @@
   color: rgb(var(--text-muted));
 }
 
-.prose-block { color: rgb(var(--text-dim)); }
-.prose-block > * + * { margin-top: 1.5rem; }
-.prose-block p { line-height: 1.8; }
-.prose-block ul, .prose-block ol { margin-left: 1.5rem; }
-.prose-block ul { list-style: disc; }
-.prose-block ol { list-style: decimal; }
-.prose-block strong { font-weight: 600; color: rgb(var(--text)); }
-.prose-block a {
+.tech-list {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: 1.6;
+  color: rgb(var(--text-muted));
+}
+
+.label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgb(var(--text-dim));
+}
+
+/* Historical name for `.label`, kept as the same declaration so the two
+ * cannot drift. Declared separately rather than aliased because Tailwind
+ * cannot `@apply` a class from this same stylesheet. */
+.field-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgb(var(--text-dim));
+}
+
+/* ---- Long-form copy ----------------------------------------------------
+ * Used for the about page and case-study overviews. Measures are capped so
+ * the line length stays readable on a wide monitor; on a phone the column is
+ * already narrow and the cap never binds.
+ */
+.prose,
+.prose-block {
+  color: rgb(var(--text-dim));
+  max-width: 68ch;
+}
+.prose > * + *, .prose-block > * + * { margin-top: 1.4rem; }
+.prose p, .prose-block p { line-height: 1.8; }
+.prose ul, .prose ol, .prose-block ul, .prose-block ol { margin-left: 1.4rem; }
+.prose ul, .prose-block ul { list-style: disc; }
+.prose ol, .prose-block ol { list-style: decimal; }
+.prose strong, .prose-block strong { font-weight: 600; color: rgb(var(--text)); }
+.prose a, .prose-block a, .link {
   color: rgb(var(--accent));
   text-decoration: underline;
   text-underline-offset: 3px;
-  text-decoration-color: rgb(var(--accent) / 0.4);
+  text-decoration-color: rgb(var(--accent) / 0.45);
+  transition: color var(--dur) var(--ease);
+}
+.prose a:hover, .prose-block a:hover, .link:hover { color: rgb(var(--accent-bright)); }
+
+/* ==========================================================================
+ * LINKS & NAVIGATION
+ * ========================================================================== */
+
+.link-underline {
+  position: relative;
+  color: rgb(var(--text));
+  transition: color var(--dur) var(--ease);
+}
+.link-underline::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -3px;
+  width: 100%;
+  height: 1px;
+  background: rgb(var(--border-strong));
+  transition: background-color var(--dur) var(--ease);
+}
+.link-underline:hover { color: rgb(var(--accent)); }
+.link-underline:hover::after { background: rgb(var(--accent)); }
+
+/* ---- Site header nav ---------------------------------------------------
+ * `.nav-link` must establish a containing block. It previously did not, so the
+ * `::after` active marker resolved against the nearest positioned ancestor —
+ * the `sticky` `<header>` — and every active item drew its underline in the
+ * same place at the bottom of the bar.
+ */
+.nav-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding-inline: 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-nav);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  transition: color var(--dur) var(--ease), background-color var(--dur) var(--ease);
+}
+.nav-link-active { color: rgb(var(--text)); }
+.nav-link-idle { color: rgb(var(--text-dim)); }
+.nav-link-idle:hover { color: rgb(var(--text)); background: rgb(var(--bg-highlight)); }
+
+.nav-link-active::after {
+  content: '';
+  position: absolute;
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: 0.3rem;
+  height: 2px;
+  border-radius: 2px;
+  background: rgb(var(--accent));
+  box-shadow: 0 0 12px rgb(var(--accent-glow));
 }
 
-.section-head { display: flex; flex-direction: column; gap: 1.25rem; }
+/* ---- Section header shape --------------------------------------------- */
+.section-head {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
 @media (min-width: 640px) {
   .section-head {
     flex-direction: row;
@@ -611,25 +489,531 @@
 }
 .section-head-title { margin-top: 1rem; max-width: 42rem; }
 
+/* ==========================================================================
+ * BUTTONS
+ * --------------------------------------------------------------------------
+ * Every button in the app — public and CMS — is composed from these three
+ * classes plus a size, so a tap target can never end up 32px tall by accident.
+ * ========================================================================== */
+
+.btn {
+  @apply inline-flex select-none items-center justify-center gap-2 whitespace-nowrap font-medium;
+  min-height: 2.75rem;
+  padding-inline: 1.125rem;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  font-size: 0.9375rem;
+  transition:
+    background-color var(--dur) var(--ease),
+    border-color var(--dur) var(--ease),
+    color var(--dur) var(--ease),
+    transform var(--dur-fast) var(--ease),
+    box-shadow var(--dur) var(--ease);
+}
+.btn:focus-visible { outline: 2px solid rgb(var(--accent)); outline-offset: 2px; }
+.btn:disabled, .btn[aria-disabled='true'] {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.btn-primary {
+  background: rgb(var(--accent));
+  color: rgb(var(--text-inverse));
+  box-shadow: 0 6px 20px -8px rgb(var(--accent-glow));
+}
+.btn-primary:hover:not(:disabled) {
+  background: rgb(var(--accent-hover));
+  box-shadow: 0 10px 28px -8px rgb(var(--accent-glow));
+}
+.btn-primary:active:not(:disabled) { transform: scale(0.98); }
+
+.btn-secondary {
+  background: rgb(var(--bg-highlight));
+  color: rgb(var(--text));
+  border-color: rgb(var(--border));
+}
+.btn-secondary:hover:not(:disabled) {
+  background: rgb(var(--bg-accent));
+  border-color: rgb(var(--border-strong));
+}
+.btn-secondary:active:not(:disabled) { transform: scale(0.98); }
+
+.btn-ghost {
+  background: transparent;
+  color: rgb(var(--text-dim));
+}
+.btn-ghost:hover:not(:disabled) {
+  color: rgb(var(--text));
+  background: rgb(var(--bg-highlight));
+}
+
+.btn-danger {
+  background: rgb(var(--error));
+  color: rgb(var(--text-inverse));
+}
+.btn-danger:hover:not(:disabled) { filter: brightness(1.08); }
+.btn-danger:active:not(:disabled) { transform: scale(0.98); }
+
+/* A quiet outline for secondary actions inside dark surfaces. */
+.btn-outline {
+  background: transparent;
+  color: rgb(var(--text));
+  border-color: rgb(var(--border-strong));
+}
+.btn-outline:hover:not(:disabled) {
+  border-color: rgb(var(--accent));
+  color: rgb(var(--accent-bright));
+  background: rgb(var(--accent-bg));
+}
+
+.btn-sm { min-height: 2.25rem; padding-inline: 0.875rem; font-size: 0.8125rem; border-radius: var(--radius-sm); }
+.btn-lg { min-height: 3rem; padding-inline: 1.5rem; font-size: 1rem; border-radius: var(--radius-lg); }
+
+.btn-link {
+  @apply inline-flex items-center gap-2 font-medium;
+  min-height: 2.75rem;
+  color: rgb(var(--text));
+  font-size: 0.9375rem;
+  transition: color var(--dur) var(--ease);
+}
+.btn-link:hover { color: rgb(var(--accent)); }
+
+/* ==========================================================================
+ * BADGES
+ * --------------------------------------------------------------------------
+ * The base is declared as part of every variant, not on `.badge` alone. Both
+ * call styles exist — `<Badge>` renders `badge badge-success`, while the admin
+ * tables write `className="badge-success"` directly — so a variant that only
+ * carried colour would render as an unstyled inline box at the second call
+ * style. Grouping them here means neither usage can come out half-dressed.
+ * ========================================================================== */
+
+.badge,
+.badge-primary,
+.badge-success,
+.badge-warning,
+.badge-error,
+.badge-neutral {
+  @apply inline-flex items-center gap-1.5 whitespace-nowrap align-middle font-medium;
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--radius-full);
+  border: 1px solid transparent;
+  font-size: 0.75rem;
+  line-height: 1.3;
+}
+.badge-primary {
+  background: rgb(var(--accent-bg));
+  color: rgb(var(--accent));
+  border-color: rgb(var(--accent) / 0.32);
+}
+.badge-success {
+  background: rgb(var(--success) / 0.12);
+  color: rgb(var(--success));
+  border-color: rgb(var(--success) / 0.32);
+}
+.badge-warning {
+  background: rgb(var(--warning) / 0.12);
+  color: rgb(var(--warning));
+  border-color: rgb(var(--warning) / 0.32);
+}
+.badge-error {
+  background: rgb(var(--error) / 0.12);
+  color: rgb(var(--error));
+  border-color: rgb(var(--error) / 0.32);
+}
+.badge-neutral {
+  background: rgb(var(--bg-highlight));
+  color: rgb(var(--text-dim));
+  border-color: rgb(var(--border));
+}
+
+/* ==========================================================================
+ * SURFACES
+ * --------------------------------------------------------------------------
+ * Three levels, each a step lighter than the last. Elevation is expressed as
+ * both a fill and a hairline, because on a near-black canvas a fill change
+ * alone is too quiet to register.
+ * ========================================================================== */
+
+.surface {
+  background: rgb(var(--bg-elevated));
+  border: 1px solid rgb(var(--border));
+}
+.surface-strong {
+  background: rgb(var(--bg-highlight));
+  border: 1px solid rgb(var(--border-strong));
+}
+
+/* Translucent, blurred panel — for anything sitting over artwork or an
+ * aurora. Uses the `/` form inside `rgb()` because this is precisely the case
+ * where an alpha channel is required. */
+.surface-glass {
+  background: rgb(var(--bg) / 0.72);
+  border: 1px solid rgb(var(--border));
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+}
+
+.card {
+  border-radius: var(--radius-xl);
+  border: 1px solid rgb(var(--border));
+  background: rgb(var(--bg-elevated));
+}
+
+/* The standard interactive card: a lift, an accent hairline, and a coloured
+ * bloom underneath. Shadow is accent-tinted rather than pure black so the card
+ * separates from the canvas instead of looking like a dark hole with a border. */
+.card-hover {
+  border-radius: var(--radius-xl);
+  border: 1px solid rgb(var(--border));
+  background: rgb(var(--bg-elevated));
+  transition:
+    transform var(--dur-slow) var(--ease),
+    border-color var(--dur-slow) var(--ease),
+    box-shadow var(--dur-slow) var(--ease),
+    background-color var(--dur-slow) var(--ease);
+}
+.card-hover:hover {
+  transform: translateY(-4px);
+  border-color: rgb(var(--accent) / 0.5);
+  box-shadow:
+    0 24px 48px -20px rgb(0 0 0 / 0.7),
+    0 0 0 1px rgb(var(--accent) / 0.22),
+    0 0 40px -12px rgb(var(--accent-glow));
+}
+@media (prefers-reduced-motion: reduce) {
+  .card-hover:hover { transform: none; }
+}
+
+/* A soft top-lit gradient, used to lift a large panel off the page without
+ * making it lighter. */
+.surface-lift {
+  background:
+    linear-gradient(180deg, rgb(var(--text) / 0.05) 0%, transparent 55%),
+    rgb(var(--bg-elevated));
+  border: 1px solid rgb(var(--border));
+}
+
+.accent-tint {
+  background: rgb(var(--accent) / 0.1);
+  border: 1px solid rgb(var(--accent) / 0.28);
+}
+
+/* ==========================================================================
+ * FORM CONTROLS
+ * --------------------------------------------------------------------------
+ * These draw their own focus ring (a border shift plus a soft halo) so they
+ * opt out of the global `outline` — but only here, and only because the
+ * replacement is visible and has at least 3:1 contrast.
+ * ========================================================================== */
+
+.input,
+.textarea,
+.select {
+  @apply w-full;
+  background: rgb(var(--bg));
+  color: rgb(var(--text));
+  border: 1px solid rgb(var(--border));
+  border-radius: var(--radius-md);
+  /* 16px on the label, 16px on the control: anything smaller makes iOS Safari
+     zoom the viewport the moment a field is focused. */
+  font-size: 1rem;
+  line-height: 1.5;
+  min-height: 3rem;
+  padding: 0.75rem 1rem;
+  transition:
+    border-color var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease),
+    background-color var(--dur) var(--ease);
+}
+.input::placeholder, .textarea::placeholder { color: rgb(var(--text-muted)); }
+.input:hover:not(:disabled),
+.textarea:hover:not(:disabled),
+.select:hover:not(:disabled) { border-color: rgb(var(--border-strong)); }
+
+.input:focus,
+.textarea:focus,
+.select:focus {
+  outline: none;
+  border-color: rgb(var(--accent));
+  box-shadow: 0 0 0 3px rgb(var(--accent) / 0.18);
+}
+.input:disabled, .textarea:disabled, .select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.input[aria-invalid='true'],
+.textarea[aria-invalid='true'],
+.select[aria-invalid='true'] { border-color: rgb(var(--error)); }
+.input[aria-invalid='true']:focus,
+.textarea[aria-invalid='true']:focus,
+.select[aria-invalid='true']:focus {
+  box-shadow: 0 0 0 3px rgb(var(--error) / 0.18);
+}
+
+.textarea {
+  min-height: 9rem;
+  resize: vertical;
+  line-height: 1.7;
+}
+
+.select {
+  appearance: none;
+  padding-right: 2.5rem;
+}
+
+/* Dark dropdown list: without this the native list renders white-on-white on
+   the pages where it is used. */
+.select option {
+  background: rgb(var(--bg-elevated));
+  color: rgb(var(--text));
+}
+
+.field-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.375rem;
+  margin-top: 0.5rem;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: rgb(var(--error));
+}
+.field-hint {
+  margin-top: 0.5rem;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: rgb(var(--text-muted));
+}
+
+/* ==========================================================================
+ * CATEGORY COLOUR SYSTEM
+ * --------------------------------------------------------------------------
+ * A category sets one variable, `--cat`, and every derived style reads it.
+ * Adding a category is a token plus one entry in `categoryColors` — no
+ * component needs editing, and no colour is ever hard-coded into a card.
+ * ========================================================================== */
+
+.cat-web { --cat: var(--cat-web); }
+.cat-app { --cat: var(--cat-app); }
+.cat-design { --cat: var(--cat-design); }
+.cat-networking { --cat: var(--cat-networking); }
+.cat-experiment { --cat: var(--cat-experiment); }
+.cat-school { --cat: var(--cat-school); }
+.cat-other { --cat: var(--cat-other); }
+
+.cat-chip {
+  background-color: rgb(var(--cat) / 0.16);
+  border-color: rgb(var(--cat) / 0.4);
+  color: rgb(var(--cat));
+}
+.cat-dot { background-color: rgb(var(--cat)); }
+.cat-tint { background-color: rgb(var(--cat) / 0.08); }
+.cat-tint-strong { background-color: rgb(var(--cat) / 0.16); }
+.cat-ring { box-shadow: 0 0 0 1px rgb(var(--cat) / 0.4); }
+
+/* A hairline that carries the category colour, for card edges. */
+.cat-edge { border-color: rgb(var(--cat) / 0.32); }
+.group:hover .cat-edge { border-color: rgb(var(--cat) / 0.75); }
+
+.cat-glow {
+  background: radial-gradient(ellipse 65% 60% at 50% 0%, rgb(var(--cat) / 0.22) 0%, transparent 72%);
+}
+
+/*
+ * A soft coloured shadow, used on hover in place of a black one.
+ *
+ * The rest state and the hover state are written out in full rather than the
+ * hover rule reading `box-shadow: var(--cat-lift)`. `--cat-lift` is not a
+ * declared custom property — that line resolves to an *invalid* value, which at
+ * computed-value time makes the declaration `unset`, and because `box-shadow`
+ * is not inherited the card's shadow silently disappears on hover. The shadow
+ * getting weaker exactly when the card is hovered is the sort of regression
+ * that never shows up in a diff and always shows up on screen.
+ */
+.cat-lift {
+  box-shadow:
+    0 24px 48px -22px rgb(0 0 0 / 0.72),
+    0 0 44px -18px rgb(var(--cat) / 0.5);
+}
+.group:hover .cat-lift {
+  box-shadow:
+    0 30px 60px -24px rgb(0 0 0 / 0.8),
+    0 0 56px -14px rgb(var(--cat) / 0.62);
+}
+
+.cat-text { color: rgb(var(--cat)); }
+.cat-border { border-color: rgb(var(--cat) / 0.4); }
+.cat-bg { background-color: rgb(var(--cat) / 0.12); }
+
+/* ==========================================================================
+ * SECTION IDENTITY
+ * --------------------------------------------------------------------------
+ * Scrolling should feel like moving through a sequence of distinct rooms, not
+ * one long column of identical grey bands. Each section carries a hue through
+ * three cheap signals — a fading hairline, a very low-opacity wash, and an
+ * eyebrow in the section's own colour.
+ * ========================================================================== */
+
+.section-tone-web { --tone: var(--cat-web); }
+.section-tone-app { --tone: var(--cat-app); }
+.section-tone-design { --tone: var(--cat-design); }
+.section-tone-networking { --tone: var(--cat-networking); }
+.section-tone-experiment { --tone: var(--cat-experiment); }
+.section-tone-school { --tone: var(--cat-school); }
+
+.section-rule {
+  height: 2px;
+  background: linear-gradient(
+    to right,
+    rgb(var(--tone) / 0.85) 0%,
+    rgb(var(--tone) / 0.3) 40%,
+    transparent 100%
+  );
+}
+
+.section-wash {
+  background: linear-gradient(
+    to bottom,
+    rgb(var(--tone) / 0.06) 0%,
+    rgb(var(--tone) / 0.015) 45%,
+    transparent 100%
+  );
+}
+
+.section-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: rgb(var(--tone, var(--accent)));
+}
+.section-eyebrow::before {
+  content: '';
+  width: 1.5rem;
+  height: 2px;
+  flex-shrink: 0;
+  border-radius: 2px;
+  background-color: rgb(var(--tone, var(--accent)));
+}
+
+/* ==========================================================================
+ * PAGE ATMOSPHERE
+ * ==========================================================================
+ * A fixed, non-interactive overlay holding a fine grain and two soft pools of
+ * light. It lives in the layout so the treatment is identical on every public
+ * page and is composited once. `pointer-events: none` guarantees it can never
+ * intercept a tap, and every content wrapper is explicitly positioned above it.
+ * ========================================================================== */
+
+.page-depth {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.page-depth::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  /* Fine film grain. Kills the banding that a large near-black gradient
+     otherwise shows on an 8-bit panel. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.02;
+}
+.page-depth::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 100vh;
+  background:
+    radial-gradient(60% 45% at 18% -5%, rgb(var(--accent) / 0.12) 0%, transparent 70%),
+    radial-gradient(55% 45% at 88% 0%, rgb(var(--cat-design) / 0.1) 0%, transparent 70%),
+    radial-gradient(70% 50% at 50% 0%, rgb(var(--bg-elevated) / 0.6) 0%, transparent 75%);
+}
+
+/* ==========================================================================
+ * SKELETONS
+ * ========================================================================== */
+
+.skeleton {
+  background: rgb(var(--bg-highlight));
+  border-radius: var(--radius-sm);
+  animation: pulse 2s var(--ease) infinite;
+}
+.skeleton-text {
+  height: 1rem;
+  width: 100%;
+  border-radius: var(--radius-sm);
+  background: rgb(var(--bg-highlight));
+  animation: pulse 2s var(--ease) infinite;
+}
+.skeleton-title {
+  height: 2.5rem;
+  width: 75%;
+  border-radius: var(--radius-sm);
+  background: rgb(var(--bg-highlight));
+  animation: pulse 2s var(--ease) infinite;
+}
+.skeleton-card {
+  aspect-ratio: 16 / 10;
+  width: 100%;
+  border-radius: var(--radius-xl);
+  background: rgb(var(--bg-highlight));
+  animation: pulse 2s var(--ease) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+/* ==========================================================================
+ * IMAGE + ARROW MOTION
+ * ========================================================================== */
+
+.img-zoom,
 .image-zoom {
-  transition: transform 450ms cubic-bezier(0,0,0.2,1);
+  transition: transform var(--dur-slow) var(--ease-out);
   will-change: transform;
 }
+.group:hover .img-zoom,
 .group:hover .image-zoom,
-.group:focus-within .image-zoom { transform: scale(1.025); }
+.group:focus-within .img-zoom,
+.group:focus-within .image-zoom {
+  transform: scale(1.05);
+}
 
-.arrow-shift { transition: transform 200ms cubic-bezier(0.2,0.8,0.2,1); }
+.arrow-shift { transition: transform var(--dur) var(--ease); }
 .group:hover .arrow-shift { transform: translateX(4px); }
 
-.animate-fade-in { animation: fadeIn 450ms cubic-bezier(0,0,0.2,1) both; }
-.animate-slide-up { animation: slideUp 700ms cubic-bezier(0,0,0.2,1) both; }
-.animate-slide-down { animation: slideDown 350ms cubic-bezier(0,0,0.2,1) both; }
-.animate-scale-in { animation: scaleIn 450ms cubic-bezier(0.34,1.4,0.64,1) both; }
+/* ==========================================================================
+ * ENTRANCE ANIMATION
+ * ========================================================================== */
+
+.animate-fade-in { animation: fadeIn 500ms var(--ease-out) both; }
+.animate-slide-up { animation: slideUp 700ms var(--ease-out) both; }
+.animate-slide-down { animation: slideDown 300ms var(--ease-out) both; }
+.animate-scale-in { animation: scaleIn 420ms var(--ease-spring) both; }
+/* Entry for the navigation drawer: travels from the edge it is anchored to, so
+ * it reads as the panel being revealed rather than as a generic fade. */
+.animate-slide-in-right { animation: slideInRight 320ms var(--ease-out) both; }
+/* Entry for a dialog on a phone. Upward travel only — the sheet rises into
+ * place from the bottom edge, which is where the thumb already is. */
+.animate-sheet-up { animation: sheetUp 340ms var(--ease-out) both; }
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes slideDown { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes scaleIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+@keyframes slideInRight { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
+@keyframes sheetUp { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: translateY(0); } }
 
 .stagger-1 { animation-delay: 60ms; }
 .stagger-2 { animation-delay: 120ms; }
@@ -637,5 +1021,34 @@
 .stagger-4 { animation-delay: 240ms; }
 .stagger-5 { animation-delay: 300ms; }
 
-.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+/* ==========================================================================
+ * UTILITIES
+ * ========================================================================== */
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
 .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+/* An edge fade for a horizontally scrollable strip: the row scrolls but does
+ * not look truncated. */
+.scroll-fade-right {
+  -webkit-mask-image: linear-gradient(to right, black 82%, transparent 100%);
+  mask-image: linear-gradient(to right, black 82%, transparent 100%);
+}
+@media (min-width: 640px) {
+  .scroll-fade-right {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+}
+
+.aspect-square { aspect-ratio: 1 / 1; }
+.aspect-video { aspect-ratio: 16 / 9; }
+.aspect-photo { aspect-ratio: 4 / 3; }
+.aspect-tall { aspect-ratio: 3 / 4; }
+
+/* The minimum comfortable tap target on a phone. Applied to anything
+ * interactive that is not already a full-size button. */
+.tap { min-height: 2.75rem; min-width: 2.75rem; }

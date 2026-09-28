@@ -5,7 +5,7 @@ import { useEffect, useState, useTransition } from 'react'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Button } from '@/components/ui/button'
+import { FormJumpNav, FormSection, FormStickyActions } from '@/components/ui/form-layout'
 import { ImageUploader } from '@/components/admin/image-uploader'
 import {
   certificateFieldErrors,
@@ -94,28 +94,36 @@ export function CertificateForm({ certificate, returnTo = '/admin/certificates' 
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-10">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       {message ? (
         <p
           role="status"
           aria-live="polite"
-          className={`border p-3 text-sm ${
+          className={
             message.tone === 'error'
-              ? 'border-[rgb(var(--error))]/40 bg-[rgb(var(--error))]/5'
-              : 'border-[rgb(var(--success))]/40 bg-[rgb(var(--success))]/5'
-          }`}
+              ? 'border border-[rgb(var(--error)/0.4)] bg-[rgb(var(--error)/0.05)] p-3 text-sm text-[rgb(var(--error))]'
+              : 'border border-[rgb(var(--success)/0.4)] bg-[rgb(var(--success)/0.05)] p-3 text-sm text-[rgb(var(--success))]'
+          }
         >
           {message.text}
         </p>
       ) : null}
 
-      <section className="space-y-6">
-        <div>
-          <p className="eyebrow">Basics</p>
-          <h2 className="heading-3 mt-3">Overview</h2>
-        </div>
+      <FormJumpNav
+        items={[
+          { id: 'certificate-overview', label: 'Overview' },
+          { id: 'certificate-appearance', label: 'Appearance' },
+          { id: 'certificate-visibility', label: 'Visibility' },
+        ]}
+      />
 
-        <div className="grid gap-6 md:grid-cols-2">
+      <FormSection
+        id="certificate-overview"
+        eyebrow="Basics"
+        title="Overview"
+        description="What the certificate is, who issued it, and when. The title and issuer are the only two fields a visitor sees in the list."
+      >
+        <div className="grid gap-5 sm:grid-cols-2">
           <Input
             label="Title"
             required
@@ -152,7 +160,54 @@ export function CertificateForm({ certificate, returnTo = '/admin/certificates' 
             error={errors.expiration_date}
             onChange={(event) => update('expiration_date', event.target.value)}
           />
+        </div>
 
+        <Textarea
+          label="Description"
+          rows={4}
+          hint="Optional. What it covered, or what you took from it."
+          value={form.description}
+          error={errors.description}
+          onChange={(event) => update('description', event.target.value)}
+          placeholder="A short note about the subject and why it mattered."
+        />
+
+        <div className="grid gap-5 sm:grid-cols-2">
+          <Input
+            label="Skills"
+            hint="Comma separated. e.g. Networking, TCP/IP, Security"
+            value={form.skills}
+            error={errors.skills}
+            onChange={(event) => update('skills', event.target.value)}
+            placeholder="Networking, TCP/IP, Security"
+          />
+
+          <Input
+            label="Sort order"
+            inputMode="numeric"
+            hint="Whole number. Higher values sit earlier in the list."
+            value={form.sort_order}
+            error={errors.sort_order}
+            onChange={(event) => update('sort_order', event.target.value)}
+          />
+        </div>
+      </FormSection>
+
+      <FormSection
+        id="certificate-appearance"
+        eyebrow="Proof &amp; reference"
+        title="Appearance"
+        description="The image and the link that prove the credential is real. All of it is optional, but an entry with an image and a credential ID reads very differently from a bare title."
+      >
+        <ImageUploader
+          label="Certificate image"
+          folder="certificates/images"
+          value={form.certificate_image_url}
+          onChange={(url) => update('certificate_image_url', url)}
+          hint="Optional. Clickable to open a larger preview on the public page."
+        />
+
+        <div className="grid gap-5 sm:grid-cols-2">
           <Input
             label="Credential ID"
             hint="Optional. The reference printed on the certificate."
@@ -172,68 +227,27 @@ export function CertificateForm({ certificate, returnTo = '/admin/certificates' 
             placeholder="https://example.com/verify"
           />
         </div>
+      </FormSection>
 
-        <Textarea
-          label="Description"
-          rows={4}
-          hint="Optional. What it covered, or what you took from it."
-          value={form.description}
-          error={errors.description}
-          onChange={(event) => update('description', event.target.value)}
-          placeholder="A short note about the subject and why it mattered."
-        />
-
-        <Input
-          label="Skills"
-          hint="Comma separated. e.g. Networking, TCP/IP, Security"
-          value={form.skills}
-          error={errors.skills}
-          onChange={(event) => update('skills', event.target.value)}
-          placeholder="Networking, TCP/IP, Security"
-        />
-      </section>
-
-      <section className="space-y-6">
-        <div>
-          <p className="eyebrow">Media &amp; ordering</p>
-          <h2 className="heading-3 mt-3">Appearance</h2>
-        </div>
-
-        <ImageUploader
-          label="Certificate image"
-          folder="certificates/images"
-          value={form.certificate_image_url}
-          onChange={(url) => update('certificate_image_url', url)}
-          hint="Optional. Clickable to open a larger preview on the public page."
-        />
-
-        <Input
-          label="Sort order"
-          inputMode="numeric"
-          hint="Whole number. Higher values sit earlier in the list."
-          value={form.sort_order}
-          error={errors.sort_order}
-          onChange={(event) => update('sort_order', event.target.value)}
-        />
-      </section>
-
-      <section className="space-y-4">
+      <FormSection
+        id="certificate-visibility"
+        eyebrow="Publishing"
+        title="Visibility"
+        description="Drafts stay hidden from the public pages until this is on."
+      >
         <Checkbox
           label="Publish this certificate"
-          description="Drafts stay private until you switch this on."
+          description="Turn this on to make it visible on the Certificates page."
           checked={form.published}
           onChange={(event) => update('published', event.target.checked)}
         />
-      </section>
+      </FormSection>
 
-      <div className="flex flex-wrap items-center justify-end gap-3">
-        <Button type="button" variant="ghost" onClick={() => router.push(returnTo)} disabled={isPending}>
-          Cancel
-        </Button>
-        <Button type="submit" loading={isPending}>
-          {certificate ? 'Save changes' : 'Create certificate'}
-        </Button>
-      </div>
+      <FormStickyActions
+        onCancel={() => router.push(returnTo)}
+        saveLabel={certificate ? 'Save changes' : 'Create certificate'}
+        isPending={isPending}
+      />
     </form>
   )
 }
