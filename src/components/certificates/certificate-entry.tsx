@@ -1,31 +1,42 @@
 'use client'
 
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import Image from 'next/image'
 import { createPortal } from 'react-dom'
-import { ExternalLink, FileBadge, Maximize2, X } from 'lucide-react'
+import { ChevronDown, ExternalLink, FileBadge, Maximize2, X } from 'lucide-react'
 import { classNames, formatMonth, isMonthCurrent } from '@/lib/utils/helpers'
 import { useFocusTrap } from '@/lib/hooks/use-focus-trap'
 import type { Certificate } from '@/types/certificate'
 
+/** Topics shown in the collapsed row before the rest move behind the toggle. */
+const COLLAPSED_SKILL_COUNT = 3
+
 /**
- * One certificate, as a row in a list rather than a card in a grid.
+ * One certificate, as a compact row that expands in place.
  *
- * The previous version put a 16:10 image across the top of every card, so a
- * grid of certificates was mostly screenshots. The information a visitor
- * actually reads — what it is, who issued it, when, what it covered — sat
- * underneath, and the two real actions ("Verify", "Preview") were 11px mono
- * links in the corner.
+ * The row used to render everything at once: a 4:3 scan, the issuer, the date,
+ * the title, a description, a credential ID, an expiry, a row of topic badges
+ * and two buttons — around 280px of vertical space per certificate. Twelve of
+ * them is a page nobody scrolls to the end of, and the reason was never
+ * information: the issuer, the date and the title are what a visitor is
+ * scanning for, and they take 100px.
  *
- * Now the text leads and the image is an optional small thumbnail on the left,
- * which is the right priority: most visitors arrive to check the issuer and the
- * date, and a certificate scan is a secondary check for the sceptically
- * inclined. The lightbox is kept because opening the full-size document is
- * genuinely useful, it is just no longer the headline.
+ * So the row now shows the identity of the credential and stops. The
+ * description, the credential ID and the actions live behind a disclosure, and
+ * a certificate with nothing extra to reveal does not get a toggle at all —
+ * there is no button that opens nothing.
  *
- * A Client Component only because the lightbox needs state.
+ * The collapsed state is a conditional render rather than a collapsed box with
+ * zero height. A zero-height `overflow-hidden` wrapper leaves its links in the
+ * accessibility tree and in the tab order while looking absent, so an invisible
+ * "Verify" link would still be reachable; not rendering the panel removes the
+ * problem instead of hiding it.
+ *
+ * A Client Component for the disclosure and the lightbox, both of which need
+ * state.
  */
 export function CertificateEntry({ certificate }: { certificate: Certificate }) {
+  const [isExpanded, setExpanded] = useState(false)
   const [isLightboxOpen, setLightboxOpen] = useState(false)
   /*
    * A URL that 404s is treated exactly like a missing one. Hiding the broken
@@ -34,136 +45,189 @@ export function CertificateEntry({ certificate }: { certificate: Certificate }) 
    * and the row falls through to the placeholder icon.
    */
   const [imageFailed, setImageFailed] = useState(false)
+  const panelId = useId()
 
   const skills = certificate.skills ?? []
   const hasImage = Boolean(certificate.certificate_image_url)
   const isExpired = !isMonthCurrent(certificate.expiration_date)
   const showsImage = hasImage && !imageFailed
+  const isActive = Boolean(certificate.credential_url) || showsImage
+
+  /*
+   * The toggle is rendered only when the collapsed row is genuinely hiding
+   * something. `isActive` is in that list because it decides where the two
+   * actions live: if a credential URL were the only hidden content and the row
+   * offered no toggle, "Verify" would become unreachable.
+   */
+  const hasDetails = Boolean(
+    certificate.description ||
+      certificate.credential_id ||
+      skills.length > COLLAPSED_SKILL_COUNT ||
+      isActive
+  )
+  const collapsedSkills = skills.slice(0, COLLAPSED_SKILL_COUNT)
+  const hiddenSkillCount = skills.length - collapsedSkills.length
 
   return (
-    <article className="group relative grid gap-5 border-t border-[rgb(var(--border))] py-8 sm:gap-6 md:grid-cols-12 md:gap-8 md:py-9">
-      {/*
-        The thumbnail is a column from `md` and a lead-in block above it. Below
-        `md` it sits *after* the title in the DOM and is moved up with
-        `order-first` on the wrapper instead, so a phone shows the text the
-        visitor came for and the image as supporting evidence — the reverse
-        order would put a 4:3 screenshot above the certificate's own name.
-      */}
-      <div className={classNames('md:col-span-3 lg:col-span-2', showsImage ? 'order-first' : 'hidden')}>
-        {showsImage ? (
-          <button
-            type="button"
-            onClick={() => setLightboxOpen(true)}
-            className="group/thumb relative block aspect-[4/3] w-full overflow-hidden rounded-[var(--radius-lg)] border border-[rgb(var(--border))] bg-[rgb(var(--bg-highlight))] transition-colors duration-300 hover:border-[rgb(var(--accent)/0.5)]"
-          >
-            <Image
-              src={certificate.certificate_image_url as string}
-              alt={`Certificate: ${certificate.title}`}
-              fill
-              sizes="(min-width: 1024px) 12rem, (min-width: 768px) 18rem, 100vw"
-              className="object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,0.61,0.36,1)] group-hover/thumb:scale-[1.03]"
-              onError={() => setImageFailed(true)}
-              quality={90}
-            />
-            {/* Bottom fade so the zoom chip stays readable over a light scan. */}
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[rgb(var(--bg)/0.6)] via-transparent to-transparent"
-            />
-            <span className="absolute bottom-2.5 right-2.5 inline-flex h-8 w-8 items-center justify-center rounded-full border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface)/0.85)] text-[rgb(var(--text-dim))] backdrop-blur-sm transition-colors duration-200 group-hover/thumb:border-[rgb(var(--accent))] group-hover/thumb:bg-[rgb(var(--accent))] group-hover/thumb:text-[rgb(var(--accent-contrast))]">
-              <Maximize2 className="h-4 w-4" aria-hidden="true" />
-            </span>
-            <span className="sr-only">Open a larger image of this certificate</span>
-          </button>
-        ) : (
-          <div className="hidden aspect-[4/3] w-full items-center justify-center rounded-[var(--radius-lg)] border border-[rgb(var(--border))] bg-[rgb(var(--bg-elevated))] text-[rgb(var(--text-muted))] md:flex">
-            <FileBadge className="h-9 w-9" aria-hidden="true" />
-          </div>
-        )}
-      </div>
-
-      <div className={classNames(showsImage ? 'md:col-span-9 lg:col-span-10' : 'md:col-span-12')}>
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <span className="meta-strong">{certificate.issuer}</span>
-          {certificate.issue_date ? (
-            <time dateTime={certificate.issue_date} className="meta tabular-nums">
-              {formatMonth(certificate.issue_date)}
-            </time>
-          ) : null}
-          {isExpired ? (
-            <span className="badge-error">Expired</span>
-          ) : certificate.expiration_date ? (
-            <span className="badge-success">Valid until {formatMonth(certificate.expiration_date)}</span>
-          ) : null}
+    <article className="group relative border-t border-[rgb(var(--border))]">
+      <div className="grid grid-cols-1 items-start gap-x-5 gap-y-4 py-5 sm:grid-cols-[auto_1fr_auto] sm:py-6">
+        {/*
+          The scan is a column from `sm` and a lead-in block above the text
+          below it, sized to a thumbnail rather than a screenshot. Below `sm` it
+          is moved up with `order-first` on the wrapper instead, so a phone shows
+          the title the visitor came for and the image as supporting evidence —
+          the reverse order would put a 4:3 scan above the certificate's name.
+        */}
+        <div className={classNames('w-20 shrink-0 sm:w-24', showsImage ? 'order-first' : 'hidden')}>
+          {showsImage ? (
+            <button
+              type="button"
+              onClick={() => setLightboxOpen(true)}
+              className="group/thumb relative block aspect-[4/3] w-full overflow-hidden rounded-[var(--radius-md)] border border-[rgb(var(--border))] bg-[rgb(var(--bg-highlight))] transition-colors duration-300 hover:border-[rgb(var(--accent)/0.5)]"
+            >
+              <Image
+                src={certificate.certificate_image_url as string}
+                alt={`Certificate: ${certificate.title}`}
+                fill
+                sizes="6rem"
+                className="object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,0.61,0.36,1)] group-hover/thumb:scale-[1.04]"
+                onError={() => setImageFailed(true)}
+                quality={90}
+              />
+              <span
+                aria-hidden="true"
+                className="absolute inset-0 bg-gradient-to-t from-[rgb(var(--bg)/0.55)] to-transparent"
+              />
+              <span className="absolute bottom-1.5 right-1.5 inline-flex h-6 w-6 items-center justify-center rounded-full border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface)/0.85)] text-[rgb(var(--text-dim))] backdrop-blur-sm transition-colors duration-200 group-hover/thumb:border-[rgb(var(--accent))] group-hover/thumb:bg-[rgb(var(--accent))] group-hover/thumb:text-[rgb(var(--accent-contrast))]">
+                <Maximize2 className="h-3 w-3" aria-hidden="true" />
+              </span>
+              <span className="sr-only">Open a larger image of this certificate</span>
+            </button>
+          ) : (
+            <div className="hidden aspect-[4/3] w-full items-center justify-center rounded-[var(--radius-md)] border border-[rgb(var(--border))] bg-[rgb(var(--bg-elevated))] text-[rgb(var(--text-muted))] sm:flex">
+              <FileBadge className="h-6 w-6" aria-hidden="true" />
+            </div>
+          )}
         </div>
 
-        <h3 className="heading-3 mt-3 text-balance">{certificate.title}</h3>
-
-        {certificate.description ? (
-          <p className="mt-3 max-w-prose text-pretty text-[length:var(--text-body-sm)] leading-relaxed text-[rgb(var(--text-dim))]">
-            {certificate.description}
-          </p>
-        ) : null}
-
-        {/* Metadata that only exists on some records, so it is listed last. */}
-        {(certificate.credential_id || certificate.expiration_date) && (
-          <dl className="mt-5 flex flex-wrap gap-x-8 gap-y-1.5">
-            {certificate.credential_id ? (
-              <div className="flex gap-2">
-                <dt className="meta">Credential ID</dt>
-                <dd className="tech-list tabular-nums text-[rgb(var(--text-dim))]">{certificate.credential_id}</dd>
-              </div>
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <span className="meta-strong">{certificate.issuer}</span>
+            {certificate.issue_date ? (
+              <time dateTime={certificate.issue_date} className="meta tabular-nums">
+                {formatMonth(certificate.issue_date)}
+              </time>
             ) : null}
-            {certificate.expiration_date ? (
-              <div className="flex gap-2">
-                <dt className="meta">Expiry</dt>
-                <dd className="tech-list tabular-nums text-[rgb(var(--text-dim))]">
-                  {formatMonth(certificate.expiration_date)}
-                </dd>
-              </div>
+            {isExpired ? (
+              <span className="badge-error">Expired</span>
+            ) : certificate.expiration_date ? (
+              <span className="badge-success">Valid until {formatMonth(certificate.expiration_date)}</span>
             ) : null}
-          </dl>
-        )}
-
-        {skills.length > 0 && (
-          <div className="mt-5 flex flex-wrap gap-1.5" role="list" aria-label="Topics covered">
-            <span className="sr-only">Topics covered: </span>
-            {skills.map((skill) => (
-              <span key={skill} className="badge-neutral" role="listitem">
-                {skill}
-              </span>
-            ))}
           </div>
-        )}
+
+          <h3 className="heading-3 mt-2 text-balance">{certificate.title}</h3>
+
+          {collapsedSkills.length > 0 && (
+            <p className="tech-list mt-2">
+              <span className="sr-only">Topics covered: </span>
+              {collapsedSkills.join(' · ')}
+              {hiddenSkillCount > 0 && <span> · +{hiddenSkillCount}</span>}
+            </p>
+          )}
+        </div>
 
         {/*
-          Actions, always visible and always labelled. Each is rendered only when
-          the underlying data exists, so the row never offers a dead end. They
-          are buttons and links with real icons rather than underlined text: an
-          underline is not a reliable affordance on a touch screen, and the two
-          verbs here are destructive-adjacent enough to deserve a target you can
-          see before tapping.
+          Only rendered when the row is genuinely hiding something. On a phone it
+          falls below the text and aligns right; from `sm` it becomes a third
+          column, bottom-aligned with the topics line.
         */}
-        {(certificate.credential_url || showsImage) && (
-          <div className="mt-6 flex flex-wrap items-center gap-2.5 border-t border-[rgb(var(--border))] pt-5">
-            {showsImage ? (
-              <button type="button" onClick={() => setLightboxOpen(true)} className="btn btn-secondary btn-sm">
-                <Maximize2 className="h-4 w-4" aria-hidden="true" />
-                View
-                <span className="sr-only"> a larger image of the {certificate.title} certificate</span>
-              </button>
-            ) : null}
-
-            {certificate.credential_url ? (
-              <a href={certificate.credential_url} target="_blank" rel="noopener noreferrer" className="btn btn-outline btn-sm">
-                <ExternalLink className="h-4 w-4" aria-hidden="true" />
-                Verify
-                <span className="sr-only"> the {certificate.title} credential (opens in a new tab)</span>
-              </a>
-            ) : null}
-          </div>
-        )}
+        {hasDetails ? (
+          <button
+            type="button"
+            onClick={() => setExpanded((value) => !value)}
+            aria-expanded={isExpanded}
+            aria-controls={panelId}
+            className="inline-flex min-h-9 shrink-0 items-center gap-1 justify-self-end self-end text-[length:var(--text-sm)] font-medium text-[rgb(var(--text-dim))] transition-colors duration-200 hover:text-[rgb(var(--accent))] sm:col-start-3 sm:row-start-1"
+          >
+            {isExpanded ? 'Less' : 'Details'}
+            <ChevronDown
+              className={classNames(
+                'h-4 w-4 transition-transform duration-200',
+                isExpanded && 'rotate-180'
+              )}
+              aria-hidden="true"
+            />
+            <span className="sr-only"> about the {certificate.title} certificate</span>
+          </button>
+        ) : null}
       </div>
+
+      {isExpanded && hasDetails && (
+        <div id={panelId} className="animate-fade-in pb-6 sm:pl-[7.25rem]">
+          {certificate.description ? (
+            <p className="max-w-prose text-pretty text-[length:var(--text-body-sm)] leading-relaxed text-[rgb(var(--text-dim))]">
+              {certificate.description}
+            </p>
+          ) : null}
+
+          {/*
+            Metadata that only exists on some records. The expiry is not repeated
+            here when it is already in the header line above.
+          */}
+          {(certificate.credential_id || (certificate.expiration_date && isExpired)) && (
+            <dl className="mt-4 flex flex-wrap gap-x-8 gap-y-1.5">
+              {certificate.credential_id ? (
+                <div className="flex gap-2">
+                  <dt className="meta">Credential ID</dt>
+                  <dd className="tech-list tabular-nums text-[rgb(var(--text-dim))]">{certificate.credential_id}</dd>
+                </div>
+              ) : null}
+              {certificate.expiration_date && isExpired ? (
+                <div className="flex gap-2">
+                  <dt className="meta">Expired</dt>
+                  <dd className="tech-list tabular-nums text-[rgb(var(--text-dim))]">
+                    {formatMonth(certificate.expiration_date)}
+                  </dd>
+                </div>
+              ) : null}
+            </dl>
+          )}
+
+          {hiddenSkillCount > 0 && (
+            <div className="mt-4 flex flex-wrap gap-1.5" role="list" aria-label="Topics covered">
+              {skills.map((skill) => (
+                <span key={skill} className="badge-neutral" role="listitem">
+                  {skill}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/*
+            Actions, always visible and always labelled, and only rendered when
+            the underlying data exists so the row never offers a dead end.
+          */}
+          {isActive && (
+            <div className="mt-5 flex flex-wrap items-center gap-2.5 border-t border-[rgb(var(--border))] pt-5">
+              {showsImage ? (
+                <button type="button" onClick={() => setLightboxOpen(true)} className="btn btn-secondary btn-sm">
+                  <Maximize2 className="h-4 w-4" aria-hidden="true" />
+                  View
+                  <span className="sr-only"> a larger image of the {certificate.title} certificate</span>
+                </button>
+              ) : null}
+
+              {certificate.credential_url ? (
+                <a href={certificate.credential_url} target="_blank" rel="noopener noreferrer" className="btn btn-outline btn-sm">
+                  <ExternalLink className="h-4 w-4" aria-hidden="true" />
+                  Verify
+                  <span className="sr-only"> the {certificate.title} credential (opens in a new tab)</span>
+                </a>
+              ) : null}
+            </div>
+          )}
+        </div>
+      )}
 
       {isLightboxOpen && showsImage ? (
         <CertificateLightbox

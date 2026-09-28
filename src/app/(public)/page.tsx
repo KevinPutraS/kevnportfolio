@@ -32,7 +32,13 @@ export const revalidate = 60
  * the projects because they are the evidence for them.
  */
 export default async function HomePage() {
-  const featured = await getFeaturedProjects(3)
+  /*
+   * Six, not three. The featured section is a rail, so its height no longer
+   * depends on the count — it is one screen whether there are two items or
+   * twenty. The cap is only there to stop the strip turning into a second copy
+   * of the projects index; "All projects" is one tap away for the rest.
+   */
+  const featured = await getFeaturedProjects(6)
 
   return (
     <>

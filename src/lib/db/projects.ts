@@ -5,7 +5,15 @@ import type { ProjectCategoryFilter } from '@/config/site'
 import { isSupabaseConfigured } from '@/lib/supabase/config'
 import { isUuid } from '@/lib/utils/validation'
 
-export const PROJECTS_PAGE_SIZE = 12
+/**
+ * Nine, so a full page of results is three rows of three on a desktop.
+ *
+ * Twelve was a grid-shaped number and not a page-shaped one: four rows is a long
+ * scroll on a laptop and a very long one on a phone, and it left the paginator
+ * with enough pages that the numbers no longer fit in one line. Nine keeps the
+ * page bounded at something that can actually be scanned in one pass.
+ */
+export const PROJECTS_PAGE_SIZE = 9
 
 export interface GetProjectsOptions {
   page?: number

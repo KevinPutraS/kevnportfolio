@@ -1,9 +1,11 @@
 import { Suspense } from 'react'
+import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { getCategoryCounts, getProjects, PROJECTS_PAGE_SIZE } from '@/lib/db/projects'
 import { isProjectCategory, type ProjectCategoryFilter } from '@/config/site'
 import { ProjectFilter, buildFilterOptions } from '@/components/projects/project-filter'
 import { ProjectGrid } from '@/components/projects/project-grid'
+import { ProjectPagination, projectsHref } from '@/components/projects/project-pagination'
 import { EmptyState } from '@/components/ui/empty-state'
 import { ButtonLink } from '@/components/ui/button-link'
 import { ArrowLink } from '@/components/ui/arrow-link'
@@ -78,6 +80,31 @@ export default async function ProjectsPage({
   const counts = await getCategoryCounts()
   const total = counts.reduce((sum, entry) => sum + entry.count, 0)
 
+  /*
+   * Out-of-range page numbers are redirected to the last real page rather than
+   * rendered.
+   *
+   * They are reachable: a bookmarked `/projects?page=3` outlives a deletion, and
+   * the category counts change whenever a project is published, moved or
+   * removed. PostgREST answers an offset past the end of the table with an
+   * error rather than an empty page, so the query returned nothing, `total` came
+   * back as 0, and the page confidently announced "No projects published yet" —
+   * on a site with four of them.
+   *
+   * The per-category total needed to clamp a filtered view is already in `counts`,
+   * so this costs no extra query, and redirecting keeps the URL honest about the
+   * content on it.
+   */
+  const categoryTotal =
+    category === 'all'
+      ? total
+      : counts.find((entry) => entry.category === category)?.count ?? 0
+  const lastPage = Math.max(1, Math.ceil(categoryTotal / PROJECTS_PAGE_SIZE))
+
+  if (page > lastPage) {
+    redirect(projectsHref({ category, page: lastPage }))
+  }
+
   return (
     <>
       <div className="container-custom">
@@ -128,7 +155,7 @@ function ProjectsSkeleton() {
       <div className="container-custom">
         <div className="h-10 w-full max-w-3xl animate-pulse rounded-[var(--radius-sm)] bg-[rgb(var(--surface))]" />
         <div className="mt-6 h-3 w-40 animate-pulse rounded-[var(--radius-sm)] bg-[rgb(var(--surface-elevated))]" />
-        <GridSkeleton count={6} />
+        <GridSkeleton count={9} />
       </div>
     </section>
   )
@@ -172,40 +199,7 @@ async function ProjectResults({
           <>
             <ProjectGrid projects={projects} className="mt-12 sm:mt-16" />
 
-            {totalPages > 1 && (
-              <nav
-                aria-label="Pagination"
-                className="mt-16 flex items-center justify-between border-t border-[rgb(var(--border))] pt-8"
-              >
-                {page > 1 ? (
-                  <ButtonLink
-                    href={`/projects?${new URLSearchParams({ ...(isFiltered ? { category } : {}), page: String(page - 1) })}`}
-                    variant="secondary"
-                    size="sm"
-                  >
-                    Previous
-                  </ButtonLink>
-                ) : (
-                  <span />
-                )}
-
-                <span className="meta">
-                  Page {page} / {totalPages}
-                </span>
-
-                {page < totalPages ? (
-                  <ButtonLink
-                    href={`/projects?${new URLSearchParams({ ...(isFiltered ? { category } : {}), page: String(page + 1) })}`}
-                    variant="secondary"
-                    size="sm"
-                  >
-                    Next
-                  </ButtonLink>
-                ) : (
-                  <span />
-                )}
-              </nav>
-            )}
+            <ProjectPagination page={page} totalPages={totalPages} category={category} />
           </>
         ) : isEmptyByFilter ? (
           <EmptyState
