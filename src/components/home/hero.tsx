@@ -62,7 +62,7 @@ export function Hero() {
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-0 bg-[rgb(var(--bg))] opacity-[0.16] max-sm:opacity-[0.45]"
+        className="pointer-events-none absolute inset-0 z-0 bg-[rgb(var(--bg))] opacity-[0.16] max-sm:opacity-[0.62]"
       />
 
       <div className="container-custom relative z-10">
