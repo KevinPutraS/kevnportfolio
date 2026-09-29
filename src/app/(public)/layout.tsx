@@ -1,3 +1,4 @@
+import { Analytics } from '@vercel/analytics/next'
 import { BottomNav } from '@/components/layout/bottom-nav'
 import { Footer } from '@/components/layout/footer'
 import { Navbar } from '@/components/layout/navbar'
@@ -58,6 +59,24 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
         style={{ height: 'calc(env(safe-area-inset-bottom, 0px) + 4rem)' }}
       />
       <BottomNav />
+
+      {/*
+        Page views, and the reason this lives here rather than in the root
+        layout.
+
+        The only question worth answering is "which project gets opened", and
+        that is only answerable from the public half of the site. Mounted in the
+        root layout it would also count every page view inside /admin —
+        signed-in browsing, which is by definition not a visitor, and the owner
+        would out-visit every real reader and make the numbers worthless.
+        Scoping it to this group drops the CMS out of the data rather than
+        filtering it out afterwards.
+
+        Vercel Analytics sets no cookies and collects no identifying data, so
+        there is nothing to gate behind a consent banner. If one is ever added
+        for another reason, this has to move inside the same condition.
+      */}
+      <Analytics />
     </div>
   )
 }

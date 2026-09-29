@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, Space_Grotesk } from 'next/font/google'
 import { siteConfig } from '@/config/site'
+import { buildPersonSchema } from '@/lib/structured-data'
 import '@/styles/globals.css'
 
 const inter = Inter({
@@ -105,6 +106,27 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           the (public) route group so they can never appear behind /admin.
         */}
         {children}
+
+        {/*
+          schema.org `Person`, the one piece of markup on the page a machine
+          reads. It is a script tag in the body rather than in `<head>` because
+          React hoists it on its own — Next documents that a
+          `application/ld+json` script can be rendered anywhere in the tree and
+          still lands in the head, so putting it here keeps it next to the data
+          it is derived from instead of stranded at the top of the file.
+
+          `JSON.stringify` and not a hand-built string: the contents come from
+          `siteConfig`, and a name or a URL with a quote or a backslash in it
+          would otherwise produce a script tag the browser refuses to parse,
+          silently dropping every property after the break. The `<` escape
+          prevents a value containing `</script>` from closing the tag early.
+        */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(buildPersonSchema()).replace(/</g, '\\u003c'),
+          }}
+        />
       </body>
     </html>
   )
