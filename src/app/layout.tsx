@@ -87,9 +87,10 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  // Matches `--bg` (10 13 18) in globals.css. It was still the pre-redesign
-  // #08090D, so the browser chrome and the page did not quite agree.
-  themeColor: '#0E0D12',
+  // Matches `--bg` (9 9 15) in globals.css. It used to be #0E0D12, which the
+  // browser chrome rendered a shade off from the page it surrounded. And it was
+  // #08090D before that. The token file is the only authority that has held.
+  themeColor: '#09090F',
   colorScheme: 'dark',
   width: 'device-width',
   initialScale: 1,

@@ -40,8 +40,8 @@ export const siteConfig = {
    */
   descriptor: 'Personal Digital Portfolio',
   /* A noun phrase, not a sentence. Used in the footer and in metadata. */
-  description:
-    'Projects, experience and certificates.',  /**
+  description: 'Projects, experience and certificates.',
+  /**
    * One sentence that says what the visitor will find here. Deliberately
    * concrete: it names the four sections instead of describing a feeling.
    */
@@ -62,10 +62,14 @@ export const siteConfig = {
   ogImage: '/images/og-image.png',
   /** Placeholder address — replace with the real one before deploying. */
   email: process.env.NEXT_PUBLIC_CONTACT_EMAIL?.trim() || 'kevinputras798@gmail.com',
+  /*
+   * No LinkedIn yet: the only URL available was a placeholder. The entry stays
+   * out until the owner confirms the real profile, so a dead link can never
+   * ship again.
+   */
   links: {
     github: 'https://github.com/KevinPutraS',
     twitter: 'https://x.com/KevnPutraS',
-    linkedin: 'https://linkedin.com/in/username',
   },
   get contactEmail() {
     return `mailto:${this.email}`
@@ -138,7 +142,6 @@ export const siteConfig = {
 export const socialLinks = [
   { label: 'GitHub', href: siteConfig.links.github },
   { label: 'Twitter', href: siteConfig.links.twitter },
-  { label: 'LinkedIn', href: siteConfig.links.linkedin },
 ] as const
 
 /**
