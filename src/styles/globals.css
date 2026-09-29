@@ -1090,6 +1090,216 @@
 .stagger-5 { animation-delay: 300ms; }
 
 /* ==========================================================================
+ * PAGE TRANSITION
+ * ==========================================================================
+ *
+ * Mounted by `src/app/(public)/template.tsx`. A template is re-created on every
+ * navigation inside its route group, so this animation replays each time a
+ * public page is entered. That remount is the whole mechanism, and it is why
+ * the class sits in a template and not in a layout: a layout is reused across
+ * navigations, so an animation on one would run once and then never again.
+ *
+ * There is no exit animation. The App Router tears the outgoing tree down and
+ * paints the new one in the same frame, and keeping the old tree on screen
+ * through that swap needs a client component holding a copy of the children and
+ * rendering the incoming page behind it. The departing page therefore leaves on
+ * a cut, and the arriving one comes in on a fade. Two consequences shaped the
+ * numbers below:
+ *
+ *  - Short. 320ms, not the 500ms of `.animate-fade-in`. The cut is the artefact,
+ *    so the incoming animation has to finish before the eye registers it as a
+ *    transition rather than as a page that took a moment to appear.
+ *  - Small travel. 10px, not the 18px of `.slideUp`. The same offset that reads
+ *    as "settling in" on a single heading reads as a full screen falling into
+ *    place when it is applied to an entire page.
+ *
+ * `transform: none` on the final keyframe is load-bearing. Because the fill mode
+ * is `both`, a non-`none` value would survive the animation and make this
+ * wrapper the containing block for every `position: fixed` descendant in the
+ * page. The two full-screen lightboxes happen to be immune because they render
+ * through a portal into `<body>`, but the sticky metadata rail on a project page
+ * and any fixed layer added later are not, so nothing is left behind.
+ *
+ * No `will-change` on purpose. Promoting a full-page subtree to its own
+ * compositor layer keeps that layer alive for as long as the page is, and the
+ * browser promotes it for the duration of the animation by itself.
+ */
+
+.page-enter {
+  animation: pageEnter 320ms var(--ease-out) both;
+}
+
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ==========================================================================
+ * PRINT
+ * ==========================================================================
+ *
+ * Printing the site as-is produces a dark page that spends a cartridge of ink
+ * and cannot be read in daylight. Everything here exists to make "Print or save
+ * as PDF" on the resume produce a document worth handing to someone.
+ *
+ * The approach is to remap the *tokens* rather than override the components. The
+ * whole palette is `--bg`, `--text`, `--border` and friends; reassigning them on
+ * `:root` inside `@media print` turns the entire page — including every
+ * component that reaches for a token — into ink on paper, with no per-component
+ * print rules and no second stylesheet to keep in sync. This is the payoff of
+ * having tokenised the colour in the first place.
+ *
+ * `!important` is necessary and is not a smell here. The print block is an
+ * override of a whole system, and specificity cannot express "unless printing",
+ * so the one way to win against component rules is to assert directly. It is
+ * scoped to `@media print`, so it cannot leak onto a screen.
+ */
+
+@media print {
+  :root {
+    /* Paper. Pure white rather than a warm off-white: a printed page's own
+     * whiteness comes from the stock, and tinting it here reads as a yellowing
+     * on top of whatever the printer is already doing. */
+    --bg: 255 255 255;
+    --background: 255 255 255;
+    --bg-elevated: 255 255 255;
+    --bg-highlight: 255 255 255;
+    --bg-accent: 245 245 245;
+
+    --border: 199 199 199;
+    --border-strong: 168 168 168;
+    --border-subtle: 199 199 199;
+
+    /* Near-black, not #000. Pure black on uncoated stock bleeds and looks
+     * heavier than the type is; this reads as printed ink. */
+    --text: 17 17 17;
+    --text-primary: 17 17 17;
+    --text-dim: 55 55 55;
+    --text-secondary: 55 55 55;
+    --text-muted: 90 90 90;
+
+    /* The accent is the one colour kept. It is the only hue in the system, it
+     * is used for small marks and links, and a CV with no colour at all reads
+     * as a photocopy of a CV. Darkened: the 245 158 11 amber that works on a
+     * near-black screen is illegible on white at 12px. */
+    --accent: 146 92 6;
+    --accent-bright: 146 92 6;
+    --accent-dim: 146 92 6;
+    --accent-hover: 120 74 4;
+    --accent-contrast: 255 255 255;
+    --accent-bg: 146 92 6;
+    --accent-bg-strong: 146 92 6;
+    --accent-glow: 146 92 6;
+
+    --cat-neutral: 90 90 90;
+    --cat-web: var(--cat-neutral);
+    --cat-app: var(--cat-neutral);
+    --cat-design: var(--cat-neutral);
+    --cat-networking: var(--cat-neutral);
+    --cat-experiment: var(--cat-neutral);
+    --cat-school: var(--cat-neutral);
+    --cat-other: var(--cat-neutral);
+  }
+
+  html,
+  body {
+    background: #fff !important;
+    color: rgb(var(--text)) !important;
+  }
+
+  /*
+    Chrome. The navbar, the footer, the mobile tab bar and the atmosphere
+    overlay are all navigation or decoration, and all of them are screen
+    affordances. Printing them wastes the first page, and several would now
+    print as a solid block over the token-remapped white page.
+
+    The tab bar is matched by class rather than by `aria-label`, because both
+    navs in the public shell — the header's and the bottom bar's — are labelled
+    "Main". `class*='fixed'` matches the one that is chrome and leaves any
+    in-content nav the resume might grow alone. It matches the literal Tailwind
+    class in the served HTML.
+   */
+  header,
+  footer,
+  nav[class*='fixed'],
+  .page-depth {
+    display: none !important;
+  }
+
+  /* The mobile menu is only ever mounted while it is open, and it renders its
+   * backdrop as a full-screen `fixed` overlay. */
+  div[class*='fixed'][class*='z-[70]'] {
+    display: none !important;
+  }
+
+  /*
+    Margins. 16mm is the printer's own default on most desktop drivers, so
+    setting it explicitly means the resume paginates the same way on a machine
+    with unusual defaults — and the page number the browser stamps in the
+    bottom margin lands outside the content rather than inside it.
+   */
+  @page {
+    margin: 16mm;
+  }
+
+  /*
+    The shell's minimum height. `.min-h-screen` on the public layout's wrapper is
+    correct on a screen and wrong on paper: it reserves a full viewport of blank
+    space below a document that is one page long, which is how a one-page CV
+    becomes a two-page CV with a blank second page.
+   */
+  .min-h-screen {
+    min-height: 0 !important;
+  }
+
+  /*
+    Paged layout.
+
+    `break-after: avoid` on headings keeps a section title from landing alone at
+    the foot of a page with its content overleaf — the single most common way a
+    generated CV looks machine-made. The entries themselves carry
+    `print:break-inside-avoid` in the component, so a work item is never split
+    across a page boundary mid-bullet.
+   */
+  h1, h2, h3, h4 {
+    break-after: avoid;
+  }
+
+  /*
+    Background art. The hero's full-bleed backdrop and the section washes are
+    `position: absolute` at 100% height, so printing them means downloading a
+    texture sized to a viewport and then printing it as a full-page image the
+    reader did not ask for. Scoped to the hero section rather than to
+    `[aria-hidden='true']` globally — several decorative elements are aria-hidden
+    and still carry a meaningful hairline.
+   */
+  .section-wash,
+  .page-depth {
+    display: none !important;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: underline;
+  }
+
+  /*
+    The three elements the resume page marks as screen-only, restated here so
+    the print behaviour is legible in one place beside the token remap it
+    depends on. `print:hidden` in the markup is what actually does the work.
+   */
+  .print\:hidden {
+    display: none !important;
+  }
+}
+
+/* ==========================================================================
  * UTILITIES
  * ========================================================================== */
 
@@ -1120,3 +1330,78 @@
 /* The minimum comfortable tap target on a phone. Applied to anything
  * interactive that is not already a full-size button. */
 .tap { min-height: 2.75rem; min-width: 2.75rem; }
+
+/* ==========================================================================
+ * RESUME
+ * ==========================================================================
+ *
+ * Only used by `src/app/(public)/resume/page.tsx`, and the reason these are
+ * classes rather than a second Tailwind scheme is the print block at the end of
+ * this file: it remaps the colour tokens, and a resume built out of arbitrary
+ * values would not follow them. A class can be restyled for paper in one place.
+ *
+ * The type scale is deliberately smaller than the reading scale. A CV is not a
+ * web page — it is read at arm's length, in one column, and often on a screen
+ * before it is ever printed — so it uses the `--text-sm` / `--text-body-sm`
+ * tokens rather than the `--text-h*` ones, with the name as the single large
+ * element on the page.
+ */
+
+.resume-header {
+  padding-bottom: 1.75rem;
+  border-bottom: 1px solid rgb(var(--border));
+}
+
+.resume-name {
+  font-family: var(--font-display);
+  font-size: var(--text-h2);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: rgb(var(--text));
+}
+
+.resume-summary {
+  margin-top: 0.625rem;
+  max-width: 62ch;
+  font-size: var(--text-body-sm);
+  line-height: 1.6;
+  color: rgb(var(--text-dim));
+}
+
+.resume-contact {
+  margin-top: 1.125rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem 1.25rem;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: rgb(var(--text-muted));
+}
+
+.resume-dt {
+  flex-shrink: 0;
+  min-width: 7.5rem;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgb(var(--text-muted));
+}
+
+.resume-dd {
+  font-size: var(--text-sm);
+  color: rgb(var(--text-dim));
+}
+
+/* The status chip inside a work entry's heading. Inline, not a bordered pill —
+ * on paper a pill is a shape with no meaning, and the section is already a list
+ * of projects with the date beside them. */
+.resume-status {
+  margin-left: 0.625rem;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgb(var(--text-muted));
+}
