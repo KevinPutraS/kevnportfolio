@@ -18,11 +18,12 @@ import { NavIcon } from './nav-icons'
  * actually makes.
  *
  * Five items, not six, on purpose. Six peers at 320px leaves each slot roughly
- * 53px wide and "Certificates" ends up clipped or set in type too small to
- * read. The bar keeps Home, Projects, Experience, About and Contact — the
- * destinations that recur — and lets Certificates ride in the drawer next to
- * the contact block it belongs with. The list is *derived* from the nav so
- * labels and tones cannot drift; dropping Certificates is one line.
+ * 53px wide and the long labels end up clipped or set in type too small to
+ * read. So one destination rides in the drawer, and it is About: the drawer,
+ * the desktop nav and the footer all carry it already, while Certificates is a
+ * section of its own a thumb actually reaches for. The list is *derived* from
+ * the nav so labels and tones cannot drift; swapping the one that rides in the
+ * drawer is a single-line filter.
  *
  * The ticket for being "prettier than the admin bar":
  *  - the active icon sits in a filled amber pill (`--accent` on
@@ -39,7 +40,7 @@ import { NavIcon } from './nav-icons'
  */
 export function BottomNav() {
   const pathname = usePathname()
-  const items = siteConfig.navigation.filter((item) => item.href !== '/certificates')
+  const items = siteConfig.navigation.filter((item) => item.href !== '/about')
 
   return (
     <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-40 lg:hidden">
