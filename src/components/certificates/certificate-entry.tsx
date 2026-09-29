@@ -12,9 +12,9 @@ import type { Certificate } from '@/types/certificate'
 const CLAMPED_LINES = 3
 
 /**
- * One certificate, as a row in a list rather than a card in a grid.
+ * One certificate, a quiet card on the same rail as the experience timeline.
  *
- * The scan is a small box, not a screenshot that owns the row. A certificate
+ * The scan is a small box, not a screenshot that owns the entry. A certificate
  * page is read as a list of credentials, and at 4:3 full width the page became
  * a stack of scans with the issuer, the date and the title — the parts a visitor
  * actually scans for — pushed underneath each one. A fixed small thumbnail keeps
@@ -89,7 +89,7 @@ export function CertificateEntry({ certificate }: { certificate: Certificate }) 
   }, [isExpanded, certificate.description])
 
   return (
-    <article className="flex flex-col gap-4 border-t border-[rgb(var(--border))] py-6 sm:flex-row sm:gap-6 sm:py-7">
+    <article className="group relative flex flex-col gap-4 rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--bg-elevated))] p-5 transition-colors duration-300 hover:border-[rgb(var(--accent)/0.45)] sm:flex-row sm:gap-6 sm:p-6">
       {/*
         The thumbnail is a lead-in block on a phone and a narrow column from
         `sm`. Below `sm` it is moved to the top with `order-first` on the
@@ -141,7 +141,7 @@ export function CertificateEntry({ certificate }: { certificate: Certificate }) 
           ) : null}
         </div>
 
-        <h3 className="heading-3 mt-2.5 text-balance">{certificate.title}</h3>
+        <h3 className="heading-3 mt-2.5 text-balance transition-colors duration-300 group-hover:text-[rgb(var(--accent))]">{certificate.title}</h3>
 
         {/* Topics, always visible: short, and they say what the course covered. */}
         {skills.length > 0 && (

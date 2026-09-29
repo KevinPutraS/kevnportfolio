@@ -61,7 +61,7 @@ export default async function CertificatesPage() {
               action={<ArrowLink href="/projects">Browse projects instead</ArrowLink>}
             />
           ) : (
-            <ul className="mt-2">
+            <ul className="mt-2 flex flex-col gap-4 sm:gap-6">
               {certificates.map((certificate) => (
                 <li key={certificate.id}>
                   <CertificateEntry certificate={certificate} />
