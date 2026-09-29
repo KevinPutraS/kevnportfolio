@@ -1,3 +1,4 @@
+import { BottomNav } from '@/components/layout/bottom-nav'
 import { Footer } from '@/components/layout/footer'
 import { Navbar } from '@/components/layout/navbar'
 
@@ -44,6 +45,19 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       <div className="relative z-10">
         <Footer />
       </div>
+
+      {/*
+        The mobile tab bar (`BottomNav`) is fixed to the bottom of the viewport,
+        so the footer's last row would otherwise sit underneath it. The spacer
+        pays that height back on the same breakpoints the bar lives on: 4rem of
+        row plus the notch inset, `lg` and up get zero.
+      */}
+      <div
+        aria-hidden="true"
+        className="lg:hidden"
+        style={{ height: 'calc(env(safe-area-inset-bottom, 0px) + 4rem)' }}
+      />
+      <BottomNav />
     </div>
   )
 }
