@@ -118,10 +118,11 @@ export function Navbar() {
         </Link>
 
         {/*
-          The desktop bar appears at `lg`, not `md`. Six items plus the wordmark
-          and the contact button need roughly 1024px before labels start
-          colliding, and a tablet-width bar squeezed to fit reads worse than the
-          drawer, which has room for the same list at a comfortable touch size.
+          The desktop bar appears at `lg`, not `md`. Seven items plus the
+          wordmark and the contact button need roughly 1024px before labels
+          start colliding, and a tablet-width bar squeezed to fit reads worse
+          than the drawer, which has room for the same list at a comfortable
+          touch size.
         */}
         <nav aria-label="Main" className="hidden lg:block">
           <ul className="flex items-center gap-0.5">

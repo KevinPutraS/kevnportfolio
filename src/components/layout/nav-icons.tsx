@@ -55,6 +55,21 @@ export function NavIcon({ name, className }: NavIconProps) {
           <path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1" />
         </svg>
       )
+    /*
+      A sheet of paper with lines, which is the document metaphor rather than a
+      download arrow — an arrow reads as an action and this destination is a
+      place, the same way the other six are places. The corner fold gives it a
+      silhouette that is distinguishable from About's silhouette at 20px, which
+      a plain rectangle with three rules would not be.
+    */
+    case 'Resume':
+      return (
+        <svg {...shared}>
+          <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z" />
+          <path d="M14 3v5h5" />
+          <path d="M9 13h6M9 17h4" />
+        </svg>
+      )
     case 'Contact':
       return (
         <svg {...shared}>

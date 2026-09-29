@@ -17,13 +17,18 @@ import { NavIcon } from './nav-icons'
  * email and social links), and the bar earns a spot for the journeys a visitor
  * actually makes.
  *
- * Five items, not six, on purpose. Six peers at 320px leaves each slot roughly
- * 53px wide and the long labels end up clipped or set in type too small to
- * read. So one destination rides in the drawer, and it is About: the drawer,
- * the desktop nav and the footer all carry it already, while Certificates is a
- * section of its own a thumb actually reaches for. The list is *derived* from
- * the nav so labels and tones cannot drift; swapping the one that rides in the
- * drawer is a single-line filter.
+ * Five items, and the cap is arithmetic rather than taste. The navigation has
+ * seven destinations; six peers at 320px leaves each slot roughly 53px wide and
+ * the long labels end up clipped or set in type too small to read. So two ride
+ * in the drawer instead: About and Resume.
+ *
+ * About was already the case that decided this. Resume is the same kind of
+ * decision for the same reason — a CV is something a visitor goes to *deliberately*,
+ * once, usually after they have already looked at the work, and it is reachable
+ * from the drawer, the desktop nav and the footer. Certificates stays, because a
+ * credential is something a thumb reaches for on its own. The list is *derived*
+ * from the nav so labels and tones cannot drift, and the pair that rides in the
+ * drawer is one filter below.
  *
  * The ticket for being "prettier than the admin bar":
  *  - the active icon sits in a filled amber pill (`--accent` on
@@ -38,9 +43,12 @@ import { NavIcon } from './nav-icons'
  *
  * Portable and prefetch-friendly: plain `<Link>`s, no drawer to open.
  */
+/** The two destinations that live in the drawer instead — see the note above. */
+const DRAWER_ONLY = new Set(['/about', '/resume'])
+
 export function BottomNav() {
   const pathname = usePathname()
-  const items = siteConfig.navigation.filter((item) => item.href !== '/about')
+  const items = siteConfig.navigation.filter((item) => !DRAWER_ONLY.has(item.href))
 
   return (
     <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-40 lg:hidden">

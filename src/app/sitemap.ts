@@ -19,6 +19,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${siteConfig.url}/certificates`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${siteConfig.url}/about`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${siteConfig.url}/contact`, lastModified: now, changeFrequency: 'yearly', priority: 0.5 },
+    /*
+      `monthly`, not `yearly`, and a priority above About. The resume changes
+      whenever something is published, and it is the one page a recruiter is
+      looking for by name — a year-long crawl interval on it means the URL is
+      the thing they find and the content behind it is out of date.
+    */
+    { url: `${siteConfig.url}/resume`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
   ]
 
   const projects = await getPublishedProjectIndex()

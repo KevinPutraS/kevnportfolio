@@ -75,6 +75,22 @@ export const siteConfig = {
     return `mailto:${this.email}`
   },
   /**
+   * The printable CV, and the one link on the site that leaves it.
+   *
+   * `null` is the honest default and it is load-bearing, not a placeholder. The
+   * resume page renders its whole document from the site's own content — the
+   * experience timeline and the certificate list are already in the database —
+   * and this field only controls whether a *download* is offered on top. Pointing
+   * it at a file that does not exist would put a 404 behind the one button on the
+   * page whose entire purpose is to produce a file, so the site ships without
+   * the button and gains it when there is a real PDF to serve.
+   *
+   * To enable it: export the PDF, drop it in `public/` (it must be a real
+   * filename, not a redirect — recruiters open these offline), and set
+   * NEXT_PUBLIC_RESUME_URL to that path.
+   */
+  resumeUrl: process.env.NEXT_PUBLIC_RESUME_URL?.trim() || null,
+  /**
    * Primary navigation.
    *
    * Every label is the plain name of the page it points at. Nothing here is
@@ -90,6 +106,7 @@ export const siteConfig = {
     { label: 'Experience', href: '/experience', tone: 'cat-design' },
     { label: 'Certificates', href: '/certificates', tone: 'cat-networking' },
     { label: 'About', href: '/about', tone: 'cat-experiment' },
+    { label: 'Resume', href: '/resume', tone: 'cat-school' },
     { label: 'Contact', href: '/contact', tone: 'cat-school', emphasis: 'primary' },
   ] as readonly NavItem[],
   /**

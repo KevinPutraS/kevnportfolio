@@ -129,3 +129,22 @@ export function isActiveRoute(pathname: string, href: string): boolean {
   if (href === '/') return pathname === '/'
   return pathname === href || pathname.startsWith(`${href}/`)
 }
+
+/**
+ * A URL as it reads on paper.
+ *
+ * On the printed resume a link is not clickable, so the label ("Live site")
+ * carries no information — the address itself is the only part worth the ink.
+ * The scheme and the `www.` are dropped because they are noise the reader
+ * re-adds mentally, and a trailing slash is dropped for the same reason. Nothing
+ * else is touched: a `github.com/user/repo` path is the part a reader needs to
+ * find the work, and a query string or fragment is left intact rather than
+ * guessed at.
+ */
+export function printableUrl(url: string): string {
+  return url
+    .trim()
+    .replace(/^https?:\/\//i, '')
+    .replace(/^www\./i, '')
+    .replace(/\/$/, '')
+}
