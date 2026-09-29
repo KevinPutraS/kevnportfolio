@@ -81,7 +81,7 @@ export function ExperienceEntry({
         )}
       />
 
-      <article className="relative ml-8 rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--bg-elevated))] p-5 pb-8 transition-colors duration-300 group-hover:border-[rgb(var(--cat)/0.45)] sm:ml-10 sm:p-6 sm:pb-12">
+      <article className="relative ml-8 rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--bg-elevated))] p-5 pb-12 transition-colors duration-300 group-hover:border-[rgb(var(--cat)/0.45)] sm:ml-10 sm:p-6 sm:pb-16">
         {/*
           The entry, boxed again. For a stretch it was type alone hanging off
           the spine; that kept the column quiet but left the logo, header,
