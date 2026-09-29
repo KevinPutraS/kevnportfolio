@@ -57,9 +57,8 @@ export default async function ExperiencePage() {
       </div>
 
       {/* Same hue as the header above, so the page reads as one section. The
-          section owns its own vertical padding — the timeline entries carry
-          their internal gaps, but the last card must stand clear of the footer
-          on the section's own account. */}
+          section owns its own vertical padding, and the list carries the gap
+          between cards — the last card must still stand clear of the footer. */}
       <SectionShell tone="section-tone-design">
         <div className="container-custom py-16 lg:py-20">
           {experiences.length === 0 ? (
@@ -83,7 +82,7 @@ export default async function ExperiencePage() {
                 aria-hidden="true"
                 className="absolute bottom-6 left-[7px] top-8 w-px bg-[rgb(var(--border-strong))]"
               />
-              <ol>
+              <ol className="flex flex-col gap-y-6 sm:gap-y-9">
                 {experiences.map((experience, index) => (
                   <ExperienceEntry
                     key={experience.id}

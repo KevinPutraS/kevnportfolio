@@ -81,7 +81,7 @@ export function ExperienceEntry({
         )}
       />
 
-      <article className="relative ml-8 rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--bg-elevated))] p-5 pb-12 transition-colors duration-300 group-hover:border-[rgb(var(--cat)/0.45)] sm:ml-10 sm:p-6 sm:pb-16">
+      <article className="relative ml-8 rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--bg-elevated))] p-5 transition-colors duration-300 group-hover:border-[rgb(var(--cat)/0.45)] sm:ml-10 sm:p-6">
         {/*
           The entry, boxed again. For a stretch it was type alone hanging off
           the spine; that kept the column quiet but left the logo, header,
@@ -89,6 +89,13 @@ export function ExperienceEntry({
           quiet kind — the hairline on `bg-elevated`, corners at the rail's
           radius, and a 3px category bar down the left edge. The hover is the
           border warming to the entry's own colour, not the block lifting.
+
+          The padding is plain `p-5`/`sm:p-6` on purpose: the vertical gap
+          between entries belongs to the `<ol>` (a real `gap-y` between the
+          list items), not to fat internal padding. Padding inside the border
+          inflates the box and makes its empty tail look glued to the card;
+          a gap between cards is only a gap if the page background runs through
+          it.
         */}
         <span
           aria-hidden="true"
