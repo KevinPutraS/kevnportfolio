@@ -1297,6 +1297,42 @@
   .print\:hidden {
     display: none !important;
   }
+
+  /*
+    The name, in print only.
+
+    `--text-h2` is a screen token, sized for a 1440px viewport where the resume
+    is one column among several. On A4 that same size is roughly 30% of the
+    width of the page in a single word, and a name that size pushes the contact
+    block and the first date over a page break on a document that should be one
+    page. Print does not get a new token for this — it is the same name, at a
+    size that fits the paper it lands on.
+   */
+  .resume-name {
+    font-size: 1.75rem;
+  }
+
+  /*
+    Section headings are allowed to break before themselves but not after, and
+    the Tools grid is held together as a unit. Splitting a two-column definition
+    list mid-way leaves `Backend` on one page and its contents on the next,
+    which reads as a mistake even though nothing is broken.
+   */
+  .resume-dt,
+  .resume-dd {
+    break-inside: avoid;
+  }
+
+  /*
+    The header and each entry are held together. A header split across a page
+    break puts the name at the foot of one sheet and the contact block at the
+    head of the next, which is the single most obviously broken thing a generated
+    CV can do.
+   */
+  .resume-header,
+  .resume-entry {
+    break-inside: avoid;
+  }
 }
 
 /* ==========================================================================
@@ -1347,9 +1383,34 @@
  * element on the page.
  */
 
+/*
+  * Two columns from `sm` up: identity and contact facts side by side.
+
+  * A contact line under the summary was the obvious layout and it is the wrong
+  * one here. The facts a reader looks for in the first two seconds — name, what
+  * they do, how to reach them — are the three things competing for vertical
+  * space on page one, and stacking them spends the top third of A4 before a
+  * single date appears. Splitting them puts the contact block beside the
+  * summary instead of below it, which is also the arrangement every CV template
+  * uses and therefore the one a recruiter's eye already knows how to read.
+
+  * Below `sm` it collapses to a single column, because two columns of contact
+  * facts on a phone leaves both of them too narrow to hold an email address
+  * without breaking mid-word.
+  */
 .resume-header {
+  display: grid;
+  gap: 1.25rem;
   padding-bottom: 1.75rem;
   border-bottom: 1px solid rgb(var(--border));
+}
+
+@media (min-width: 640px) {
+  .resume-header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 3rem;
+    align-items: start;
+  }
 }
 
 .resume-name {
@@ -1369,14 +1430,73 @@
   color: rgb(var(--text-dim));
 }
 
+/*
+  * Right-aligned in the second column. A left-aligned contact block against a
+  * left-aligned name reads as two separate things; right-aligned against the
+  * rule below it, it reads as one header unit with the details hanging off the
+  * end of it.
+  */
 .resume-contact {
-  margin-top: 1.125rem;
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.375rem 1.25rem;
+  flex-direction: column;
+  gap: 0.25rem;
   font-family: var(--font-mono);
   font-size: var(--text-xs);
+  line-height: 1.5;
   color: rgb(var(--text-muted));
+}
+
+@media (min-width: 640px) {
+  .resume-contact {
+    align-items: flex-end;
+    text-align: right;
+  }
+}
+
+/*
+  * The date rail.
+
+  * An entry is a two-column grid from `sm` up: a narrow, fixed-width column of
+  * dates, then the content. This is the format on essentially every printed CV,
+  * and it is here for a specific reason rather than out of convention — it makes
+  * the dates line up in a single readable column, so a reader can see at a
+  * glance how the last few roles overlap or leave gaps. A date floated to the
+  * right of a heading sits at whatever x-position the heading happens to end at,
+  * and the eye has to hunt for it on every entry.
+
+  * `9.5rem` rather than `auto` so every date in the section starts at the same
+  * x, and right-aligned so the ranges read as a flush column against the
+  * content. A long organisation name cannot widen it, because the content column
+  * takes the remaining space rather than the date column growing.
+  */
+.resume-entry {
+  display: grid;
+  gap: 0.25rem 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .resume-entry {
+    grid-template-columns: 9.5rem minmax(0, 1fr);
+  }
+}
+
+.resume-entry-when {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: rgb(var(--text-muted));
+}
+
+@media (min-width: 640px) {
+  .resume-entry-when {
+    padding-top: 0.2em;
+    text-align: right;
+    white-space: nowrap;
+  }
+}
+
+.resume-entry-what {
+  min-width: 0;
 }
 
 .resume-dt {

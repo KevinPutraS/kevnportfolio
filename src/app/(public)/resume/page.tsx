@@ -118,9 +118,18 @@ export default async function ResumePage() {
             * token drops to a sane size — a display-size name on A4 eats a
             * sixth of the page.
             */}
+          {/*
+            Identity on the left, contact facts on the right, from `sm` up. See
+            the note on `.resume-header` in globals.css for why they are not
+            stacked. The email carries the address rather than a `mailto:` label
+            so the text on paper is the thing a reader would type, not the word
+            "email".
+          */}
           <div className="resume-header">
-            <h2 className="resume-name">{siteConfig.personName}</h2>
-            <p className="resume-summary">{siteConfig.heroStatement}</p>
+            <div>
+              <h2 className="resume-name">{siteConfig.personName}</h2>
+              <p className="resume-summary">{siteConfig.heroStatement}</p>
+            </div>
 
             <ul className="resume-contact">
               <li>
@@ -141,6 +150,11 @@ export default async function ResumePage() {
                   </a>
                 </li>
               ))}
+              <li className="print:hidden">
+                <Link href="/contact" className="link-underline">
+                  Get in touch
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -372,68 +386,79 @@ function ResumeEntry({
 }) {
   return (
     <li className="print:break-inside-avoid">
-      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h4 className="font-display text-[length:var(--text-body-sm)] font-bold text-[rgb(var(--text))]">
-          {heading}
-          {subheading && (
-            <span className="ml-2 font-sans font-normal text-[rgb(var(--text-dim))]">
-              {subheading}
-            </span>
-          )}
-        </h4>
-        {meta && <p className="meta tabular-nums">{meta}</p>}
-      </div>
+      {/*
+        The date rail. See `.resume-entry` in globals.css — the reason this is a
+        grid and not a float is that the dates then line up in one column, so
+        the shape of a career is visible before any of it is read.
+      */}
+      <div className="resume-entry">
+        {meta && <p className="resume-entry-when tabular-nums">{meta}</p>}
 
-      {href && (
-        <a
-          href={href}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-1 inline-flex flex-wrap items-center gap-1 text-[length:var(--text-sm)] text-[rgb(var(--text-muted))] hover:text-[rgb(var(--accent))]"
-        >
-          {/*
-            Two renderings of the same link, because paper and screen do not
-            want the same thing. On screen the label is the affordance and the
-            address is noise behind it. Printed, the label is a dead word — "Live
-            site" on a sheet of A4 is a promise the reader cannot keep — so the
-            address takes over. Hiding the URL in print is what made an earlier
-            draft of this page print six projects and zero ways to reach any of
-            them.
-          */}
-          <span className="print:hidden">
-            {hrefLabel ?? 'Link'}
-            <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
-            <span className="sr-only">(opens in a new tab)</span>
-          </span>
-          <span className="hidden break-all print:inline">{printableUrl(href)}</span>
-        </a>
-      )}
+        <div className="resume-entry-what">
+          <h4 className="font-display text-[length:var(--text-body-sm)] font-bold text-[rgb(var(--text))]">
+            {heading}
+            {subheading && (
+              <span className="ml-2 font-sans font-normal text-[rgb(var(--text-dim))]">
+                {subheading}
+              </span>
+            )}
+          </h4>
 
-      {summary && (
-        <p className="mt-1.5 max-w-prose text-pretty text-[length:var(--text-body-sm)] text-[rgb(var(--text-dim))]">
-          {summary}
-        </p>
-      )}
-
-      {bullets && bullets.length > 0 && (
-        <ul className="mt-2 space-y-1">
-          {bullets.map((bullet, index) => (
-            <li
-              key={index}
-              className="flex gap-2.5 text-[length:var(--text-sm)] leading-relaxed text-[rgb(var(--text-dim))]"
+          {href && (
+            <a
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1 inline-flex flex-wrap items-center gap-1 text-[length:var(--text-sm)] text-[rgb(var(--text-muted))] hover:text-[rgb(var(--accent))]"
             >
-              <span aria-hidden="true" className="mt-[0.55em] h-1 w-1 shrink-0 rounded-full bg-[rgb(var(--border-strong))]" />
-              <span className="text-pretty">{bullet}</span>
-            </li>
-          ))}
-        </ul>
-      )}
+              {/*
+                Two renderings of the same link, because paper and screen do not
+                want the same thing. On screen the label is the affordance and
+                the address is noise behind it. Printed, the label is a dead
+                word — "Live site" on a sheet of A4 is a promise the reader
+                cannot keep — so the address takes over. Hiding the URL in print
+                is what made an earlier draft of this page print six projects
+                and zero ways to reach any of them.
+              */}
+              <span className="print:hidden">
+                {hrefLabel ?? 'Link'}
+                <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
+                <span className="sr-only">(opens in a new tab)</span>
+              </span>
+              <span className="hidden break-all print:inline">{printableUrl(href)}</span>
+            </a>
+          )}
 
-      {tags && tags.length > 0 && (
-        <p className="mt-2 font-mono text-[length:var(--text-xs)] text-[rgb(var(--text-muted))]">
-          {tags.join(' · ')}
-        </p>
-      )}
+          {summary && (
+            <p className="mt-1.5 max-w-prose text-pretty text-[length:var(--text-body-sm)] text-[rgb(var(--text-dim))]">
+              {summary}
+            </p>
+          )}
+
+          {bullets && bullets.length > 0 && (
+            <ul className="mt-2 space-y-1">
+              {bullets.map((bullet, index) => (
+                <li
+                  key={index}
+                  className="flex gap-2.5 text-[length:var(--text-sm)] leading-relaxed text-[rgb(var(--text-dim))]"
+                >
+                  <span
+                    aria-hidden="true"
+                    className="mt-[0.55em] h-1 w-1 shrink-0 rounded-full bg-[rgb(var(--border-strong))]"
+                  />
+                  <span className="text-pretty">{bullet}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {tags && tags.length > 0 && (
+            <p className="mt-2 font-mono text-[length:var(--text-xs)] text-[rgb(var(--text-muted))]">
+              {tags.join(' · ')}
+            </p>
+          )}
+        </div>
+      </div>
     </li>
   )
 }
