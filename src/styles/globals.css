@@ -1525,3 +1525,100 @@
   letter-spacing: 0.1em;
   color: rgb(var(--text-muted));
 }
+
+/* ==========================================================================
+ * PRINT TYPOGRAPHY OVERRIDES
+ * ==========================================================================
+ *
+ * At the end of the file on purpose, and the placement is the fix.
+ *
+ * The bug this addresses is glyphs overlapping each other in the generated PDF.
+ * The cause is a mismatch between a typeface and a set of spacing values
+ * calibrated for a different one. `--font-display` resolves to Space Grotesk,
+ * loaded by `next/font` with `font-display: swap`, and every heading in this
+ * file is set with *negative* letter-spacing tuned to Grotesk's tight
+ * geometric spacing: -0.045em on the display size, -0.04em on h1, -0.032em on
+ * h2, -0.014em on h4.
+ *
+ * A print job is not a page load. The browser lays the document out on a
+ * headless print surface, and a webfont that has not finished decoding by then
+ * is replaced from the fallback chain — Inter, then `system-ui`. Those
+ * substitutes are wider and rounder than Grotesk. Negative tracking sized for
+ * the tighter face is then applied to the wider one, the advance widths no
+ * longer cover the glyphs, and letters collide: capitals cut into the lowercase
+ * beside them, descenders bite into the line above.
+ *
+ * `text-rendering: optimizeLegibility` on `body` compounds it. It asks for
+ * kerning and ligature substitution from the font's own tables, which a
+ * substituted face does not have, so kerning gets applied from a metrics source
+ * that no longer matches the glyphs being positioned.
+ *
+ * Both properties are reset here. The headings keep their size, weight and
+ * colour — the hierarchy is carried by those, and the document still looks like
+ * the site — and give up only the two properties that were calibrated to one
+ * typeface's spacing.
+ *
+ * Why the end of the file: a `@media print` block adds no specificity, it only
+ * adds a condition. These rules are the same weight as `.resume-name` and
+ * `.heading-1` above, so whichever comes last in the stylesheet wins. Placed
+ * here they override without `!important`, which is what `!important` would be
+ * admitting is needed.
+ * ========================================================================== */
+@media print {
+  html,
+  body {
+    text-rendering: auto;
+    -webkit-font-smoothing: auto;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  .resume-name,
+  .heading-1,
+  .heading-2,
+  .heading-3,
+  .heading-4 {
+    letter-spacing: normal;
+  }
+
+  /*
+    The tight leading has the same root cause as the tracking. `.heading-1` sits
+    at line-height 1.02 and `.resume-name` at 1.1 — both correct for a face
+    whose ascender and descender are known, both visibly clipped once a taller
+    substituted face lands in the same box. Print loosens the leading rather than
+    shrinking the type, so the document keeps its proportions and stops losing
+    the tops of its capitals.
+   */
+  h1,
+  h2,
+  .heading-1,
+  .heading-2 {
+    line-height: 1.2;
+  }
+
+  h3,
+  h4,
+  .heading-3,
+  .heading-4,
+  .resume-name {
+    line-height: 1.25;
+  }
+
+  /*
+    Tailwind's `tracking-tight` and friends are arbitrary values compiled into
+    their own utility classes, so they would need the same treatment as the
+    `.heading-*` rules above but are not named in them. Resetting tracking on
+    every heading catches them, and the uppercase mono labels — which carry a
+    *positive* 0.1em and are spaced for a monospace grid — keep theirs, since
+    extra space between glyphs cannot cause an overlap.
+   */
+  .resume-dt,
+  .resume-contact,
+  .resume-status {
+    letter-spacing: 0.05em;
+  }
+}
