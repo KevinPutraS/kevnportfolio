@@ -244,29 +244,27 @@ Write-ProjectImage 'shader-study.png' 23 'GENERATIVE SKETCH'
 Write-ProjectImage 'campus-dash.png'  29 'COURSEWORK PROJECT'
 
 # ---------------------------------------------------------------------------
-# Favicon: a 64px PNG embedded in an ICO container (supported since Vista).
+# Favicon: the amber K monogram as a 64px PNG inside an ICO container
+# (supported since Vista). Mirrors src/app/icon.svg.
 # ---------------------------------------------------------------------------
 function Write-Favicon {
     $size = 64
     $bmp = New-Object System.Drawing.Bitmap($size, $size)
     $g = [System.Drawing.Graphics]::FromImage($bmp)
     $g.SmoothingMode = 'AntiAlias'
-    $g.TextRenderingHint = 'AntiAliasGridFit'
     $g.Clear($Bg)
 
-    $accent = New-Brush $Accent
-    $g.FillRectangle($accent, 0, 0, $size, 10)
-    $g.FillRectangle($accent, 0, ($size - 10), $size, 10)
-    $g.FillRectangle($accent, 0, 0, 10, $size)
-    $g.FillRectangle($accent, ($size - 10), 0, 10, $size)
-    $accent.Dispose()
+    $amber = [System.Drawing.Color]::FromArgb(245, 158, 11)
+    $pen = New-Object System.Drawing.Pen($amber, (5.5 * $size / 32))
+    $pen.StartCap = [System.Drawing.Drawing2D.LineCap]::Round
+    $pen.EndCap = [System.Drawing.Drawing2D.LineCap]::Round
+    $pen.LineJoin = [System.Drawing.Drawing2D.LineJoin]::Round
+    $s = $size / 32.0
+    $g.DrawLine($pen, (10.5 * $s), (7 * $s), (10.5 * $s), (25 * $s))
+    $g.DrawLine($pen, (10.5 * $s), (14.25 * $s), (21.5 * $s), (8 * $s))
+    $g.DrawLine($pen, (10.5 * $s), (17.25 * $s), (21.5 * $s), (24.5 * $s))
+    $pen.Dispose()
 
-    $font = Get-Font 'Segoe UI' 38 ([System.Drawing.FontStyle]::Bold)
-    $brush = New-Brush $Text
-    $fmt = New-Object System.Drawing.StringFormat
-    $fmt.Alignment = 'Center'; $fmt.LineAlignment = 'Center'
-    $g.DrawString('K', $font, $brush, (New-Object System.Drawing.RectangleF(6, 4, ($size - 12), ($size - 8))), $fmt)
-    $fmt.Dispose(); $font.Dispose(); $brush.Dispose()
     $g.Dispose()
 
     $ms = New-Object System.IO.MemoryStream
