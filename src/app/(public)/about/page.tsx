@@ -83,13 +83,14 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/*
+{/*
         ---- Focus areas, one line each -----------------------------------
-        The three sections below this point each take a *different* tone. They
-        were all `section-tone-experiment`, which meant three consecutive tinted
-        washes with a hairline between them — one long band that reads as a
-        single section, and quietly undoes the point of `SectionShell`. Varying
-        the hue is what makes each read as its own room.
+        Each of the three sections below uses `SectionShell`, whose hairline and
+        wash mark the top edge of a distinct room. The tones used to be three
+        different hues so the rooms read as different colours; they are the same
+        amber now, which is exactly the point of a one-accent palette — the
+        hairlines are what separate the rooms, and the accent no longer pretends
+        the content inside them has its own identity.
       */}
       <SectionShell tone="section-tone-web">
         <div className="container-custom py-16 lg:py-20">
@@ -99,25 +100,21 @@ export default function AboutPage() {
               <h2 className="heading-2 mt-5 text-balance">What I work in.</h2>
             </div>
 
-            <ul className="grid gap-3 sm:grid-cols-2 lg:col-span-8">
+            <ul className="grid gap-x-8 gap-y-9 sm:grid-cols-2 lg:col-span-8">
               {interests.map((interest, index) => (
-                <li
-                  key={interest.title}
-                  className={[
-                    'cat-web',
-                    'cat-app',
-                    'cat-design',
-                    'cat-networking',
-                    'cat-experiment',
-                    'cat-school',
-                  ][index % 6]}
-                >
-                  <div className="h-full rounded-2xl border bg-[rgb(var(--bg-elevated))] p-5 transition-[transform,border-color] duration-300 hover:-translate-y-1 hover:border-[rgb(var(--cat)/0.5)]">
-                    <h3 className="font-display text-[length:var(--text-sm)] font-bold tracking-[-0.01em] text-[rgb(var(--text))]">
-                      {interest.title}
-                    </h3>
+                <li key={interest.title} className="group">
+                  <div className="border-t border-[rgb(var(--border))] pt-4 transition-colors duration-300 group-hover:border-[rgb(var(--accent)/0.55)]">
+                    <div className="flex items-baseline justify-between gap-4">
+                      <h3 className="font-display text-[length:var(--text-body-sm)] font-bold tracking-[-0.01em] text-[rgb(var(--text))]">
+                        {interest.title}
+                      </h3>
+                      <span className="font-mono text-[length:var(--text-meta)] tabular-nums text-[rgb(var(--text-muted))]">
+                        {String(index + 1).padStart(2, '0')}
+                      </span>
+                    </div>
                     {/* One line, not a paragraph. The homepage carries the
-                        short form; this is where the full sentence lives, once. */}
+                        short form; this is where the full sentence lives,
+                        once. */}
                     <p className="mt-2 text-[length:var(--text-sm)] leading-relaxed text-[rgb(var(--text-muted))]">
                       {interest.description}
                     </p>
@@ -143,10 +140,10 @@ export default function AboutPage() {
                 <div key={group.group}>
                   <dt className="meta-strong">{group.group}</dt>
                   <dd className="mt-2.5 flex flex-wrap gap-1.5">
-                    {group.items.map((item) => (
+{group.items.map((item) => (
                       <span
                         key={item}
-                        className="rounded-md border border-[rgb(var(--border))] bg-[rgb(var(--bg-elevated))] px-2.5 py-1 font-mono text-[length:var(--text-xs)] text-[rgb(var(--text-dim))]"
+                        className="border border-[rgb(var(--border))] px-2.5 py-1 font-mono text-[length:var(--text-xs)] text-[rgb(var(--text-dim))]"
                       >
                         {item}
                       </span>
@@ -180,26 +177,20 @@ export default function AboutPage() {
               <p className="eyebrow">Method</p>
               <h2 className="heading-2 mt-5 text-balance">How I work.</h2>
 
-              <ol className="mt-8 grid gap-6 sm:grid-cols-2">
+<ol className="mt-8 grid gap-x-8 gap-y-9 sm:grid-cols-2">
                 {projectApproach.map((item, index) => (
-                  <li
-                    key={item.title}
-                    className={[
-                      'cat-web',
-                      'cat-app',
-                      'cat-design',
-                      'cat-networking',
-                    ][index % 4]}
-                  >
-                    <span className="font-display text-3xl font-bold leading-none tracking-[-0.04em] text-[rgb(var(--cat))]">
-                      {String(index + 1).padStart(2, '0')}
-                    </span>
-                    <h3 className="mt-3 font-display text-[length:var(--text-sm)] font-bold tracking-[-0.01em] text-[rgb(var(--text))]">
-                      {item.title}
-                    </h3>
-                    <p className="mt-1 text-[length:var(--text-xs)] leading-relaxed text-[rgb(var(--text-muted))]">
-                      {item.description}
-                    </p>
+                  <li key={item.title}>
+                    <div className="border-t border-[rgb(var(--border))] pt-4">
+                      <span className="font-mono text-[length:var(--text-meta)] tabular-nums text-[rgb(var(--accent))]">
+                        {String(index + 1).padStart(2, '0')}
+                      </span>
+                      <h3 className="mt-3 font-display text-[length:var(--text-sm)] font-bold tracking-[-0.01em] text-[rgb(var(--text))]">
+                        {item.title}
+                      </h3>
+                      <p className="mt-1 text-[length:var(--text-xs)] leading-relaxed text-[rgb(var(--text-muted))]">
+                        {item.description}
+                      </p>
+                    </div>
                   </li>
                 ))}
               </ol>

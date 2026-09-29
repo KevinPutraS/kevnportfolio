@@ -22,15 +22,18 @@ export function Footer() {
 
   return (
     <footer className="relative isolate overflow-hidden border-t border-[rgb(var(--border))]">
-      {/* Final coloured rule, same treatment as the sections above. */}
+      {/* Final rule, same treatment as the sections above, but one accent
+          colour — the three-colour gradient this replaced stopped making sense
+          when the palette collapsed to a single accent. */}
       <div
         aria-hidden="true"
-        className="h-[2px] w-full bg-gradient-to-r from-[rgb(var(--accent))] via-[rgb(var(--cat-design))] to-[rgb(var(--cat-app))] opacity-70"
+        className="h-[2px] w-full opacity-70"
+        style={{ background: 'linear-gradient(to right, rgb(var(--accent)) 0%, rgb(var(--accent) / 0.25) 55%, transparent 100%)' }}
       />
       <div
         aria-hidden="true"
         className="section-wash pointer-events-none absolute inset-0 -z-10"
-        style={{ ['--tone' as string]: 'var(--cat-design)' }}
+        style={{ ['--tone' as string]: 'var(--accent)' }}
       />
 
       {/*

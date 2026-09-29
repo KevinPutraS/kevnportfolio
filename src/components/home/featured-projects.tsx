@@ -1,4 +1,4 @@
-import { ProjectCard } from '@/components/projects/project-card'
+import { ProjectRailCard } from '@/components/projects/project-rail-card'
 import { ArrowLink } from '@/components/ui/arrow-link'
 import { HorizontalRail } from '@/components/ui/horizontal-rail'
 import { SectionShell, SectionHeader, SectionEyebrow } from '@/components/ui/section-shell'
@@ -24,8 +24,8 @@ import type { Project } from '@/types/project'
  * Card widths step up across breakpoints rather than being a fixed count of
  * visible cards, because the container is fluid: 78vw on a phone leaves a peek
  * of the next card, and the desktop widths show two and a half so the rail is
- * visibly a rail. The card markup itself is shared with the projects index via
- * `ProjectCard` — this section is a layout decision, not a second card design.
+ * visibly a rail. The card itself is `ProjectRailCard` — the only card left on
+ * the site, since the index and the related-work rows are not cards.
  */
 export async function FeaturedProjects({ projects }: { projects?: Project[] }) {
   const list = projects ?? (await getFeaturedProjects(6))
@@ -73,9 +73,8 @@ export async function FeaturedProjects({ projects }: { projects?: Project[] }) {
                 key={project.id}
                 className="w-[78vw] max-w-[21rem] shrink-0 snap-start sm:w-[22rem] lg:w-[24rem] xl:w-[26rem]"
               >
-                <ProjectCard
+                <ProjectRailCard
                   project={project}
-                  variant="rail"
                   className="h-full"
                   /* Only the first card is above the fold on any viewport, so
                      only the first card is worth preloading. */

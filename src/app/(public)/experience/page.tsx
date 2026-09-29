@@ -78,7 +78,7 @@ export default async function ExperiencePage() {
             <div className="relative mt-2">
               <span
                 aria-hidden="true"
-                className="absolute bottom-6 left-[7px] top-8 w-px bg-gradient-to-b from-[rgb(var(--cat-web))] via-[rgb(var(--cat-design))] to-[rgb(var(--cat-experiment))] opacity-40"
+                className="absolute bottom-6 left-[7px] top-8 w-px bg-[rgb(var(--border-strong))]"
               />
               <ol>
                 {experiences.map((experience, index) => (

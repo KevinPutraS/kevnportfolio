@@ -1,7 +1,7 @@
-import { ArrowLink } from '@/components/ui/arrow-link'
+import Link from 'next/link'
+import { ArrowUpRight } from 'lucide-react'
 import { ButtonLink } from '@/components/ui/button-link'
-import { getProjects } from '@/lib/db/projects'
-import { siteConfig, currentlyExploring } from '@/config/site'
+import { siteConfig } from '@/config/site'
 
 /**
  * Hero.
@@ -10,44 +10,27 @@ import { siteConfig, currentlyExploring } from '@/config/site'
  * inside, where to start. The name is the largest element because it is the only
  * thing a visitor cannot infer.
  *
- * Server Component, async so the counters below can read real row counts. The
- * type scale is fluid, so the headline holds at 320px and at 1440px with no
- * breakpoint of its own.
+ * This used to be the most decorated thing on the site and the reason it looked
+ * generated: the name carried a three-stop gradient from the accent through two
+ * category hues, behind it sat three blurred colour pools and a masked grid, and
+ * the panel beside it held four more. That is a lot of light for a page whose
+ * whole idea is restraint, and none of it carried information.
+ *
+ * What replaced it carries information instead. The name is solid off-white at
+ * display scale, the statement sits under it in the dim text colour, and the
+ * panel is a site index: the four sections, numbered, with one line each — the
+ * answer to "what is this site?" that `siteConfig.sections` was written for. It
+ * is deliberately *not* a list of recent projects: the featured rail directly
+ * below already shows the work, and printing the same four titles twice inside
+ * one screen is filler.
+ *
+ * Server Component, but synchronous — no database call — so it is trivially
+ * static. The type scale is fluid, so the headline holds at 320px and at 1440px
+ * with no breakpoint of its own.
  */
-export async function Hero() {
-  // The `total` is a COUNT from the same query, so the number in the hero is
-  // the real number of published projects rather than the length of a page of
-  // them — the old version showed `03` forever because it counted a slice.
-  const { total: projectCount } = await getProjects({ page: 1 })
-
-  const year = new Date().getFullYear()
-
+export function Hero() {
   return (
-    <section className="relative overflow-hidden">
-      {/*
-        Depth: three soft pools of colour light plus a fading grid.
-
-        `-z-10` is safe here and only here because `main` is `relative z-10` and
-        therefore establishes a stacking context. The pools are painted behind
-        the hero's own content but still above the layout's fixed `page-depth`
-        overlay, so the two layers never fight.
-      */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute -top-40 left-1/4 h-[32rem] w-[32rem] -translate-x-1/2 rounded-full bg-[rgb(var(--accent)/0.1)] blur-[130px]" />
-        <div className="absolute -right-24 top-1/4 h-[28rem] w-[28rem] rounded-full bg-[rgb(var(--cat-design)/0.1)] blur-[130px]" />
-        <div className="absolute -left-24 bottom-0 h-[24rem] w-[24rem] rounded-full bg-[rgb(var(--cat-app)/0.08)] blur-[120px]" />
-        <div
-          className="absolute inset-0 opacity-35"
-          style={{
-            backgroundImage:
-              'linear-gradient(to right, rgb(var(--border)) 1px, transparent 1px), linear-gradient(to bottom, rgb(var(--border)) 1px, transparent 1px)',
-            backgroundSize: '72px 72px',
-            maskImage: 'radial-gradient(ellipse 80% 60% at 50% 0%, black 40%, transparent 100%)',
-            WebkitMaskImage: 'radial-gradient(ellipse 80% 60% at 50% 0%, black 40%, transparent 100%)',
-          }}
-        />
-      </div>
-
+    <section className="relative">
       <div className="container-custom">
         <div className="flex items-center justify-between gap-6 border-b border-[rgb(var(--border))] py-4">
           <p className="eyebrow">
@@ -55,29 +38,29 @@ export async function Hero() {
             <span aria-hidden="true" className="px-2 text-[rgb(var(--border-strong))]">
               /
             </span>
-            {year}
+            {new Date().getFullYear()}
           </p>
-          <p className="meta hidden sm:block">Projects · Experience · Certificates</p>
+          <p className="meta hidden sm:block">Web · Software · Design · Experiments</p>
         </div>
 
         {/*
-          Name, statement, preview, then the longer copy.
+          Name, statement, then the site index.
 
-          On desktop the headline and the panel sit side by side. On mobile the
-          order is explicit: headline, then the panel, then the buttons — the
-          previous version put three paragraphs of text and two buttons before
-          the first image, so on a phone the hero was a wall of words with the
-          work buried below the fold.
-
-          `order` is doing real work here and is not incidental: it is the whole
-          reason the mobile hero is not a reading exercise.
+          On desktop the headline and the index sit side by side. On mobile the
+          order is explicit: headline, index, buttons — nothing stands between a
+          phone visitor and the two calls to action, and the index still answers
+          "what is this site?" before the buttons answer "where do I go?".
         */}
-        <div className="grid gap-x-12 gap-y-8 py-12 sm:gap-y-10 sm:py-20 lg:grid-cols-12 lg:py-24">
-          <div className="order-1 lg:col-span-7">
+        <div className="grid gap-x-12 gap-y-10 py-12 sm:py-20 lg:grid-cols-12 lg:gap-y-0 lg:py-24">
+          <div className="lg:col-span-7">
             <h1 className="display-1 animate-fade-in">
-              <span className="block bg-gradient-to-r from-[rgb(var(--accent))] via-[rgb(var(--cat-design))] to-[rgb(var(--cat-app))] bg-clip-text text-transparent">
-                {siteConfig.personName}
-              </span>
+              {/*
+                Solid, not a gradient. A gradient fill across a display-size name
+                is the single loudest "generated" signal there is, and it cost
+                more legibility than it bought: the middle stop landed near the
+                background, so the centre of the name was the dimmest part of it.
+              */}
+              <span className="block text-[rgb(var(--text))]">{siteConfig.personName}</span>
               <span className="mt-5 block max-w-xl font-sans text-[length:var(--text-lead)] font-normal leading-[1.35] tracking-[-0.01em] text-[rgb(var(--text-dim))] text-balance sm:mt-7 sm:text-[length:var(--text-h3)] sm:leading-[1.25]">
                 {siteConfig.heroStatement}
               </span>
@@ -89,75 +72,55 @@ export async function Hero() {
               the wrong one from 480px up, where a half-empty column of buttons
               reads as a layout that has not finished.
             */}
-            <div className="order-3 mt-7 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 lg:mt-10">
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 lg:mt-10">
               <ButtonLink href="/projects" size="lg" className="w-full sm:w-auto">
                 View projects
               </ButtonLink>
-              <ArrowLink href="/about" className="justify-center sm:justify-start">
+              <ButtonLink href="/about" variant="secondary" size="lg" className="w-full sm:w-auto">
                 About me
-              </ArrowLink>
+              </ButtonLink>
             </div>
           </div>
 
           {/*
-            The visual, visible at every width.
-
-            It was `hidden lg:block` for a while, which left the mobile hero as
-            nothing but a name and two buttons — text with no image, which read
-            as an unfinished screen. It is back on mobile, redesigned: a colour
-            field built from the category palette with the "right now" chips
-            sitting on it.
-
-            Deliberately not a project screenshot. With one project published,
-            any project image here would be the same tile again a few hundred
-            pixels below in the featured grid — a visible duplicate, which is
-            worse than no image at all. This carries the only thing the grid
-            cannot: what is in progress.
+            The site index. Four hairlined rows, one per content section, each
+            with a number and a single description line. A list rather than
+            cards, for the same reason the projects index is one: the hero panel
+            is allowed a fixed height, and a set of identical cards would read as
+            shapes where these rows read as a table of contents.
           */}
-          <aside className="order-2 lg:order-none lg:col-span-5">
-            <div className="relative overflow-hidden rounded-[var(--radius-2xl)] border border-[rgb(var(--border))] p-5 sm:p-6">
-              {/* Colour field. Four overlapping radial washes in the category
-                  hues, so the panel has depth and colour without an image. */}
-              <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-                <div className="absolute -left-10 -top-10 h-40 w-40 rounded-full bg-[rgb(var(--accent)/0.25)] blur-3xl" />
-                <div className="absolute -right-8 top-8 h-36 w-36 rounded-full bg-[rgb(var(--cat-design)/0.25)] blur-3xl" />
-                <div className="absolute bottom-0 left-1/3 h-32 w-32 rounded-full bg-[rgb(var(--cat-app)/0.25)] blur-3xl" />
-                <div className="absolute bottom-6 right-6 h-24 w-24 rounded-full bg-[rgb(var(--cat-networking)/0.2)] blur-2xl" />
-              </div>
+          <aside className="order-2 lg:order-none lg:col-span-4 lg:col-start-9">
+            <div className="border-t border-[rgb(var(--border))] pt-5 lg:mt-1">
+              <p className="eyebrow">On this site</p>
 
-              <div className="relative">
-                <p className="eyebrow">Right now</p>
-
-                <ul className="mt-3.5 flex flex-wrap gap-1.5" role="list">
-                  {currentlyExploring.slice(0, 3).map((item) => (
-                    <li
-                      key={item}
-                      className="rounded-full border border-[rgb(var(--border-strong))] bg-[rgb(var(--bg)/0.7)] px-3 py-1.5 text-[length:var(--text-xs)] text-[rgb(var(--text-dim))] backdrop-blur-sm"
-                    >
-                      {item}
+              <nav aria-label="Site sections" className="mt-4">
+                <ol>
+                  {siteConfig.sections.map((section, i) => (
+                    <li key={section.href} className="border-t border-[rgb(var(--border))]">
+                      <Link
+                        href={section.href}
+                        className="group block py-3"
+                      >
+                        <span className="flex items-baseline gap-4">
+                          <span className="font-mono text-[length:var(--text-meta)] tabular-nums text-[rgb(var(--text-muted))]">
+                            {String(i + 1).padStart(2, '0')}
+                          </span>
+                          <span className="text-[length:var(--text-body-sm)] font-medium text-[rgb(var(--text))] transition-colors duration-200 group-hover:text-[rgb(var(--accent))]">
+                            {section.label}
+                          </span>
+                          <ArrowUpRight
+                            className="ml-auto h-3.5 w-3.5 shrink-0 self-center text-[rgb(var(--text-muted))] transition-all duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-[rgb(var(--accent))]"
+                            aria-hidden="true"
+                          />
+                        </span>
+                        <span className="mt-1 block pl-[2.125rem] text-[length:var(--text-xs)] leading-snug text-[rgb(var(--text-dim))] sm:pl-[2.25rem]">
+                          {section.description}
+                        </span>
+                      </Link>
                     </li>
                   ))}
-                </ul>
-
-                {/*
-                  One real number instead of three decorative ones.
-
-                  The previous panel had "Projects / 03", a truncated project
-                  title under a "Latest" label that overflowed its own column,
-                  and "Focus / Open" — a word that means nothing as a statistic.
-                  Only the project count survives, because it is the one figure
-                  here that is actually true and actually interesting. A single
-                  figure gets a full-width row rather than a third of a
-                  three-column grid, so it is not visually competing with two
-                  things that are not there.
-                */}
-                <div className="mt-6 flex items-baseline justify-between gap-4 border-t border-[rgb(var(--border))] pt-5">
-                  <span className="meta">Published projects</span>
-                  <span className="font-display text-3xl font-bold tracking-[-0.03em] tabular-nums text-[rgb(var(--text))]">
-                    {String(projectCount).padStart(2, '0')}
-                  </span>
-                </div>
-              </div>
+                </ol>
+              </nav>
             </div>
           </aside>
         </div>

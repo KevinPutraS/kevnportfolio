@@ -46,32 +46,55 @@
     --text-inverse: 7 9 14;
 
     /* ---- Accent --------------------------------------------------------
-     * Electric cyan. Chosen because no category hue uses it (the seven below
-     * are spread to skip the cyan band entirely), so the interface colour and
-     * the informational colour can never be confused for one another.
+     * Amber, not cyan.
+     *
+     * The canvas is cold — every surface here runs blue-violet, from `9 9 15`
+     * up to `34 33 47` — so a warm hue is the one that separates from the page
+     * without needing a glow to do it. Cyan sat *on* the background rather
+     * than against it, and it is the most-default accent a developer reaches
+     * for, which is exactly what made the old hero read as a template.
+     *
+     * Green and red are deliberately not candidates: they are already spoken
+     * for by `--success` and `--error`, and an accent in either hue makes a
+     * "Valid until" badge read as part of a link.
+     *
+     * `--accent-contrast` is what is drawn *on top of* the accent, so it is a
+     * near-black rather than white. White on `#F59E0B` is about 2.2:1; this
+     * clears 10:1.
      */
-    --accent: 34 211 238;
-    --accent-bright: 103 232 249;
-    --accent-dim: 14 165 190;
-    --accent-hover: 56 226 245;
-    --accent-contrast: 7 9 14;
-    --accent-bg: 34 211 238 / 0.12;
-    --accent-bg-strong: 34 211 238 / 0.2;
-    --accent-glow: 34 211 238 / 0.35;
+    --accent: 245 158 11;
+    --accent-bright: 252 187 60;
+    --accent-dim: 180 108 6;
+    --accent-hover: 252 202 90;
+    --accent-contrast: 9 7 3;
+    --accent-bg: 245 158 11 / 0.12;
+    --accent-bg-strong: 245 158 11 / 0.2;
+    --accent-glow: 245 158 11 / 0.3;
 
-    /* ---- Category hues -------------------------------------------------
-     * Seven colours for exactly one job: identifying a project category.
-     * Spaced around the wheel at similar lightness and saturation so they read
-     * as one family. Because colour here is never decorative, a visitor learns
-     * the mapping once and then recognises a project from the colour alone.
+    /* ---- Category ------------------------------------------------------
+     * One neutral, not seven hues.
+     *
+     * Every category used to own a colour, and that colour was painted onto the
+     * card border, a glow over the thumbnail, a chip, a dot, a section wash and
+     * a section hairline. Seven categories meant seven differently-coloured
+     * cards sitting next to each other in a grid, which reads as a template
+     * rather than as an editorial page — and it left the accent with no job,
+     * because the interface was already using all the colour.
+     *
+     * So category is a *label* now, not a colour. The seven class names stay,
+     * because nineteen files address them and they are how the CMS marks a row,
+     * but they all resolve to the same desaturated slate. The identity a
+     * category used to carry is now carried by its text label, which is
+     * something a screen reader announces and a colour-blind visitor can read.
      */
-    --cat-web: 96 165 250;
-    --cat-app: 52 211 153;
-    --cat-design: 244 114 182;
-    --cat-networking: 251 191 36;
-    --cat-experiment: 167 139 250;
-    --cat-school: 251 146 60;
-    --cat-other: 148 163 184;
+    --cat-neutral: 148 163 184;
+    --cat-web: var(--cat-neutral);
+    --cat-app: var(--cat-neutral);
+    --cat-design: var(--cat-neutral);
+    --cat-networking: var(--cat-neutral);
+    --cat-experiment: var(--cat-neutral);
+    --cat-school: var(--cat-neutral);
+    --cat-other: var(--cat-neutral);
 
     /* ---- Status --------------------------------------------------------
      * Green / amber / red. Deliberately distinct from every category hue at
@@ -811,11 +834,16 @@
 }
 
 /* ==========================================================================
- * CATEGORY COLOUR SYSTEM
+ * CATEGORY SYSTEM
  * --------------------------------------------------------------------------
  * A category sets one variable, `--cat`, and every derived style reads it.
  * Adding a category is a token plus one entry in `categoryColors` — no
  * component needs editing, and no colour is ever hard-coded into a card.
+ *
+ * The variable is neutral for every category now (see the token block), so
+ * these are label mechanics rather than an identity system. They are kept
+ * because nineteen files address them and because the CMS still marks a row by
+ * its category, but nothing here is expected to produce a hue.
  * ========================================================================== */
 
 .cat-web { --cat: var(--cat-web); }
@@ -836,34 +864,43 @@
 .cat-tint-strong { background-color: rgb(var(--cat) / 0.16); }
 .cat-ring { box-shadow: 0 0 0 1px rgb(var(--cat) / 0.4); }
 
-/* A hairline that carries the category colour, for card edges. */
-.cat-edge { border-color: rgb(var(--cat) / 0.32); }
-.group:hover .cat-edge { border-color: rgb(var(--cat) / 0.75); }
+/*
+ * A hairline that carries the category colour, for card edges. Now that every
+ * category resolves to the same neutral, this is a plain border that warms
+ * slightly on hover. It stays a class because six components opt in by name.
+ */
+.cat-edge { border-color: rgb(var(--cat) / 0.24); }
+.group:hover .cat-edge { border-color: rgb(var(--cat) / 0.45); }
 
+/*
+ * Was a coloured radial glow sitting over every project thumbnail. A neutral
+ * glow is still a glow, so this is now a very low flat wash whose only job is
+ * to separate the image from the card behind it. The depth comes from the
+ * surface tokens, not from light.
+ */
 .cat-glow {
-  background: radial-gradient(ellipse 65% 60% at 50% 0%, rgb(var(--cat) / 0.22) 0%, transparent 72%);
+  background: linear-gradient(to bottom, rgb(var(--cat) / 0.06), transparent 60%);
 }
 
 /*
- * A soft coloured shadow, used on hover in place of a black one.
+ * A soft shadow on hover, in place of a black one.
  *
  * The rest state and the hover state are written out in full rather than the
  * hover rule reading `box-shadow: var(--cat-lift)`. `--cat-lift` is not a
  * declared custom property — that line resolves to an *invalid* value, which at
- * computed-value time makes the declaration `unset`, and because `box-shadow`
- * is not inherited the card's shadow silently disappears on hover. The shadow
+ * computed-value time makes the declaration `unset`, and because `box-shadow` is
+ * not inherited the card's shadow silently disappears on hover. The shadow
  * getting weaker exactly when the card is hovered is the sort of regression
  * that never shows up in a diff and always shows up on screen.
+ *
+ * The second, coloured shadow is gone. It was the strongest "card lift" tell on
+ * the site and the main reason every surface read as generic.
  */
 .cat-lift {
-  box-shadow:
-    0 24px 48px -22px rgb(0 0 0 / 0.72),
-    0 0 44px -18px rgb(var(--cat) / 0.5);
+  box-shadow: 0 18px 40px -24px rgb(0 0 0 / 0.7);
 }
 .group:hover .cat-lift {
-  box-shadow:
-    0 30px 60px -24px rgb(0 0 0 / 0.8),
-    0 0 56px -14px rgb(var(--cat) / 0.62);
+  box-shadow: 0 24px 48px -22px rgb(0 0 0 / 0.8);
 }
 
 .cat-text { color: rgb(var(--cat)); }
@@ -874,17 +911,24 @@
  * SECTION IDENTITY
  * --------------------------------------------------------------------------
  * Scrolling should feel like moving through a sequence of distinct rooms, not
- * one long column of identical grey bands. Each section carries a hue through
- * three cheap signals — a fading hairline, a very low-opacity wash, and an
- * eyebrow in the section's own colour.
+ * one long column of identical grey bands. Each section carries a signal through
+ * three cheap things — a fading hairline, a very low-opacity wash, and an
+ * eyebrow mark.
+ *
+ * The tone is now the single accent for every section. The room is drawn by the
+ * rhythm — the hairline, the air above it, the rule below — rather than by
+ * giving each band its own hue, which is what made the homepage read as a
+ * stack of differently-coloured widgets. The class names are kept so the
+ * seventeen call sites that pass a tone keep working and a section can be given
+ * a distinct tone later without touching a component.
  * ========================================================================== */
 
-.section-tone-web { --tone: var(--cat-web); }
-.section-tone-app { --tone: var(--cat-app); }
-.section-tone-design { --tone: var(--cat-design); }
-.section-tone-networking { --tone: var(--cat-networking); }
-.section-tone-experiment { --tone: var(--cat-experiment); }
-.section-tone-school { --tone: var(--cat-school); }
+.section-tone-web { --tone: var(--accent); }
+.section-tone-app { --tone: var(--accent); }
+.section-tone-design { --tone: var(--accent); }
+.section-tone-networking { --tone: var(--accent); }
+.section-tone-experiment { --tone: var(--accent); }
+.section-tone-school { --tone: var(--accent); }
 
 .section-rule {
   height: 2px;

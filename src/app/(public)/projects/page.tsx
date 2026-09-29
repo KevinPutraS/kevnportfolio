@@ -4,7 +4,7 @@ import type { Metadata } from 'next'
 import { getCategoryCounts, getProjects, PROJECTS_PAGE_SIZE } from '@/lib/db/projects'
 import { isProjectCategory, type ProjectCategoryFilter } from '@/config/site'
 import { ProjectFilter, buildFilterOptions } from '@/components/projects/project-filter'
-import { ProjectGrid } from '@/components/projects/project-grid'
+import { ProjectIndex } from '@/components/projects/project-index'
 import { ProjectPagination, projectsHref } from '@/components/projects/project-pagination'
 import { EmptyState } from '@/components/ui/empty-state'
 import { ButtonLink } from '@/components/ui/button-link'
@@ -197,7 +197,11 @@ async function ProjectResults({
 
         {projects.length > 0 ? (
           <>
-            <ProjectGrid projects={projects} className="mt-12 sm:mt-16" />
+            <ProjectIndex
+              projects={projects}
+              startIndex={(page - 1) * PROJECTS_PAGE_SIZE}
+              className="mt-12 sm:mt-16"
+            />
 
             <ProjectPagination page={page} totalPages={totalPages} category={category} />
           </>

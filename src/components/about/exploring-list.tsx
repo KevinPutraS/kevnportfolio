@@ -20,9 +20,11 @@ export function ExploringList({ className }: { className?: string }) {
   return (
     <ul className={classNames('flex flex-wrap gap-2.5', className)} role="list">
       {currentlyExploring.map((item) => (
+        // A hairline pill, flat — the raised chip background was the last echo
+        // of the old card system.
         <li
           key={item}
-          className="inline-flex items-center rounded-full border border-[rgb(var(--border))] bg-[rgb(var(--bg-elevated))] px-4 py-2 text-[length:var(--text-sm)] text-[rgb(var(--text-dim))]"
+          className="inline-flex items-center rounded-full border border-[rgb(var(--border))] px-4 py-2 font-mono text-[length:var(--text-xs)] uppercase tracking-[0.08em] text-[rgb(var(--text-dim))]"
         >
           {item}
         </li>

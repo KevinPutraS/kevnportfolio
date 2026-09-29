@@ -26,14 +26,30 @@ export function PageSkeleton() {
   )
 }
 
+/**
+ * The projects index placeholder, shaped like the index it stands in for.
+ *
+ * A grid of tall blocks here was a visible jump: the page would paint nine
+ * landscape rectangles, then replace them with a column of text rows. The rows
+ * below mirror the real row — an ordinal, a title, two text lines, a meta line
+ * and the trailing thumbnail — so the swap does not move anything.
+ */
 export function GridSkeleton({ count = 3 }: { count?: number }) {
   return (
-    <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="border-t border-[rgb(var(--border))]">
       {Array.from({ length: count }, (_, index) => (
-        <div key={index}>
-          <div className="aspect-[4/3] w-full animate-pulse bg-[rgb(var(--surface-elevated))]" />
-          <div className="mt-4 h-4 w-2/3 animate-pulse bg-[rgb(var(--surface-elevated))]" />
-          <div className="mt-2 h-3 w-full animate-pulse bg-[rgb(var(--surface))]" />
+        <div
+          key={index}
+          className="flex items-start gap-4 border-b border-[rgb(var(--border))] py-7 sm:gap-6 sm:py-8"
+        >
+          <div className="h-3 w-7 shrink-0 animate-pulse bg-[rgb(var(--surface))] sm:w-9" />
+          <div className="min-w-0 flex-1">
+            <div className="h-5 w-2/3 animate-pulse bg-[rgb(var(--surface-elevated))]" />
+            <div className="mt-3 h-3 w-full animate-pulse bg-[rgb(var(--surface))]" />
+            <div className="mt-2 h-3 w-4/5 animate-pulse bg-[rgb(var(--surface))]" />
+            <div className="mt-4 h-3 w-32 animate-pulse bg-[rgb(var(--surface))]" />
+          </div>
+          <div className="w-20 shrink-0 animate-pulse bg-[rgb(var(--surface-elevated))] sm:w-28 lg:w-40" />
         </div>
       ))}
     </div>

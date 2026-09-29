@@ -65,36 +65,31 @@ export function ExperienceEntry({
           would push half the node outside the container and produce a horizontal
           scrollbar on a phone, which is the one overflow a timeline must not have.
 
+          The current role used to be marked with a soft halo ring outside the
+          node; that is gone with the rest of the glow. A filled accent node
+          against a hollow one is signal enough.
+
           Sits at `top-8`, which lines it up with the optical centre of the job
-          title rather than with the top edge of the card. It used to sit higher,
-          because the top row used to be a line of metadata; the title moved up to
-          take its place and the node followed. */}
+          title rather than with the top edge of the entry. */}
       <span
         aria-hidden="true"
         className={classNames(
-          'absolute left-[7px] top-8 z-10 h-3.5 w-3.5 -translate-x-1/2 rounded-full border-2 transition-all duration-500 sm:top-9',
+          'absolute left-[7px] top-8 z-10 h-3.5 w-3.5 -translate-x-1/2 rounded-full border-2 transition-colors duration-500 sm:top-9',
           isCurrent
-            ? 'cat-dot border-[rgb(var(--cat))] shadow-[0_0_0_5px_rgb(var(--cat)/0.18)]'
-            : 'border-[rgb(var(--border-strong))] bg-[rgb(var(--bg))] group-hover:border-[rgb(var(--cat))] group-hover:bg-[rgb(var(--cat))]'
+            ? 'border-[rgb(var(--accent))] bg-[rgb(var(--accent))]'
+            : 'border-[rgb(var(--border-strong))] bg-[rgb(var(--bg))] group-hover:border-[rgb(var(--accent))]'
         )}
       />
 
       <article className="pb-10 pl-8 sm:pb-12 sm:pl-10">
-        <div className="relative isolate overflow-hidden rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--bg-elevated))] p-5 transition-[transform,border-color,box-shadow] duration-500 hover:-translate-y-0.5 hover:border-[rgb(var(--cat)/0.5)] hover:shadow-[0_26px_54px_-30px_rgb(0_0_0/0.8)] sm:p-6 lg:p-7">
-          {/*
-            A soft wash of the entry's own hue in the top corner. `isolate` keeps
-            the blur inside this element's stacking context so it cannot bleed
-            onto the page background, and `overflow-hidden` on the card clips it
-            to the rounded corner instead of letting a square of blur sit over the
-            border radius. It is decoration, so it carries no text and no pointer
-            events.
-          */}
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute -right-24 -top-28 h-64 w-64 rounded-full bg-[rgb(var(--cat)/0.09)] blur-3xl"
-          />
-
-          <div className="relative flex flex-wrap items-start gap-x-4 gap-y-3 sm:gap-x-5">
+        {/* The entry itself. This was a raised card — `rounded-2xl`, its own
+            background, a lift and a shadow on hover, and a blurred colour wash
+            bleeding from the top corner. The spine is the shape of a timeline
+            and the entries needed to hang off it quietly, so the box and its
+            wash are gone and the entry reads as type. The hover is now a word
+            changing colour, not the whole block lifting. */}
+        <div className="relative">
+          <div className="flex flex-wrap items-start gap-x-4 gap-y-3 sm:gap-x-5">
             {/* 64px on desktop, up from 56px. The logo is the only non-text
                 element in the row and it is what lets a visitor scan the column
                 instead of reading it, so it gets the room. */}
@@ -105,7 +100,7 @@ export function ExperienceEntry({
             />
 
             <div className="min-w-0 flex-1">
-              <h3 className="text-balance break-words font-display text-xl font-bold leading-[1.15] tracking-[-0.025em] text-[rgb(var(--text))] transition-colors duration-300 group-hover:text-[rgb(var(--cat))] sm:text-2xl">
+              <h3 className="text-balance break-words font-display text-xl font-bold leading-[1.15] tracking-[-0.025em] text-[rgb(var(--text))] transition-colors duration-300 group-hover:text-[rgb(var(--accent))] sm:text-2xl">
                 {experience.title}
               </h3>
 
@@ -125,10 +120,12 @@ export function ExperienceEntry({
                   320 viewport
                   − 40  container-custom padding-inline
                   − 32  the timeline's pl-8 indent
-                  − 40  the card's p-5
                   − 56  the logo
                   − 16  the gap
-                  = 136px
+                  = 176px
+
+              (Wider than it used to be: the entry no longer sits in a padded
+              card, so the 40px of card padding it paid is back in the budget.)
 
               And the period is not the string it looks like. `formatMonth` uses
               `month: 'long'`, rendered through `meta-strong` — 12px mono,
@@ -137,28 +134,26 @@ export function ExperienceEntry({
                   "SEPTEMBER 2021 — PRESENT"        23 chars ≈ 204px
                   "SEPTEMBER 2021 — DECEMBER 2026"  29 chars ≈ 258px
 
-              Two conclusions. `w-full` below `sm` is worth having: 208px instead
-              of 136px keeps the common range on one line. But 208px is not
+              Two conclusions. `w-full` below `sm` is worth having: 248px instead
+              of 176px keeps the common range on one line. But 248px is not
               enough for the longest one, and no font size or tracking value
-              fixes that within a 136px budget — so this row wraps, deliberately,
+              fixes that within a 176px budget — so this row wraps, deliberately,
               onto a second line at the space before the end date.
 
               That is why the `<time>` has no `whitespace-nowrap` and no
-              `shrink-0` any more. Both were what made the range unbreakable, and
-              an unbreakable string with nowhere to fit has exactly one outcome:
-              it overruns the card and `overflow-hidden` — which is there to clip
-              the background wash — trims the end of it. `min-w-0` lets it shrink
-              to its longest word and wrap there instead, so the whole range is
-              always readable. A two-line date is a normal thing to see on a
-              phone. A date missing its year is not.
+              `shrink-0`: an unbreakable range with nowhere to fit overruns the
+              column. `min-w-0` lets it shrink to its longest word and wrap
+              there instead, so the whole range is always readable. A two-line
+              date is a normal thing to see on a phone. A date missing its year
+              is not.
 
               At `sm` the row is content-sized with `sm:ml-auto` setting it
               against the right edge, beside the identity block, where there are
               hundreds of pixels and no constraint left to reason about.
             */}
             <div className="flex w-full min-w-0 flex-wrap items-center gap-x-3 gap-y-2 sm:ml-auto sm:w-auto">
-              {/* `tabular-nums` so the months line up when several cards are read
-                  against each other. No `nowrap`: see above. */}
+              {/* `tabular-nums` so the months line up when several entries are
+                  read against each other. No `nowrap`: see above. */}
               <time className="meta-strong min-w-0 tabular-nums">
                 {period || 'Date not set'}
               </time>
@@ -200,7 +195,7 @@ export function ExperienceEntry({
             {/*
               `break-words` for the same reason as the organisation above: a
               single long technology name is the one string here that can exceed
-              the column, and the card clips rather than scrolls.
+              the column.
             */}
             {technologies.length > 0 ? (
               <p className="tech-list break-words">
