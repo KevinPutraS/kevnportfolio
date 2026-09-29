@@ -81,13 +81,19 @@ export function ExperienceEntry({
         )}
       />
 
-      <article className="pb-10 pl-8 sm:pb-12 sm:pl-10">
-        {/* The entry itself. This was a raised card — `rounded-2xl`, its own
-            background, a lift and a shadow on hover, and a blurred colour wash
-            bleeding from the top corner. The spine is the shape of a timeline
-            and the entries needed to hang off it quietly, so the box and its
-            wash are gone and the entry reads as type. The hover is now a word
-            changing colour, not the whole block lifting. */}
+      <article className="relative ml-8 rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--bg-elevated))] p-5 pb-6 transition-colors duration-300 group-hover:border-[rgb(var(--cat)/0.45)] sm:ml-10 sm:p-6 sm:pb-8">
+        {/*
+          The entry, boxed again. For a stretch it was type alone hanging off
+          the spine; that kept the column quiet but left the logo, header,
+          bullets and footer with no frame of their own. It is a card again, the
+          quiet kind — the hairline on `bg-elevated`, corners at the rail's
+          radius, and a 3px category bar down the left edge. The hover is the
+          border warming to the entry's own colour, not the block lifting.
+        */}
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute bottom-4 left-0 top-4 w-[3px] rounded-full bg-[rgb(var(--cat))] opacity-80"
+        />
         <div className="relative">
           <div className="flex flex-wrap items-start gap-x-4 gap-y-3 sm:gap-x-5">
             {/* 64px on desktop, up from 56px. The logo is the only non-text
@@ -119,13 +125,16 @@ export function ExperienceEntry({
 
                   320 viewport
                   − 40  container-custom padding-inline
-                  − 32  the timeline's pl-8 indent
+                  − 32  the timeline's ml-8 indent
+                  − 40  the card's own p-5 padding-inline
                   − 56  the logo
                   − 16  the gap
-                  = 176px
+                  = 136px
 
-              (Wider than it used to be: the entry no longer sits in a padded
-              card, so the 40px of card padding it paid is back in the budget.)
+              (The row has the card's inner width to live in, 208px. That is
+              40px narrower than before the box came back, so the wrap happens
+              earlier — but the conclusion is unchanged, which is why only the
+              numbers had to move.)
 
               And the period is not the string it looks like. `formatMonth` uses
               `month: 'long'`, rendered through `meta-strong` — 12px mono,
@@ -134,10 +143,10 @@ export function ExperienceEntry({
                   "SEPTEMBER 2021 — PRESENT"        23 chars ≈ 204px
                   "SEPTEMBER 2021 — DECEMBER 2026"  29 chars ≈ 258px
 
-              Two conclusions. `w-full` below `sm` is worth having: 248px instead
-              of 176px keeps the common range on one line. But 248px is not
+              Two conclusions. `w-full` below `sm` is worth having: 208px instead
+              of 136px keeps the common range on one line. But 208px is not
               enough for the longest one, and no font size or tracking value
-              fixes that within a 176px budget — so this row wraps, deliberately,
+              fixes that within a 136px budget — so this row wraps, deliberately,
               onto a second line at the space before the end date.
 
               That is why the `<time>` has no `whitespace-nowrap` and no
