@@ -56,9 +56,12 @@ export default async function ExperiencePage() {
         />
       </div>
 
-      {/* Same hue as the header above, so the page reads as one section. */}
+      {/* Same hue as the header above, so the page reads as one section. The
+          section owns its own vertical padding — the timeline entries carry
+          their internal gaps, but the last card must stand clear of the footer
+          on the section's own account. */}
       <SectionShell tone="section-tone-design">
-        <div className="container-custom">
+        <div className="container-custom py-16 lg:py-20">
           {experiences.length === 0 ? (
             <EmptyState
               className="mt-12"

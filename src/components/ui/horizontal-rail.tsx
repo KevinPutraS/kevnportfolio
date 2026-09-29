@@ -188,7 +188,7 @@ export function HorizontalRail({
             // trailing right padding lets the last card and the next one show
             // the same peek, and because the track is the scroll container none
             // of this can widen the page.
-            'flex snap-x snap-mandatory gap-5 overflow-x-auto pr-5',
+            'flex snap-x snap-mandatory gap-6 overflow-x-auto pr-5',
             'scrollbar-hide overscroll-x-contain sm:pr-8 lg:pr-0',
             // Bottom padding so a focused card's outline is not clipped by the
             // container's overflow.
