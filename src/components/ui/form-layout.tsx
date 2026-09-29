@@ -99,7 +99,9 @@ export function FormStickyActions({
   return (
     <div
       className={classNames(
-        'sticky bottom-0 z-30 -mx-5 mt-2 border-t border-[rgb(var(--border))] bg-[rgb(var(--bg)/0.88)] px-5 backdrop-blur-xl sm:mx-0 sm:rounded-[var(--radius-lg)] sm:border sm:bg-transparent sm:p-0 sm:backdrop-blur-none',
+        // `-mx-6` / `px-6` negate the container's 1.5rem gutter so the bar spans
+        // the full width of a phone rather than floating inside the column.
+        'sticky bottom-0 z-30 -mx-6 mt-2 border-t border-[rgb(var(--border))] bg-[rgb(var(--bg)/0.88)] px-6 backdrop-blur-xl sm:mx-0 sm:rounded-[var(--radius-lg)] sm:border sm:bg-transparent sm:p-0 sm:backdrop-blur-none',
         className
       )}
       style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
@@ -140,7 +142,7 @@ export function FormJumpNav({ items }: { items: ReadonlyArray<{ id: string; labe
   return (
     <nav
       aria-label="Form sections"
-      className="-mx-5 mb-6 flex gap-2 overflow-x-auto scrollbar-hide px-5 pb-1 lg:hidden"
+      className="-mx-6 mb-6 flex gap-2 overflow-x-auto scrollbar-hide px-6 pb-1 lg:hidden"
     >
       {items.map((item) => (
         <a

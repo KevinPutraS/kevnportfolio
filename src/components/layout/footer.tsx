@@ -33,7 +33,15 @@ export function Footer() {
         style={{ ['--tone' as string]: 'var(--cat-design)' }}
       />
 
-      <div className="container-custom">
+      {/*
+        `env(safe-area-inset-bottom)` on the last thing on the page. The mobile
+        drawer, the modal and the admin tab bar all cleared it already; the
+        footer did not, and its copyright line is the one row a phone user can
+        still be looking at when the home indicator is drawn. Padded on the inner
+        container rather than the `<footer>` so the border and the coloured rule
+        above still span the full width.
+      */}
+      <div className="container-custom pb-[max(1.5rem,env(safe-area-inset-bottom))]">
         <div className="py-10 sm:py-12">
           <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
             {/* Name, plus one line. At a footer scale, not a headline scale. */}

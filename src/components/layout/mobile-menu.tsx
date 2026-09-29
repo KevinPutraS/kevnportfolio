@@ -84,7 +84,16 @@ export function MobileMenu() {
       {isOpen &&
         mounted &&
         createPortal(
-          <div className="fixed inset-0 z-[70] lg:hidden">
+          /*
+            `h-[100dvh]` rather than `inset-0`. A `fixed` box sized with `inset-0`
+            resolves against the *layout* viewport, which on iOS Safari is taller
+            than what the user can actually see while the URL bar is expanded — so
+            the drawer's footer (email + social links, in a `shrink-0` block at the
+            bottom) sat underneath the browser chrome and could not be tapped.
+            The dynamic viewport tracks the bars as they collapse, and `top-0` is
+            kept explicit so the panel still starts at the very top.
+          */
+          <div className="fixed inset-x-0 top-0 z-[70] h-[100dvh] lg:hidden">
             <div
               className="animate-fade-in absolute inset-0 bg-[rgb(0_0_0/0.65)] backdrop-blur-sm"
               onClick={close}

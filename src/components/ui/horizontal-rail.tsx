@@ -182,12 +182,14 @@ export function HorizontalRail({
           aria-roledescription="carousel"
           aria-label={label}
           className={classNames(
-            // The negative margin plus matching padding lets the first and last
-            // card run to the screen edge on a phone, so the next one is
-            // visibly *behind* the fold rather than merely off-screen. The
-            // track is the scroll container, so this can never widen the page.
-            '-mx-5 flex snap-x snap-mandatory gap-5 overflow-x-auto px-5',
-            'scrollbar-hide overscroll-x-contain sm:-mx-8 sm:px-8 lg:mx-0 lg:px-0',
+            // The first card is inset by the container's own gutter on every
+            // breakpoint so it lines up with the section heading above it,
+            // rather than running flush to the viewport edge on a phone. A
+            // trailing right padding lets the last card and the next one show
+            // the same peek, and because the track is the scroll container none
+            // of this can widen the page.
+            'flex snap-x snap-mandatory gap-5 overflow-x-auto pr-5',
+            'scrollbar-hide overscroll-x-contain sm:pr-8 lg:pr-0',
             // Bottom padding so a focused card's outline is not clipped by the
             // container's overflow.
             'pb-2',

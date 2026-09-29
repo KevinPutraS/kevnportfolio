@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { BackgroundSummary } from '@/components/about/background-summary'
-import { ExploringList } from '@/components/home/exploring-list'
+import { ExploringList } from '@/components/about/exploring-list'
 import { ArrowLink } from '@/components/ui/arrow-link'
 import { SectionShell } from '@/components/ui/section-shell'
 import { siteConfig, interests, technologies, projectApproach } from '@/config/site'

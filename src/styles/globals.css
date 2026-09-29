@@ -181,6 +181,21 @@
     text-rendering: optimizeLegibility;
   }
 
+  /*
+   * A last-resort guard against a stray wide child turning into a horizontal
+   * scroll on a phone. `clip` rather than `hidden`: `overflow: hidden` turns the
+   * element into a scroll container, which would silently kill `position:
+   * sticky` on the header and every `sticky bottom-0` bar in the CMS. `clip`
+   * contains the overflow with no scrollport at all.
+   *
+   * This is a net, not a fix — anything relying on it is still a bug, and the
+   * rails and filters that reach the screen edge are real scroll containers of
+   * their own, so they are unaffected.
+   */
+  html, body {
+    overflow-x: clip;
+  }
+
   /* Long words and URLs must never push a layout wider than the viewport. */
   h1, h2, h3, h4, h5, h6, p, li, dd, dt, figcaption {
     overflow-wrap: break-word;
@@ -238,13 +253,22 @@
  * ========================================================================== */
 
 /* One container definition. `container-custom` is the historical name and is
- * kept as the same declaration so existing call sites need not change. */
+ * kept as the same declaration so existing call sites need not change.
+ *
+ * 1.5rem below `sm`, not 1.25rem. The old value left only 350px of content on a
+ * 390px phone, and the rails, cards and forms that sit inside it read as pinned
+ * against the screen edge rather than as a column of the page. It costs 8px of
+ * width on the smallest phone in the matrix (272px of content at 320px) and
+ * buys back the gutter every section on the site is aligned to.
+ *
+ * Anything that bleeds to the screen edge — the project filter, the admin form
+ * bar — negates this exact value, so the two must move together. */
 .container,
 .container-custom {
   margin-inline: auto;
   width: 100%;
   max-width: var(--container-max);
-  padding-inline: 1.25rem;
+  padding-inline: 1.5rem;
 }
 @media (min-width: 640px) {
   .container, .container-custom { padding-inline: 2rem; }

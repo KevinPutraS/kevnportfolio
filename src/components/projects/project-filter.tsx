@@ -43,7 +43,12 @@ export function ProjectFilter({ options, active }: ProjectFilterProps) {
 
   return (
     <nav aria-label="Project categories" className="relative">
-      <ul className="-mx-5 flex items-center gap-3 overflow-x-auto px-5 scrollbar-hide sm:mx-0 sm:flex-wrap sm:gap-x-6 sm:overflow-visible sm:px-0">
+      {/* `-mx-6` negates the container's 1.5rem gutter so the line runs to the
+          screen edge on a phone, which is the only place the category list is
+          allowed to break the column. It is deliberately the same value as the
+          container padding: the two were 1.25rem and drifted apart once, which
+          left the first category 4px out of alignment with the heading above. */}
+      <ul className="-mx-6 flex items-center gap-3 overflow-x-auto px-6 scrollbar-hide sm:mx-0 sm:flex-wrap sm:gap-x-6 sm:overflow-visible sm:px-0">
         {entries.map((option, index) => {
           const isActive = option.value === active
           const isEmpty = option.count === 0 && option.value !== 'all'
@@ -123,7 +128,7 @@ export function ProjectFilter({ options, active }: ProjectFilterProps) {
       {/* Edge fade, mobile only — the line scrolls but does not look cut off. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-y-0 -right-5 w-12 bg-gradient-to-l from-[rgb(var(--background))] to-transparent sm:hidden"
+        className="pointer-events-none absolute inset-y-0 -right-6 w-12 bg-gradient-to-l from-[rgb(var(--background))] to-transparent sm:hidden"
       />
     </nav>
   )
