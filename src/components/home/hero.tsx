@@ -41,12 +41,12 @@ export function Hero() {
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 z-0 bg-cover bg-bottom hidden lg:block"
-        style={{ backgroundImage: "url('/images/bgdesktop.webp')" }}
+        style={{ backgroundImage: "url('/images/bgdesktop.png')" }}
       />
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 z-0 bg-cover bg-bottom lg:hidden"
-        style={{ backgroundImage: "url('/images/bgmobile.webp')" }}
+        style={{ backgroundImage: "url('/images/bgmobile.png')" }}
       />
 
       <div className="container-custom relative z-10">
