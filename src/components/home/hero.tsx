@@ -32,16 +32,21 @@ export function Hero() {
   return (
     <section className="relative">
       {/*
-        The backdrop is work by the site's owner: a wide, near-black field with
-        marks around its edges, dark enough that the words clear it with no
-        scrim of ours on top. `bg-cover bg-bottom` keeps the lower edge in view
-        at every aspect ratio; phones sample the sheet's centre, which the
-        artwork leaves clean.
+        The backdrop is work by the site's owner, mounted in two cuts - the grid
+        lives side by side from lg, so above lg a wide banner fills the sheet,
+        and below it a portrait field is designed for the phone's centred slice
+        that `cover` would otherwise cut a wide banner down to. Both sit below
+        the words; the artwork is dark enough to need no scrim of ours.
       */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-0 bg-cover bg-bottom"
-        style={{ backgroundImage: "url('/images/bgimages.png')" }}
+        className="pointer-events-none absolute inset-0 z-0 bg-cover bg-bottom hidden lg:block"
+        style={{ backgroundImage: "url('/images/hero-bg-desktop.png')" }}
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-0 bg-cover bg-bottom lg:hidden"
+        style={{ backgroundImage: "url('/images/hero-bg-mobile.png')" }}
       />
 
       <div className="container-custom relative z-10">
