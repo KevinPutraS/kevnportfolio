@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowUpRight } from 'lucide-react'
+import { ArrowRight, ArrowUpRight } from 'lucide-react'
 import { ButtonLink } from '@/components/ui/button-link'
 import { siteConfig } from '@/config/site'
 
@@ -23,6 +23,13 @@ import { siteConfig } from '@/config/site'
  * is deliberately *not* a list of recent projects: the featured rail directly
  * below already shows the work, and printing the same four titles twice inside
  * one screen is filler.
+ *
+ * From `lg` the hero is a deliberate two-column sheet: the statement column is
+ * ~58% wide, the index ~42%, split by a vertical rule at the index's left edge.
+ * The sheet fills the viewport below the header (`min-h-[calc(100svh-4rem)]`,
+ * with the columns centred in it) and caps itself at 84rem, so at 1440px the
+ * columns stop growing and the composition stays tight. All of it is `lg:`-
+ * prefixed: phones and tablets keep the stacked, padded-layout hero untouched.
  *
  * Server Component, but synchronous — no database call — so it is trivially
  * static. The type scale is fluid, so the headline holds at 320px and at 1440px
@@ -49,7 +56,7 @@ export function Hero() {
         style={{ backgroundImage: "url('/images/bgmobile.webp')" }}
       />
 
-      <div className="container-custom relative z-10">
+      <div className="container-custom relative z-10 lg:flex lg:min-h-[calc(100svh-4rem)] lg:max-w-[84rem] lg:flex-col">
         <div className="flex items-center justify-between gap-6 border-b border-[rgb(var(--border))] py-4">
           <p className="eyebrow">
             {siteConfig.descriptor}
@@ -69,7 +76,7 @@ export function Hero() {
           phone visitor and the two calls to action, and the index still answers
           "what is this site?" before the buttons answer "where do I go?".
         */}
-        <div className="grid gap-x-12 gap-y-10 py-12 sm:py-20 lg:grid-cols-12 lg:gap-y-0 lg:py-24">
+        <div className="grid gap-x-12 gap-y-10 py-12 sm:py-20 lg:grid-cols-12 lg:flex-1 lg:items-center lg:gap-y-0 lg:py-0">
           <div className="lg:col-span-7">
             <h1 className="display-1 animate-fade-in">
               {/*
@@ -78,7 +85,20 @@ export function Hero() {
                 more legibility than it bought: the middle stop landed near the
                 background, so the centre of the name was the dimmest part of it.
               */}
-              <span className="block text-[rgb(var(--text))]">{siteConfig.personName}</span>
+              <span className="block text-[rgb(var(--text))]">
+                {siteConfig.personName}
+                {/*
+                  The accent mark after the name. Present on desktop only, where
+                  the two-column hero is the centrepiece: a small solid square
+                  that echoes the sculpture's single accent hue. `em`-sized so it
+                  scales with the fluid display type, and aligned to the text
+                  baseline so it does not float in the cap height.
+                */}
+                <span
+                  aria-hidden="true"
+                  className="hidden text-[rgb(var(--accent))] lg:ml-4 lg:inline-block lg:h-[0.3em] lg:w-[0.3em] lg:rounded-[3px] lg:bg-[rgb(var(--accent))] lg:align-baseline"
+                />
+              </span>
               <span className="mt-5 block max-w-xl font-sans text-[length:var(--text-lead)] font-normal leading-[1.35] tracking-[-0.01em] text-[rgb(var(--text-dim))] text-balance sm:mt-7 sm:text-[length:var(--text-h3)] sm:leading-[1.25]">
                 {siteConfig.heroStatement}
               </span>
@@ -92,6 +112,7 @@ export function Hero() {
             */}
             <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 lg:mt-10">
               <ButtonLink href="/projects" size="lg" className="w-full sm:w-auto">
+                <ArrowRight className="hidden h-4 w-4 lg:block" aria-hidden="true" />
                 View projects
               </ButtonLink>
               <ButtonLink href="/about" variant="secondary" size="lg" className="w-full sm:w-auto">
@@ -107,8 +128,15 @@ export function Hero() {
             is allowed a fixed height, and a set of identical cards would read as
             shapes where these rows read as a table of contents.
           */}
-          <aside className="order-2 lg:order-none lg:col-span-4 lg:col-start-9">
-            <div className="border-t border-[rgb(var(--border))] pt-5 lg:mt-1">
+          <aside className="order-2 lg:order-none lg:col-span-5 lg:col-start-8">
+            {/*
+              The index's frame changes with the layout. Below `lg` it is a
+              section of its own with a rule above it (unchanged). From `lg` the
+              rule moves to the left edge and becomes the vertical divider
+              between the two hero columns, and `lg:pt-0 lg:pl-10` trades the
+              old top padding for room against the new edge.
+            */}
+            <div className="border-t border-[rgb(var(--border))] pt-5 lg:mt-0 lg:border-l lg:border-t-0 lg:pb-0 lg:pl-10 lg:pt-0">
               <p className="eyebrow">On this site</p>
 
               <nav aria-label="Site sections" className="mt-4">
