@@ -69,7 +69,7 @@ export function About() {
                       {group.items.map((item) => (
                         <span
                           key={item}
-                          className="border border-[rgb(var(--border))] px-2.5 py-1 font-mono text-[length:var(--text-xs)] text-[rgb(var(--text-dim))]"
+                          className="rounded-full border border-[rgb(var(--border))] px-2.5 py-1 font-mono text-[length:var(--text-xs)] text-[rgb(var(--text-dim))]"
                         >
                           {item}
                         </span>

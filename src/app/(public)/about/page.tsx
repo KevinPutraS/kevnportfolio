@@ -15,27 +15,33 @@ export const metadata: Metadata = {
   title: 'About',
   description: `How ${siteConfig.personName} works, what he builds, and the areas of technology he is exploring.`,
   alternates: { canonical: '/about' },
+  openGraph: {
+    title: `About — ${siteConfig.name}`,
+    description: 'How I learn, what I work in, and the tools I reach for.',
+    url: '/about',
+  },
 }
 
 /**
- * About.
+ * About. The long version of the homepage, and nothing shorter than that.
  *
- * The long version of the homepage, and only that.
+ * The overlap with the homepage is deliberate rather than accidental: both
+ * carry the interests, the toolkit and the approach, but at different depths.
+ * The homepage squeezes them into tiles, chips and a four-beat strip for a
+ * visitor who is still skimming; here the same material is allowed to breathe —
+ * the focus areas are one full sentence each, the toolkit sits in two columns,
+ * and the approach gets a numbered section of its own.
  *
- * This page previously ran to about 500 words and repeated the homepage almost
- * item for item — the same motivations as longer sentences, the same focus areas,
- * the same toolkit, the same approach steps. A visitor who read the homepage and
- * then opened this one found nothing new for the first three screens.
- *
- * So the overlap is gone. What stays is what a homepage cannot hold:
+ * What About alone holds:
  *
  * - two paragraphs on how he actually learns, which is the one thing a list of
  *   projects cannot demonstrate
- * - the focus areas in one line each, instead of a paragraph per area
+ * - the "right now" pills, which are too transient to earn a place on the
+ *   homepage
  * - real experience and certificate records, which are facts rather than claims
  *
- * Interests and the toolkit are not repeated either: the homepage already renders
- * them as tiles and chips, and a second copy on this page is pure duplication.
+ * The records render through `CredentialLists`, the same component the
+ * homepage's preview uses, so the two summaries cannot drift apart.
  */
 /**
  * The page fetches nothing. Experience and certificates are read inside
@@ -143,7 +149,7 @@ export default function AboutPage() {
 {group.items.map((item) => (
                       <span
                         key={item}
-                        className="border border-[rgb(var(--border))] px-2.5 py-1 font-mono text-[length:var(--text-xs)] text-[rgb(var(--text-dim))]"
+                        className="rounded-full border border-[rgb(var(--border))] px-2.5 py-1 font-mono text-[length:var(--text-xs)] text-[rgb(var(--text-dim))]"
                       >
                         {item}
                       </span>
