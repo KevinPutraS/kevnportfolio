@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { ArrowLeft, ArrowUpRight, GitBranch } from 'lucide-react'
 import { getProjectBySlug, getRelatedProjects } from '@/lib/db/projects'
 import { categoryLabels, categoryColorClass, siteConfig } from '@/config/site'
+import { projectStatusLabels } from '@/config/project-status'
 import { formatMonth } from '@/lib/utils/helpers'
 import { ProjectGallery } from '@/components/projects/project-gallery'
 import { ProjectThumbnail } from '@/components/projects/project-thumbnail'
@@ -103,6 +104,9 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
   const technologies = project.technologies ?? []
   const hasLinks = Boolean(project.project_url || project.repository_url)
   const catClass = categoryColorClass(project.category)
+  const role = project.role?.trim() || null
+  const outcome = project.outcome?.trim() || null
+  const statusLabel = project.status ? projectStatusLabels[project.status] : null
 
   return (
     <article className={catClass}>
@@ -128,12 +132,36 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
           </div>
 
           <div className="py-14 sm:py-20 lg:py-24">
-            <span className="cat-chip inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 font-mono text-xs uppercase tracking-[0.12em]">
-              <span aria-hidden="true" className="cat-dot h-1.5 w-1.5 rounded-full" />
-              {categoryLabels[project.category] ?? project.category}
-            </span>
+            {/*
+              Category and status, side by side when there is a status to show.
+
+              Two chips of the same weight reading as one row is the point: the
+              category says what kind of thing this is, the status says how far it
+              got, and a reader deciding whether to keep reading needs both
+              before the title, not after it. With no status set the row is a
+              single chip rather than a chip and a gap.
+            */}
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="cat-chip inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 font-mono text-xs uppercase tracking-[0.12em]">
+                <span aria-hidden="true" className="cat-dot h-1.5 w-1.5 rounded-full" />
+                {categoryLabels[project.category] ?? project.category}
+              </span>
+
+              {statusLabel && (
+                <span className="inline-flex items-center rounded-full border border-[rgb(var(--border))] px-3.5 py-1.5 font-mono text-xs uppercase tracking-[0.12em] text-[rgb(var(--text-dim))]">
+                  {statusLabel}
+                </span>
+              )}
+            </div>
 
             <h1 className="heading-1 mt-7 max-w-[16ch] text-balance">{project.title}</h1>
+
+            {role && (
+              <p className="mt-4 flex items-start gap-2.5 text-[length:var(--text-body-sm)] text-[rgb(var(--text-muted))]">
+                <span className="label mt-px shrink-0">Role</span>
+                <span className="text-pretty">{role}</span>
+              </p>
+            )}
 
             <p className="body-lg mt-7 max-w-2xl text-pretty text-[rgb(var(--text-dim))]">
               {project.short_description}
@@ -256,6 +284,26 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
               </section>
             )}
 
+            {/*
+              The outcome, and the reason it is its own section rather than the
+              last paragraph of the overview.
+
+              A case study's overview says what the project was; its outcome says
+              what it produced. Running them together is how a page ends on a
+              description of the code instead of on a result, which is the one
+              thing a reader came for. Set on a tinted panel so it reads as a
+              conclusion rather than as more body copy, and capped at 600
+              characters in the database to keep it to a single paragraph.
+            */}
+            {outcome && (
+              <section className="mt-14 border-l-2 border-[rgb(var(--accent))] bg-[rgb(var(--accent)/0.05)] px-5 py-4 sm:px-6">
+                <h2 className="label text-[rgb(var(--accent))]">Outcome</h2>
+                <p className="mt-2 text-pretty text-[length:var(--text-body-sm)] leading-relaxed text-[rgb(var(--text))]">
+                  {outcome}
+                </p>
+              </section>
+            )}
+
             {gallery.length > 0 && (
               <section className="mt-16">
                 <div className="flex items-baseline justify-between gap-4">
@@ -271,7 +319,13 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
               </section>
             )}
 
-            {!hasDescription && gallery.length === 0 && (
+            {/*
+              Only when the page is genuinely empty. A project with a role and an
+              outcome but no long description and no gallery has real content on
+              it, and "a write-up is on the way" next to that is a lie the page
+              tells about itself. The gate counts all three sections.
+            */}
+            {!hasDescription && !outcome && gallery.length === 0 && (
               <p className="body text-pretty text-[rgb(var(--text-muted))]">
                 A write-up for this one is on the way.
               </p>

@@ -1,6 +1,7 @@
 import type { ProjectCategory } from '@/config/site'
+import type { ProjectStatus } from '@/config/project-status'
 
-export type { ProjectCategory }
+export type { ProjectCategory, ProjectStatus }
 
 export interface Project {
   id: string
@@ -16,6 +17,18 @@ export interface Project {
   repository_url: string | null
   featured: boolean
   published: boolean
+  /**
+   * What the owner actually did on this project. `null` means not stated, and
+   * the public page omits the row rather than rendering an empty one.
+   */
+  role: string | null
+  /**
+   * How finished it is. `null` renders no badge at all — see the migration for
+   * why this is not defaulted to a value the author never chose.
+   */
+  status: ProjectStatus | null
+  /** What came of it. Capped at 600 characters in the database. */
+  outcome: string | null
   /** Month precision: stored as `YYYY-MM`. */
   project_date: string | null
   created_at: string
@@ -35,6 +48,9 @@ export interface ProjectFormData {
   gallery: string[]
   project_url: string
   repository_url: string
+  role: string
+  status: '' | ProjectStatus
+  outcome: string
   featured: boolean
   published: boolean
 }

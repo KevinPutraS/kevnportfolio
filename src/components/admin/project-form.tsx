@@ -11,6 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { FormJumpNav, FormSection, FormStickyActions } from '@/components/ui/form-layout'
 import { ImageUploader } from './image-uploader'
 import { projectCategories, type ProjectCategory } from '@/config/site'
+import { projectStatuses, type ProjectStatus } from '@/config/project-status'
 import { classNames } from '@/lib/utils/helpers'
 import {
   formatList,
@@ -25,6 +26,18 @@ const CATEGORY_OPTIONS = projectCategories.map((category) => ({
   label: category.label,
 }))
 
+/*
+ * The status `<Select>` carries an empty first option, and that is not a
+ * placeholder to be styled around — it is the "not stated" state, the same
+ * `NULL` the public page treats as "render no badge". Labeling it "Not stated"
+ * rather than leaving it blank makes the choice visible instead of looking like
+ * a control that failed to load.
+ */
+const STATUS_OPTIONS = [
+  { value: '', label: 'Not stated' },
+  ...projectStatuses.map((status) => ({ value: status.value, label: status.label })),
+]
+
 const EMPTY_FORM: ProjectFormData = {
   title: '',
   slug: '',
@@ -37,6 +50,9 @@ const EMPTY_FORM: ProjectFormData = {
   gallery: [],
   project_url: '',
   repository_url: '',
+  role: '',
+  status: '',
+  outcome: '',
   featured: false,
   published: false,
 }
@@ -56,6 +72,11 @@ function toFormData(project: Project): ProjectFormData {
     gallery: project.gallery ?? [],
     project_url: project.project_url ?? '',
     repository_url: project.repository_url ?? '',
+    role: project.role ?? '',
+    // A row written before the migration has `undefined` here, not `null`, so
+    // `?? ''` covers both. The Select's empty option is the "not stated" state.
+    status: project.status ?? '',
+    outcome: project.outcome ?? '',
     featured: project.featured,
     published: project.published,
   }
@@ -161,6 +182,7 @@ export function ProjectForm({ project }: { project?: Project }) {
       <FormJumpNav
         items={[
           { id: 'project-details', label: 'Details' },
+          { id: 'project-role', label: 'Role & outcome' },
           { id: 'project-technologies', label: 'Technologies' },
           { id: 'project-images', label: 'Images' },
           { id: 'project-links', label: 'Links' },
@@ -241,6 +263,54 @@ export function ProjectForm({ project }: { project?: Project }) {
           hint="Longer case-study text. Leave blank to hide the overview section."
           rows={10}
           maxLength={10000}
+        />
+      </FormSection>
+
+      {/*
+        A section of its own rather than three more fields inside "Details".
+
+        These three answer a different question from the rest of the form. Title,
+        category and date describe what the project *is*; role, status and
+        outcome describe what happened. That is the difference between a
+        catalogue entry and a case study, and it is the part a project page
+        cannot invent for itself — which is exactly why it gets its own heading
+        in the editor too, so it does not read as optional metadata.
+      */}
+      <FormSection
+        id="project-role"
+        eyebrow="The work"
+        title="Role, status and outcome"
+        description="How you were involved, how far it got, and what came of it. All three are optional and the public page hides whatever is left blank — but a project with all three set is a case study, and one without is a listing."
+      >
+        <Input
+          id="project-role"
+          label="Your role"
+          value={values.role}
+          onChange={(event) => update('role', event.target.value)}
+          error={errors.role}
+          hint="What you actually did. Shown beside the project on the public page — for example: built the front end alone, or owned the API."
+          maxLength={200}
+        />
+
+        <Select
+          id="project-status"
+          label="Status"
+          value={values.status}
+          onChange={(event) => update('status', event.target.value as ProjectStatus | '')}
+          error={errors.status}
+          options={STATUS_OPTIONS}
+          hint="Shown as a badge next to the category. Leave it unstated and no badge appears."
+        />
+
+        <Textarea
+          id="project-outcome"
+          label="Outcome"
+          value={values.outcome}
+          onChange={(event) => update('outcome', event.target.value)}
+          error={errors.outcome}
+          hint="A result, a lesson, a number — one short paragraph. Deliberately capped: this is the closing statement, and anything longer belongs in the description above."
+          rows={4}
+          maxLength={600}
         />
       </FormSection>
 

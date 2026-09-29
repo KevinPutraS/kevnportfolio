@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { ActionMessage, RowAction } from '@/components/admin/row-action'
 import { useRowActions, type RowToggle } from '@/lib/hooks/use-row-actions'
 import { categoryLabels, categoryColorClass } from '@/config/site'
+import { projectStatusLabels } from '@/config/project-status'
 import type { Project } from '@/types/project'
 
 const TOGGLES: readonly RowToggle<Project>[] = [
@@ -62,11 +63,21 @@ export function ProjectTableClient({ projects }: { projects: Project[] }) {
       <div className="overflow-hidden rounded-xl border border-[rgb(var(--border))]">
         <table className="w-full border-collapse text-left">
           <caption className="sr-only">
-            All projects with their status, date and available actions
+            All projects with their category, progress status, date, publication state and
+            available actions
           </caption>
           <thead className="hidden border-b border-[rgb(var(--border))] bg-[rgb(var(--bg-highlight))] lg:table-header-group">
             <tr>
-              {['Project', 'Category', 'Date', 'Status', 'Actions'].map((heading) => (
+              {/*
+                "Visibility", not "Status". The projects table grew a `status`
+                column of its own in migration 20260929000000, and this header
+                was already using the word to mean published/draft. Two
+                different meanings of one column heading in the same table is
+                the kind of ambiguity that costs a mistimed publish later, so the
+                old one is renamed for what it actually measures and the project's
+                own status is shown in its own cell.
+              */}
+              {['Project', 'Category', 'Date', 'Progress', 'Visibility', 'Actions'].map((heading) => (
                 <th
                   key={heading}
                   scope="col"
@@ -118,6 +129,10 @@ export function ProjectTableClient({ projects }: { projects: Project[] }) {
                         </span>
                         <span className="mt-0.5 block font-mono text-[length:var(--text-xs)] text-[rgb(var(--text-muted))] lg:hidden">
                           {categoryLabels[project.category]}
+                          {/* The Progress cell is desktop-only, so the status has
+                              to ride along here or a phone shows a row that
+                              cannot say whether the work is finished. */}
+                          {project.status ? ` · ${projectStatusLabels[project.status]}` : ''}
                           {project.project_date ? ` · ${formatMonth(project.project_date)}` : ''}
                         </span>
                       </span>
@@ -136,6 +151,26 @@ export function ProjectTableClient({ projects }: { projects: Project[] }) {
                       <time dateTime={project.project_date}>{formatMonth(project.project_date)}</time>
                     ) : (
                       <span aria-label="No date" className="text-[rgb(var(--text-muted))]">
+                        —
+                      </span>
+                    )}
+                  </td>
+
+                  <td className="hidden px-4 py-3 lg:table-cell">
+                    {project.status ? (
+                      <span className="cat-chip inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-[length:var(--text-xs)] uppercase tracking-[0.08em]">
+                        <span aria-hidden="true" className="cat-dot h-1.5 w-1.5 rounded-full" />
+                        {projectStatusLabels[project.status]}
+                      </span>
+                    ) : (
+                      /*
+                        Every seeded row predates the `status` column, so the
+                        unlabelled state is the common one on a table that has not
+                        been edited yet. An em dash with a screen-reader label
+                        reads as "nothing recorded" rather than as a blank the
+                        owner has to investigate.
+                      */
+                      <span aria-label="No progress status recorded" className="text-[rgb(var(--text-muted))]">
                         —
                       </span>
                     )}

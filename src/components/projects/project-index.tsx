@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { ArrowUpRight } from 'lucide-react'
 import { categoryLabels, type ProjectCategory } from '@/config/site'
+import { projectStatusLabels } from '@/config/project-status'
 import { formatMonth, classNames } from '@/lib/utils/helpers'
 import type { Project } from '@/types/project'
 import { ProjectThumbnail } from './project-thumbnail'
@@ -85,6 +86,25 @@ export function ProjectIndex({
                   <span className="text-[rgb(var(--text))]">
                     {categoryLabels[category] ?? project.category}
                   </span>
+                  {/*
+                    Status, right after the category and before the date.
+
+                    The order is the argument: kind of thing, then how far it got,
+                    then when. A reader scanning the column for "is this finished"
+                    finds it in the same position on every row, which is the only
+                    reason a metadata line like this is worth having at all. It is
+                    dimmer than the category so the row's identity still leads.
+                  */}
+                  {project.status && (
+                    <>
+                      <span aria-hidden="true" className="text-[rgb(var(--border-strong))]">
+                        ·
+                      </span>
+                      <span className="text-[rgb(var(--text-muted))]">
+                        {projectStatusLabels[project.status]}
+                      </span>
+                    </>
+                  )}
                   {project.project_date ? (
                     <>
                       <span aria-hidden="true" className="text-[rgb(var(--border-strong))]">

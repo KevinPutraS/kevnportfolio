@@ -105,6 +105,18 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       gallery: existing.gallery ?? [],
       project_url: existing.project_url ?? '',
       repository_url: existing.repository_url ?? '',
+      /*
+        The three columns added in migration 20260929000000. They have to be
+        named here explicitly because this handler builds a *complete* row from
+        the stored one and overlays the patch, then validates the result — a
+        field that is not listed keeps its stored value only because it is
+        absent from `merged`. Leaving them out would mean every full editor save
+        silently resets role, status and outcome to empty, which is the kind of
+        data loss that only shows up weeks later.
+      */
+      role: existing.role ?? '',
+      status: existing.status ?? '',
+      outcome: existing.outcome ?? '',
       featured: existing.featured,
       published: existing.published,
       ...patch,

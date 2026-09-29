@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { projectCategories } from '@/config/site'
+import { projectStatuses } from '@/config/project-status'
 import {
   mediaReferenceSchema,
   optionalHttpUrlField,
@@ -15,6 +16,13 @@ const categoryValues = projectCategories.map((category) => category.value) as [
 ]
 
 export const projectCategorySchema = z.enum(categoryValues)
+
+const statusValues = projectStatuses.map((status) => status.value) as [
+  (typeof projectStatuses)[number]['value'],
+  ...(typeof projectStatuses)[number]['value'][],
+]
+
+export const projectStatusSchema = z.enum(statusValues)
 
 export const projectFormSchema = z.object({
   title: z.string().trim().min(1, 'Title is required').max(100, 'Title must be 100 characters or less'),
@@ -48,6 +56,20 @@ export const projectFormSchema = z.object({
   gallery: z.array(mediaReferenceSchema).max(12, 'A project can have at most 12 gallery images'),
   project_url: optionalHttpUrlField,
   repository_url: optionalHttpUrlField,
+  role: z
+    .string()
+    .max(200, 'Role must be 200 characters or less')
+    .optional()
+    .or(z.literal('')),
+  // The empty string is the "not stated" case, not a fifth status. It has to be
+  // allowed here so the form can submit an untouched `<Select>`; `toProjectRecord`
+  // turns it back into `null` so the column keeps meaning one thing.
+  status: z.union([z.literal(''), projectStatusSchema]),
+  outcome: z
+    .string()
+    .max(600, 'Outcome must be 600 characters or less')
+    .optional()
+    .or(z.literal('')),
   featured: z.boolean(),
   published: z.boolean(),
 })
@@ -66,6 +88,9 @@ export interface ProjectRecordInput {
   gallery: string[]
   project_url: string | null
   repository_url: string | null
+  role: string | null
+  status: (typeof projectStatuses)[number]['value'] | null
+  outcome: string | null
   featured: boolean
   published: boolean
   project_date: string | null
@@ -87,6 +112,13 @@ export function toProjectRecord(values: ProjectFormValues): ProjectRecordInput {
     gallery: values.gallery,
     project_url: values.project_url ? values.project_url : null,
     repository_url: values.repository_url ? values.repository_url : null,
+    role: values.role ? values.role : null,
+    // The empty string means "not stated", and the column is nullable, so it
+    // becomes `null` rather than an empty string. The distinction matters:
+    // `NULL` is what makes the public page omit the badge instead of rendering
+    // an empty one.
+    status: values.status === '' ? null : values.status,
+    outcome: values.outcome ? values.outcome : null,
     featured: values.featured,
     published: values.published,
     project_date: toDatabaseMonth(values.project_date),

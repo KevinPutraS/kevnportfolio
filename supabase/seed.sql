@@ -10,8 +10,39 @@
 --   supabase db reset
 -- Images point at files bundled in /public/images/projects, so nothing
 -- depends on an external image host.
+--
+-- The projects block deliberately does not set `role`, `status` or `outcome`.
+-- Those three columns arrived in migration 20260929000000, and a seed row that
+-- asserted "shipped" for a project that does not exist would put an unfounded
+-- claim on a public page — the same reason those columns are nullable rather
+-- than defaulted. They stay NULL here and the site omits the badge.
 -- ---------------------------------------------------------------------------
 -- ===========================================================================
+
+-- ===========================================================================
+-- Remove the previous demo rows first.
+--
+-- This file has to be safe to run twice, and `ON CONFLICT DO NOTHING` does not
+-- make it so. Only `projects` has a natural key to conflict on: `slug` is
+-- UNIQUE, so the projects block really is idempotent. `experiences` and
+-- `certificates` have nothing but a generated `id UUID PRIMARY KEY` — no
+-- UNIQUE constraint anywhere on either table — so `ON CONFLICT DO NOTHING` can
+-- never fire, and a second run inserts three more experience rows and three more
+-- certificate rows every time it is executed. The symptom is not an error; it is
+-- a timeline that quietly grows a duplicate of every entry.
+--
+-- Deleting the demo rows by the same predicates the reminder at the bottom of
+-- this file already documents makes re-running idempotent without adding a
+-- unique constraint to the schema — which would be a real design decision (what
+-- counts as the same experience?) made for the convenience of a demo seed.
+--
+-- Only rows this file created are touched. Real entries live under real
+-- organizations and issuers and real slugs, so they survive a re-seed.
+-- ===========================================================================
+
+DELETE FROM public.projects     WHERE slug LIKE 'demo-%';
+DELETE FROM public.experiences  WHERE organization LIKE 'Sample%';
+DELETE FROM public.certificates WHERE issuer LIKE 'Sample%';
 
 INSERT INTO public.projects (
   title, slug, short_description, description, category, technologies,
@@ -334,15 +365,22 @@ ON CONFLICT DO NOTHING;
 -- ===========================================================================
 -- REMINDER: this is demo content.
 --
--- Clear it whenever you are ready to publish your own work:
+-- Every row above is prefixed "Demo · " or sits under a "Sample" organization or
+-- issuer, so the three DELETEs at the top of this file remove all of it. That
+-- means running this file again *replaces* the demo content rather than adding
+-- to it — handy while you are filling the site in, because you can edit the
+-- INSERTs and re-run to see the change.
+--
+-- To clear the demo content without re-seeding:
+--
+--   DELETE FROM public.projects     WHERE slug LIKE 'demo-%';
+--   DELETE FROM public.experiences  WHERE organization LIKE 'Sample%';
+--   DELETE FROM public.certificates WHERE issuer LIKE 'Sample%';
+--
+-- Or wipe the content tables entirely, keeping your admin account and any
+-- uploaded files:
 --
 --   TRUNCATE public.projects, public.experiences, public.certificates;
---
--- Or remove individual rows:
---
---   DELETE FROM public.projects         WHERE slug LIKE 'demo-%';
---   DELETE FROM public.experiences      WHERE organization LIKE 'Sample%';
---   DELETE FROM public.certificates     WHERE issuer LIKE 'Sample%';
 --
 -- To grant yourself admin access, create a user in Supabase Auth first, then:
 --

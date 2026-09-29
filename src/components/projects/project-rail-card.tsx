@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { ArrowUpRight } from 'lucide-react'
 import { categoryLabels, type ProjectCategory } from '@/config/site'
+import { projectStatusLabels } from '@/config/project-status'
 import { formatMonth } from '@/lib/utils/helpers'
 import type { Project } from '@/types/project'
 import { ProjectThumbnail } from './project-thumbnail'
@@ -84,6 +85,19 @@ export function ProjectRailCard({
 
           <p className="meta mt-5 flex items-center gap-x-2 gap-y-0.5">
             <span>{categoryLabels[category] ?? project.category}</span>
+            {/* Same position as the index row: category, status, then the stack.
+                One order across both project surfaces, so the two read as one
+                index rather than as two formats. */}
+            {project.status && (
+              <>
+                <span aria-hidden="true" className="text-[rgb(var(--border-strong))]">
+                  /
+                </span>
+                <span className="text-[rgb(var(--text-muted))]">
+                  {projectStatusLabels[project.status]}
+                </span>
+              </>
+            )}
             {technologies.length > 0 && (
               <>
                 <span aria-hidden="true" className="text-[rgb(var(--border-strong))]">

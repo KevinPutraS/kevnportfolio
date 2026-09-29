@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { categoryLabels, type ProjectCategory } from '@/config/site'
+import { projectStatusLabels } from '@/config/project-status'
 import { formatMonth } from '@/lib/utils/helpers'
 import type { Project } from '@/types/project'
 
@@ -46,10 +47,24 @@ export function RelatedProjects({ projects }: { projects: Project[] }) {
                       <p className="mt-1 text-[length:var(--text-sm)] text-[rgb(var(--text-dim))]">
                         {project.short_description}
                       </p>
-                      <p className="mt-3 flex items-center gap-2.5 font-mono text-[length:var(--text-meta)] uppercase tracking-[0.1em]">
+                      <p className="mt-3 flex flex-wrap items-center gap-2.5 font-mono text-[length:var(--text-meta)] uppercase tracking-[0.1em]">
                         <span className="text-[rgb(var(--text))]">
                           {categoryLabels[category] ?? project.category}
                         </span>
+                        {/* Same slot as the index row: category, status, date.
+                            A suggestion that omits whether a project is finished
+                            is a suggestion the reader has to check the link to
+                            act on. */}
+                        {project.status && (
+                          <>
+                            <span aria-hidden="true" className="text-[rgb(var(--border-strong))]">
+                              ·
+                            </span>
+                            <span className="text-[rgb(var(--text-muted))]">
+                              {projectStatusLabels[project.status]}
+                            </span>
+                          </>
+                        )}
                         {project.project_date ? (
                           <>
                             <span aria-hidden="true" className="text-[rgb(var(--border-strong))]">
