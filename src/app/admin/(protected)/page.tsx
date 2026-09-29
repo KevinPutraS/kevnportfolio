@@ -8,7 +8,6 @@ import { getUser } from '@/lib/auth'
 import { ButtonLink } from '@/components/ui/button-link'
 import { EmptyState } from '@/components/ui/empty-state'
 import { SectionEyebrow } from '@/components/ui/section-shell'
-import { categoryColorClass } from '@/config/site'
 import { classNames, formatRelativeTime } from '@/lib/utils/helpers'
 
 export const dynamic = 'force-dynamic'
@@ -35,21 +34,42 @@ export default async function AdminDashboardPage() {
   // each other and with the projects list.
   const { total, published, drafts, featured } = counts
 
-  // Each counter carries a hue and an icon. Projects are blue, experience pink,
-  // certificates amber — the same mapping the public site uses, so the dashboard
-  // and the site it manages read as one thing.
+  // Each counter carries a *status* colour rather than a category hue. The
+  // public palette collapsed to one accent, so the per-category colours that
+  // used to tint these tiles are gone; what is left of a counter's meaning is
+  // its status — published is green, featured is amber, everything else is
+  // neutral — the same language the row badges below already speak.
   const stats = [
-    { label: 'Total projects', value: total, tone: 'cat-web', icon: <FolderOpen className="h-4 w-4" aria-hidden="true" /> },
-    { label: 'Published', value: published, tone: 'cat-app', icon: <Eye className="h-4 w-4" aria-hidden="true" /> },
-    { label: 'Drafts', value: drafts, tone: 'cat-networking', icon: <EyeOff className="h-4 w-4" aria-hidden="true" /> },
-    { label: 'Featured', value: featured, tone: 'cat-experiment', icon: <Star className="h-4 w-4" aria-hidden="true" /> },
+    {
+      label: 'Total projects',
+      value: total,
+      chip: 'border-[rgb(var(--border-strong)/0.5)] bg-[rgb(var(--surface))] text-[rgb(var(--text-muted))]',
+      icon: <FolderOpen className="h-4 w-4" aria-hidden="true" />,
+    },
+    {
+      label: 'Published',
+      value: published,
+      chip: 'border-[rgb(var(--success)/0.4)] bg-[rgb(var(--success)/0.14)] text-[rgb(var(--success))]',
+      icon: <Eye className="h-4 w-4" aria-hidden="true" />,
+    },
+    {
+      label: 'Drafts',
+      value: drafts,
+      chip: 'border-[rgb(var(--border-strong)/0.5)] bg-[rgb(var(--surface))] text-[rgb(var(--text-muted))]',
+      icon: <EyeOff className="h-4 w-4" aria-hidden="true" />,
+    },
+    {
+      label: 'Featured',
+      value: featured,
+      chip: 'border-[rgb(var(--accent)/0.4)] bg-[rgb(var(--accent)/0.14)] text-[rgb(var(--accent))]',
+      icon: <Star className="h-4 w-4" aria-hidden="true" />,
+    },
   ]
 
   const collections = [
     {
       label: 'Experience entries',
       icon: <Briefcase className="h-4 w-4" aria-hidden="true" />,
-      tone: 'cat-design',
       total: experiences.length,
       live: experiences.filter((item) => item.published).length,
       href: '/admin/experience',
@@ -58,7 +78,6 @@ export default async function AdminDashboardPage() {
     {
       label: 'Certificates',
       icon: <Award className="h-4 w-4" aria-hidden="true" />,
-      tone: 'cat-networking',
       total: certificates.length,
       live: certificates.filter((item) => item.published).length,
       href: '/admin/certificates',
@@ -88,11 +107,13 @@ export default async function AdminDashboardPage() {
       </header>
 
       {/*
-        Counters. Each card carries the hue of the section it counts, so the
-        dashboard is scannable the same way the public site is: projects are blue,
-        experience pink, certificates amber. The old version was a single grey
-        grid of four identical numbers, which is the most "spreadsheet" thing on
-        the screen.
+        Counters. Each card carries the colour of the *status* it counts —
+        published in green, featured in amber, the rest neutral — so the
+        dashboard is scannable by meaning rather than by a hue per category.
+        The old version tinted each tile by section (blue, pink, amber…) but
+        that palette collapsed to one accent, so a tile was just grey with a
+        claim attached. Diffing these tiles by colour was then doing the work
+        of reading.
 
         `grid-cols-2` from 320px, not `sm:grid-cols-2`. One column on a phone
         meant four cards of nothing but a number and a label before the page
@@ -107,14 +128,14 @@ export default async function AdminDashboardPage() {
           {stats.map((stat) => (
             <li
               key={stat.label}
-              className={classNames(
-                'rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--bg-elevated))] p-4 transition-[transform,border-color] duration-300 hover:-translate-y-1 sm:p-5',
-                stat.tone
-              )}
+              className="rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--bg-elevated))] p-4 transition-[border-color,background-color] duration-300 hover:border-[rgb(var(--accent)/0.45)] sm:p-5"
             >
               <span
                 aria-hidden="true"
-                className="flex h-7 w-7 items-center justify-center rounded-md border border-[rgb(var(--cat)/0.4)] bg-[rgb(var(--cat)/0.14)] text-[rgb(var(--cat))] sm:h-8 sm:w-8"
+                className={classNames(
+                  'flex h-7 w-7 items-center justify-center rounded-md border sm:h-8 sm:w-8',
+                  stat.chip
+                )}
               >
                 {stat.icon}
               </span>
@@ -138,15 +159,12 @@ export default async function AdminDashboardPage() {
           {collections.map((collection) => (
             <li
               key={collection.label}
-              className={classNames(
-                'rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--bg-elevated))] p-4 transition-[border-color] duration-300 hover:border-[rgb(var(--cat)/0.5)] sm:p-5',
-                collection.tone
-              )}
+              className="rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--bg-elevated))] p-4 transition-[border-color,background-color] duration-300 hover:border-[rgb(var(--accent)/0.45)] sm:p-5"
             >
               <p className="flex items-center gap-2.5">
                 <span
                   aria-hidden="true"
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[rgb(var(--cat)/0.4)] bg-[rgb(var(--cat)/0.14)] text-[rgb(var(--cat))]"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[rgb(var(--border-strong)/0.5)] bg-[rgb(var(--surface))] text-[rgb(var(--text-muted))]"
                 >
                   {collection.icon}
                 </span>
@@ -163,7 +181,7 @@ export default async function AdminDashboardPage() {
 
               <Link
                 href={collection.href}
-                className="group mt-4 inline-flex min-h-11 w-full items-center gap-1.5 text-[length:var(--text-sm)] font-medium text-[rgb(var(--cat))] sm:w-auto"
+                className="group mt-4 inline-flex min-h-11 w-full items-center gap-1.5 text-[length:var(--text-sm)] font-medium text-[rgb(var(--accent))] sm:w-auto"
               >
                 Manage
                 <ArrowUpRight
@@ -206,10 +224,7 @@ export default async function AdminDashboardPage() {
               <li key={project.id}>
                 <Link
                   href={`/admin/projects/${project.id}/edit`}
-                  className={classNames(
-                    'group flex items-center gap-3 rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--bg-elevated))] p-2.5 transition-[border-color,transform] duration-200 hover:-translate-y-0.5 hover:border-[rgb(var(--cat)/0.5)]',
-                    categoryColorClass(project.category)
-                  )}
+                  className="group flex items-center gap-3 rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--bg-elevated))] p-2.5 transition-[border-color,background-color] duration-200 hover:border-[rgb(var(--accent)/0.5)]"
                 >
                   <span className="relative h-10 w-14 shrink-0 overflow-hidden rounded-md border border-[rgb(var(--border))] bg-[rgb(var(--bg-highlight))]">
                     {project.thumbnail_url ? (
@@ -268,7 +283,7 @@ export default async function AdminDashboardPage() {
                   </span>
 
                   <Pencil
-                    className="h-4 w-4 shrink-0 text-[rgb(var(--text-muted))] transition-colors group-hover:text-[rgb(var(--cat))]"
+                    className="h-4 w-4 shrink-0 text-[rgb(var(--text-muted))] transition-colors group-hover:text-[rgb(var(--accent))]"
                     aria-hidden="true"
                   />
                 </Link>

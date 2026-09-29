@@ -53,8 +53,11 @@ export function ProjectTableClient({ projects }: { projects: Project[] }) {
         reading twenty titles to work out which was which — while the screenshot
         that identifies a project was sitting in the CMS form, one click away.
         A 40px thumbnail in the row does the identifying that a sentence of text
-        was doing badly, and the category column carries its hue so the table
-        reads as a colour map too.
+        was doing badly, and the category column carries its label as a chip so
+        the table can be scanned by type without reading a row. Every category is
+        the same neutral grey now, which is the point: the chip says which
+        category, and the status badges carry the only colour that means
+        anything.
       */}
       <div className="overflow-hidden rounded-xl border border-[rgb(var(--border))]">
         <table className="w-full border-collapse text-left">
