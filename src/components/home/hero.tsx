@@ -31,7 +31,19 @@ import { siteConfig } from '@/config/site'
 export function Hero() {
   return (
     <section className="relative">
-      <div className="container-custom">
+      {/*
+        The backdrop: a technical drawing rather than a photo or a glow.
+        Vector, so it stays sharp at any resolution; authored faint enough that
+        the headline clears it without a scrim, so no gradient has to come
+        back to rescue the text.
+      */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-0 bg-cover bg-center"
+        style={{ backgroundImage: "url('/images/hero-bg.svg')" }}
+      />
+
+      <div className="container-custom relative z-10">
         <div className="flex items-center justify-between gap-6 border-b border-[rgb(var(--border))] py-4">
           <p className="eyebrow">
             {siteConfig.descriptor}
