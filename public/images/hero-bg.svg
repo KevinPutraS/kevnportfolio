@@ -1,59 +1,142 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
   <!--
-    Hero backdrop: a quiet technical drawing, not a photo and not a glow.
-    A substrate of dots, passive orthogonal traces with junction nodes,
-    and one live route in the amber accent. Vector, transparent canvas,
-    so the page background shows through and it stays sharp at any
-    viewport. Kept faint so the headline needs no scrim. ASCII comments
-    only: an em-dash typed here once made the file unparseable XML.
+    Hero backdrop: not a glow, not a lattice of dots, a picture - a workbench of
+    windows showing the kind of thing this site is about. A tall editor pane
+    with a sidebar, rows of code, a small output chart, and one live amber
+    route tying the panel to the sheet. Everything in the site's own palette:
+    elevated greys for the chrome, a dim neutral for the passive marks, and a
+    single amber line where the signal is.
+
+    Placement rule (this is what keeps it off the type): the picture's subjects
+    live in the lower band of the canvas, y 470 to 900, spanning most of the
+    width. The hero anchors this layer to the bottom, so the lower band is the
+    only part guaranteed on-screen at every viewport - desktop crops the top,
+    phones crop the sides, the bottom always shows. Text lives above it in the
+    upper band; the scrim divs in hero.tsx finish the job where the bands meet.
+
+    The palette leans brighter than the page chrome so the panel actually reads
+    as a picture behind the words, not a shadow. ASCII comments only: an em-dash
+    in one of these made the file unparseable before, once.
   -->
 
   <defs>
+    <!-- Fine substrate, a touch of texture under and around the panel. -->
     <pattern id="substrate" width="56" height="56" patternUnits="userSpaceOnUse">
-      <circle cx="18" cy="16" r="1.4" fill="#a5a9c0"/>
-      <circle cx="45" cy="42" r="1.1" fill="#a5a9c0"/>
+      <circle cx="18" cy="16" r="1.3" fill="#9aa0b8"/>
+      <circle cx="45" cy="42" r="1" fill="#9aa0b8"/>
     </pattern>
 
-    <linearGradient id="sheet-fade" x1="0" y1="0" x2="0" y2="1">
+    <!-- Dissolve the panel into the dark at the right edge and the bottom of
+         the sheet, so it never ends in a hard rectangle. -->
+    <linearGradient id="fade-x" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0" stop-color="#ffffff" stop-opacity="1"/>
-      <stop offset="0.72" stop-color="#ffffff" stop-opacity="0.9"/>
+      <stop offset="0.7" stop-color="#ffffff" stop-opacity="1"/>
       <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
     </linearGradient>
-    <mask id="fade">
-      <rect width="1600" height="900" fill="url(#sheet-fade)"/>
+    <linearGradient id="fade-y" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="1"/>
+      <stop offset="0.92" stop-color="#ffffff" stop-opacity="1"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <mask id="sheet-fade">
+      <rect width="1600" height="900" fill="url(#fade-y)"/>
+    </mask>
+    <mask id="panel-fade">
+      <rect width="1600" height="900" fill="url(#fade-x)"/>
     </mask>
   </defs>
 
-  <g mask="url(#fade)">
-    <rect width="1600" height="900" fill="url(#substrate)" opacity="0.45"/>
+  <!-- Substrate. On phones the viewport slices the centre of the canvas, on
+       wide screens the whole field shows - so the dots are safe texture in
+       either and read as grain rather than a marking. -->
+  <g mask="url(#sheet-fade)">
+    <rect width="1600" height="900" fill="url(#substrate)" opacity="0.42"/>
 
-    <g fill="none" stroke="#7d81a3" stroke-width="1">
-      <path d="M40 150 H330 V250 H560 V190 H1240" opacity="0.4"/>
-      <path d="M60 430 V310 H340 V235 H700" opacity="0.32"/>
-      <path d="M640 760 V560 H1120 V420 H1520" opacity="0.36"/>
-      <path d="M1180 120 V300 H1380" opacity="0.3"/>
-    </g>
-
-    <g fill="#a5a9c0">
-      <circle cx="40" cy="150" r="2"/>
-      <circle cx="330" cy="250" r="2"/>
-      <circle cx="560" cy="190" r="2"/>
-      <circle cx="60" cy="430" r="2"/>
-      <circle cx="340" cy="235" r="2"/>
-      <circle cx="640" cy="760" r="2"/>
-      <circle cx="1120" cy="420" r="2"/>
-      <circle cx="1180" cy="120" r="2"/>
-      <circle cx="1380" cy="300" r="2"/>
+    <!-- Two faint neutral traces, upper-left, tying the sheet to the panel. -->
+    <g fill="none" stroke="#8b8fa8" stroke-width="1" opacity="0.25">
+      <path d="M120 300 H420 V360 H760"/>
+      <path d="M160 210 H520 V270 H900"/>
     </g>
   </g>
 
-  <g>
-    <path d="M340 856 V700 H820 V600 H1210 V480" fill="none" stroke="#f59e0b" stroke-width="1.25" opacity="0.52"/>
-    <g fill="#f59e0b">
-      <circle cx="340" cy="856" r="2.6"/>
-      <circle cx="340" cy="700" r="2.4"/>
-      <circle cx="820" cy="600" r="3"/>
-      <circle cx="1210" cy="480" r="2.4"/>
+  <!-- The workbench: the picture proper, bottom-anchored and wide so both a
+       phone's centre slice and a desktop's full width show it. -->
+  <g mask="url(#panel-fade)">
+    <g transform="rotate(-2 850 690)">
+      <!-- Back sheet, half-shadowed behind the front window. -->
+      <rect x="410" y="560" width="930" height="300" rx="16" fill="#1b1b28" stroke="#3a3a54" stroke-width="1"/>
+      <g fill="#3a3a50">
+        <rect x="470" y="628" width="180" height="8" rx="2" opacity="0.55"/>
+        <rect x="470" y="648" width="130" height="8" rx="2" opacity="0.45"/>
+        <rect x="470" y="668" width="220" height="8" rx="2" opacity="0.4"/>
+      </g>
+
+      <!-- Front window: chrome, editor, output. -->
+      <rect x="310" y="500" width="900" height="336" rx="14" fill="#1a1a28" stroke="#4a4a68" stroke-width="1.2"/>
+
+      <!-- A hair of amber along the lit top edge, so the panel reads as a live
+           thing rather than a dark slab. -->
+      <path d="M324 501.5 H1196" fill="none" stroke="#f59e0b" stroke-width="1.2" opacity="0.35"/>
+
+      <!-- Title bar with the site's traffic lights, one lit. -->
+      <path d="M324 500 H1196 A14 14 0 0 1 1210 514 V540 H310 V514 A14 14 0 0 1 324 500Z" fill="#1f1f2e"/>
+      <circle cx="348" cy="520" r="4.5" fill="#52526f"/>
+      <circle cx="370" cy="520" r="4.5" fill="#52526f"/>
+      <circle cx="392" cy="520" r="4.5" fill="#f59e0b"/>
+      <rect x="560" y="509" width="400" height="22" rx="11" fill="#101018" stroke="#3b3b55" stroke-width="1"/>
+      <circle cx="580" cy="520" r="3" fill="#f59e0b" opacity="0.85"/>
+      <rect x="596" y="515" width="120" height="10" rx="2" fill="#42425c" opacity="0.7"/>
+      <rect x="726" y="515" width="60" height="10" rx="2" fill="#35354c" opacity="0.7"/>
+
+      <!-- Left activity sidebar, one active node. -->
+      <rect x="330" y="556" width="64" height="252" rx="8" fill="#191924" stroke="#34344b" stroke-width="1"/>
+      <g fill="#545474">
+        <rect x="344" y="574" width="36" height="10" rx="2" opacity="0.7"/>
+        <rect x="344" y="594" width="36" height="10" rx="2" opacity="0.7"/>
+        <rect x="344" y="614" width="36" height="10" rx="2" opacity="0.5"/>
+      </g>
+      <circle cx="362" cy="652" r="5" fill="#f59e0b"/>
+      <g fill="#545474">
+        <rect x="344" y="672" width="36" height="10" rx="2" opacity="0.5"/>
+        <rect x="344" y="692" width="36" height="10" rx="2" opacity="0.5"/>
+        <rect x="344" y="712" width="36" height="10" rx="2" opacity="0.35"/>
+      </g>
+
+      <!-- The editor body: code reads as rows of bars, the live lines amber. -->
+      <rect x="410" y="556" width="560" height="252" rx="8" fill="#1d1d2a" stroke="#3a3a53" stroke-width="1"/>
+      <g>
+        <rect x="436" y="578" width="240" height="8" rx="2" fill="#5a5a7a" opacity="0.95"/>
+        <rect x="436" y="596" width="180" height="8" rx="2" fill="#4c4c6a" opacity="0.9"/>
+        <rect x="436" y="614" width="96" height="8" rx="2" fill="#f59e0b" opacity="0.9"/>
+        <rect x="436" y="632" width="270" height="8" rx="2" fill="#5a5a7a" opacity="0.9"/>
+        <rect x="436" y="650" width="210" height="8" rx="2" fill="#4c4c6a" opacity="0.85"/>
+        <rect x="436" y="668" width="64" height="8" rx="2" fill="#454563" opacity="0.95"/>
+        <rect x="488" y="686" width="150" height="8" rx="2" fill="#5a5a7a" opacity="0.85"/>
+        <rect x="488" y="704" width="110" height="8" rx="2" fill="#f59e0b" opacity="0.85"/>
+        <rect x="488" y="722" width="210" height="8" rx="2" fill="#4c4c6a" opacity="0.8"/>
+        <rect x="436" y="748" width="150" height="8" rx="2" fill="#454563" opacity="0.95"/>
+        <rect x="436" y="766" width="240" height="8" rx="2" fill="#5a5a7a" opacity="0.7"/>
+        <circle cx="452" cy="620" r="2.5" fill="#f59e0b"/>
+      </g>
+
+      <!-- Output card: a line chart, one segment amber. -->
+      <rect x="990" y="556" width="170" height="252" rx="8" fill="#1b1b28" stroke="#3a3a52" stroke-width="1"/>
+      <rect x="1011" y="576" width="70" height="8" rx="2" fill="#454560" opacity="0.7"/>
+      <path d="M1022 760 L1062 706 L1098 726 L1134 676 L1128 688" fill="none" stroke="#9aa0b8" stroke-width="2" opacity="0.85"/>
+      <path d="M1134 676 L1138 668" stroke="#f59e0b" stroke-width="2" opacity="0.95"/>
+      <g fill="#545474" opacity="0.6">
+        <circle cx="1022" cy="760" r="3.5"/>
+        <circle cx="1062" cy="706" r="3.5"/>
+        <circle cx="1098" cy="726" r="3.5"/>
+        <circle cx="1134" cy="676" r="3.5"/>
+      </g>
+      <circle cx="1138" cy="668" r="4" fill="#f59e0b"/>
+      <rect x="1011" y="776" width="128" height="8" rx="2" fill="#33334a" opacity="0.7"/>
     </g>
+
+    <!-- The one live route leaving the panel, reaching out to the sheet. -->
+    <path d="M1210 700 H1420" fill="none" stroke="#f59e0b" stroke-width="1.5" opacity="0.55"/>
+    <circle cx="1420" cy="700" r="3.5" fill="#f59e0b" opacity="0.8"/>
+    <circle cx="300" cy="752" r="4" fill="#8b8fa8" opacity="0.55"/>
   </g>
 </svg>

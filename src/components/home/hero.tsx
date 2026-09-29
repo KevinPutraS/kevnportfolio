@@ -32,15 +32,37 @@ export function Hero() {
   return (
     <section className="relative">
       {/*
-        The backdrop: a technical drawing rather than a photo or a glow.
-        Vector, so it stays sharp at any resolution; authored faint enough that
-        the headline clears it without a scrim, so no gradient has to come
-        back to rescue the text.
+        The backdrop. It started as a photo taker's trick - three blurred colour
+        pools and a masked grid - which the redesign took away as an apology for
+        a name carved in gradient. This is the picture the blank replaced: not a
+        photograph, not a lattice of dots, an illustrated workbench in the site's
+        own palette - editor, sidebar, a chart, one amber route.
+
+        Anchoring matters. `bg-bottom` pins the sheet to the lower edge because
+        that is the only band every viewport shows: wide screens crop the canvas
+        top and bottom with `cover`, phones crop the sides; the bottom survives
+        both. The picture's subjects are all drawn in that lower band, so they
+        are present at every width while the words stay in the upper band.
       */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-0 bg-cover bg-center"
+        className="pointer-events-none absolute inset-0 z-0 bg-cover bg-bottom"
         style={{ backgroundImage: "url('/images/hero-bg.svg')" }}
+      />
+
+      {/*
+        The scrim, where the picture's band meets the words' band. Text sits on
+        the page background, which stays opaque across the upper part of the
+        sheet and opens toward the picture below. Phones stack the whole story
+        full-width over the artwork, so they get their own veil on top.
+      */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-0 bg-[linear-gradient(180deg,rgb(var(--bg))_0%,rgb(var(--bg)/0.72)_30%,rgb(var(--bg)/0.22)_55%,rgb(var(--bg)/0.05)_100%)]"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-0 bg-[rgb(var(--bg))] opacity-[0.16] max-sm:opacity-[0.45]"
       />
 
       <div className="container-custom relative z-10">
