@@ -41,7 +41,34 @@
     /* ---- Type ---------------------------------------------------------- */
     --text: 244 244 250;
     --text-dim: 169 170 186;
-    --text-muted: 116 117 136;
+    /*
+     * Was `116 117 136`, which measures 4.39:1 against `--bg` and 4.15:1 against
+     * `--bg-elevated`. Both are under the 4.5:1 WCAG AA asks of text this size,
+     * and this token is set on 86 elements across 38 files, so the whole palette
+     * was a little bit non-compliant and nothing local could fix it. The hero had
+     * already grown a `.meta-strong` class built on `--text-dim` purely to dodge
+     * it, which is the shape that drifts: a per-component patch for a palette
+     * problem, with the other 37 files still failing.
+     *
+     * `132 133 152` keeps the same cool blue-violet relationship the other
+     * greys have — the blue channel runs about 20 above the red, and green 1
+     * above it, exactly as in `--text-dim` — so the palette's temperature does
+     * not move. The three text steps stay a ladder rather than a pair:
+     *
+     *   --text        18.12:1   on --bg
+     *   --text-dim     8.65:1
+     *   --text-muted   5.47:1
+     *
+     * The number is set by the *lightest* surface the token lands on, not by the
+     * page. Against `--bg` alone a value as low as `122 123 142` would have
+     * cleared 4.5:1, which is the mistake worth recording: `--bg-elevated`
+     * (`17 17 25`) is brighter than the page, so it costs the same mid-grey more
+     * contrast, and `--bg-highlight` (`25 25 36`) costs it more again. Measured
+     * on the worst of the three, this value gives 4.80:1, which is the margin
+     * that matters. Anything that lightens the surfaces will need it rechecked;
+     * `tests/palette-contrast.spec.ts` walks the real elements and will say so.
+     */
+    --text-muted: 132 133 152;
     /* Text placed *on top of* an accent fill. Dark, so it clears 10:1. */
     --text-inverse: 7 9 14;
 
@@ -380,7 +407,15 @@
 
 /* Small all-caps label used for column heads and section eyebrows. Spelled
  * out rather than `@apply`-ing `.meta`, because Tailwind cannot `@apply` a
- * class declared in the same stylesheet. */
+ * class declared in the same stylesheet.
+ *
+ * This sat on `--text-dim` because `--text-muted` was under AA and a label is
+ * small text, and the class was the per-component patch for that. The token is
+ * fixed, so it is no longer a patch — it stays on `--text-dim` on its own merits:
+ * these are the labels that name each column and section, and the whole design
+ * leans on them being quiet rather than on them being dim. A quieter tone is
+ * worth having. What was not worth having was a token that failed 4.5:1 in 38
+ * files, and that is gone. */
 .meta-strong {
   font-family: var(--font-mono);
   font-size: var(--text-xs);

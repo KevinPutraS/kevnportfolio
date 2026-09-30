@@ -5,20 +5,22 @@ import { settle } from './helpers'
 /**
  * The text tokens against the page background.
  *
- * The tokens are stored as bare RGB triplets (`--text-muted: 116 117 136`) and
+ * The tokens are stored as bare RGB triplets (`--text-muted: 132 133 152`) and
  * consumed as `rgb(var(--text-muted))`, so the ratio is a property of the
  * palette and holds on every route whether or not a page uses the token.
  *
- * This file also records a known failure. `--text-muted` measures 4.39:1 against
- * `--bg`, just under the 4.5:1 WCAG AA asks of text this size, and it is used in
- * 38 files. The hero already works around it with a `.meta-strong` class built on
- * `--text-dim` (8.6:1) — a per-component patch for a palette problem, which is
- * the shape that drifts. The honest fix is one token.
+ * This file used to carry a known failure. `--text-muted` measured 4.39:1 against
+ * `--bg` and 4.15:1 against `--bg-elevated`, and the hero had grown a
+ * `.meta-strong` class built on `--text-dim` to dodge it — a per-component patch
+ * for a palette problem, which is the shape that drifts, since 37 other files
+ * stayed non-compliant. The token is fixed now and the assertions are plain, so
+ * this test is the thing that stops it drifting back.
  *
- * `test.fail()` marks that as expected: the suite stays green while the debt is
- * open, and the day someone lifts the token this becomes a real pass with no edit
- * here. Dropping the `.fail` before the token is fixed is the one way to lose
- * track of it.
+ * The second test is the one that carries the weight. Measuring a token against
+ * `--bg` is a measurement of the palette on paper; walking every small text
+ * element on a page and measuring it against the surface it *actually* sits on is
+ * a measurement of the site, and it is the one that catches a token used on a
+ * brighter surface than the token test can see.
  */
 
 type Token = { name: string; value: [number, number, number] }
@@ -34,6 +36,12 @@ function readTokens(): Token[] {
     const n = root.getPropertyValue(name).match(/[\d.]+/g)?.slice(0, 3).map(Number)
     return [n?.[0] ?? 0, n?.[1] ?? 0, n?.[2] ?? 0]
   }
+  // Spelled out rather than globbed, because the three that belong on the page are
+  // not all the tokens starting with `--text`. `--text-inverse` is deliberately
+  // the near-invisible one — it is set on top of an accent fill, where it clears
+  // 10:1 against amber, and against `--bg` it measures about 1.00:1. Adding it
+  // here "for coverage" would fail with a number that looks absurd until you know
+  // what the token is for.
   return [
     { name: '--text', value: read('--text') },
     { name: '--text-dim', value: read('--text-dim') },
@@ -41,14 +49,27 @@ function readTokens(): Token[] {
   ]
 }
 
+/**
+ * The page background, read from the stylesheet rather than assumed.
+ *
+ * If `--bg` comes back empty then the stylesheet never applied, and the honest
+ * answer is to say so. A bare `.match(...).slice` throws `Cannot read properties
+ * of null` from a line that looks unrelated to the cause, which is a bad way to
+ * learn that someone ran `next build` against the shared `.next` and the dev
+ * server is now serving 200 HTML over a 404 stylesheet.
+ */
 const pageBackground = (page: import('@playwright/test').Page) =>
   page.evaluate(() => {
-    const n = getComputedStyle(document.documentElement)
-      .getPropertyValue('--bg')
-      .match(/[\d.]+/g)!
-      .slice(0, 3)
-      .map(Number)
-    return [n[0], n[1], n[2]] as [number, number, number]
+    const raw = getComputedStyle(document.documentElement).getPropertyValue('--bg')
+    const m = raw.match(/[\d.]+/g)
+    if (!m) {
+      throw new Error(
+        `--bg resolved to "${raw.trim()}" on :root, so globals.css is not applied. ` +
+          `Check the stylesheet responds 200 before trusting any result here — a ` +
+          `200 from the dev server only means the HTML did.`
+      )
+    }
+    return [Number(m[0]), Number(m[1]), Number(m[2])] as [number, number, number]
   })
 
 test.describe('palette contrast', () => {
@@ -57,7 +78,7 @@ test.describe('palette contrast', () => {
     await settle(page)
     const background = await pageBackground(page)
 
-    for (const t of (await page.evaluate(readTokens)).filter((t) => t.name !== '--text-muted')) {
+    for (const t of await page.evaluate(readTokens)) {
       const ratio = contrast(t.value, background)
       console.log(`  ${t.name.padEnd(14)} rgb(${t.value.join(', ')})  ${ratio.toFixed(2)}:1`)
       expect(ratio, `${t.name} against --bg`).toBeGreaterThanOrEqual(4.5)
@@ -65,9 +86,9 @@ test.describe('palette contrast', () => {
   })
 
   test('--text-muted clears AA against the page background', async ({ page }) => {
-    // Known debt: 4.39:1 in 38 files. See the note at the top of this file.
-    test.fail(true, 'known debt: --text-muted is 4.39:1; fix the token, then drop this .fail')
-
+    // Was 4.39:1 against --bg and 4.15:1 against --bg-elevated, and was the one
+    // token the loop above had to skip. 116 117 136 -> 132 133 152; see the note
+    // on the token in globals.css for why the binding surface is not --bg.
     await page.goto('/')
     await settle(page)
     const background = await pageBackground(page)
@@ -81,13 +102,11 @@ test.describe('palette contrast', () => {
   })
 
   test('no small text on the homepage fails against its own background', async ({ page }) => {
-    // Same debt as the token above, seen from the other end. 30 elements, all of
-    // them `--text-muted`. Marked expected so the suite is green while the token
-    // is short; it turns into a real pass the moment the token is fixed, and it
-    // is the test that will complain if a *new* element starts using the token
-    // somewhere the palette test has no visibility of.
-    test.fail(true, 'follows --text-muted: every offender is that one token; fix it and this passes')
-
+    // The same debt seen from the other end: it was 31-32 elements, and every one
+    // of them was this token. Kept as its own test because the palette test above
+    // only knows the token, while this one walks the rendered elements and so
+    // catches a *new* small-text element landing on a surface the palette test has
+    // no visibility of.
     await page.goto('/')
     await settle(page)
 
@@ -103,24 +122,28 @@ test.describe('palette contrast', () => {
      *  - the `/` between the descriptor and the year is `aria-hidden`. WCAG 1.4.3
      *    exempts purely decorative text, and a separator is exactly that.
      *
-     * Opacity is deliberately not consulted. Contrast is a property of the two
-     * colours, and skipping half-faded elements would have made the count depend
-     * on when the assertion happened to run — a fade-in still in flight is a
-     * function of machine load, not of the design. The intended rendered state is
-     * full opacity, so that is what is measured.
+     * The opacity of an *ancestor* is a different matter, and it is checked. An
+     * element's own `opacity: 0.5` is a decision about that element, which the
+     * walk already skips; but `opacity` on a wrapper composites every descendant
+     * toward the backdrop, and none of the two colours above know about it. A
+     * `disabled:opacity-50` or a `transition-opacity` left on an ancestor would
+     * put real text under AA while this file still reported the declared token
+     * ratio. The declared value is not the painted value.
      *
      * A gradient or image background resolves to null and is skipped rather than
      * guessed at; the hero's own text over its artwork is measured for real, by
      * sampling pixels, in `hero-contrast.spec.ts`.
-     *
-     * One thing worth knowing before the token is lifted: `--bg-elevated`
-     * (17 17 25) is *lighter* than the page, so muted grey on it measures 4.15:1
-     * — worse than the 4.39:1 against the page itself. A replacement has to clear
-     * 4.5:1 on both, and the elevated surface is the binding constraint.
      */
     const found = await page.evaluate(() => {
-      const bgTriplet = getComputedStyle(document.documentElement).getPropertyValue('--bg').match(/[\d.]+/g)!.slice(0, 3).map(Number)
-      const fallback = [bgTriplet[0], bgTriplet[1], bgTriplet[2]] as number[]
+      const raw = getComputedStyle(document.documentElement).getPropertyValue('--bg')
+      const bgMatch = raw.match(/[\d.]+/g)
+      if (!bgMatch) {
+        throw new Error(
+          `--bg resolved to "${raw.trim()}" on :root, so globals.css is not applied. ` +
+            `Everything below would be measured against a fallback and mean nothing.`
+        )
+      }
+      const fallback = [Number(bgMatch[0]), Number(bgMatch[1]), Number(bgMatch[2])]
 
       const effectiveBg = (el: Element): number[] | null => {
         for (let n: Element | null = el; n && n !== document.documentElement; n = n.parentElement) {
@@ -135,7 +158,21 @@ test.describe('palette contrast', () => {
         return fallback
       }
 
-      const out: Array<{ text: string; color: number[]; bg: number[]; size: number }> = []
+      /** The alpha an ancestor paints this element at, as a multiplier. */
+      const inheritedFade = (el: Element): { fade: number; culprit: string } => {
+        let fade = 1
+        let culprit = ''
+        for (let n: Element | null = el; n && n !== document.documentElement; n = n.parentElement) {
+          const o = Number.parseFloat(getComputedStyle(n).opacity)
+          if (o < 1) {
+            fade *= o
+            if (!culprit) culprit = `${n.tagName.toLowerCase()}.${String(n.className).split(' ')[0]}`
+          }
+        }
+        return { fade, culprit }
+      }
+
+      const out: Array<{ text: string; color: number[]; bg: number[]; size: number; fade: number; culprit: string }> = []
       for (const el of document.querySelectorAll<HTMLElement>('body *')) {
         if (el.closest('[aria-hidden="true"]')) continue
         const text = (el.textContent ?? '').trim()
@@ -149,7 +186,8 @@ test.describe('palette contrast', () => {
         const bg = effectiveBg(el)
         if (!bg) continue
         const c = cs.color.match(/[\d.]+/g)!.slice(0, 3).map(Number)
-        out.push({ text: text.slice(0, 40), color: [c[0], c[1], c[2]], bg, size })
+        const { fade, culprit } = inheritedFade(el)
+        out.push({ text: text.slice(0, 40), color: [c[0], c[1], c[2]], bg, size, fade, culprit })
       }
       return out
     })
@@ -169,6 +207,20 @@ test.describe('palette contrast', () => {
     expect(
       failing.map((o) => `"${o.text}" @ ${o.ratio.toFixed(2)}:1`),
       `${failing.length} small text element(s) below 4.5:1 on the homepage`
+    ).toEqual([])
+
+    // Asserted separately, because the failure mode is different in kind: not a
+    // token that was always wrong, but text that renders lighter than its
+    // declared colour because a wrapper is semi-transparent. `disabled:opacity-50`
+    // and `transition-opacity` are both easy to leave behind.
+    const faded = found.filter((o) => o.fade < 1)
+    console.log(`  of those, ${faded.length} sit under a semi-transparent ancestor`)
+    for (const f of faded) {
+      console.log(`  ${f.fade}x via ${f.culprit}  "${f.text}"`)
+    }
+    expect(
+      faded.map((o) => `${o.text} at ${o.fade}x via ${o.culprit}`),
+      'small text must not be composited down by a semi-transparent ancestor'
     ).toEqual([])
   })
 })
