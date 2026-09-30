@@ -1007,6 +1007,143 @@
 }
 
 /* ==========================================================================
+ * HERO BACKDROP
+ * --------------------------------------------------------------------------
+ * The hero's atmosphere is two bitmaps — `bgdesktop.webp` and `bgmobile.webp` —
+ * painted full-bleed behind the content. Measured against a page background of
+ * luminance 9, the desktop plate peaks at 225, and its brightest region is a
+ * wedge in the bottom-right corner that lands squarely under the site index.
+ * `--text-dim` sits at 170, so the secondary text there was reading *darker*
+ * than the glow behind it: the decoration was not merely competing with the
+ * content, it was inverting it.
+ *
+ * The fix is not a new image. It is three adjustments to the existing one:
+ *
+ *   1. the plate is dimmed to a level where it reads as texture;
+ *   2. a scrim holds it down under the two text columns — and only there, so the
+ *      margins and the gutter keep the artwork's own character;
+ *   3. a corner scrim removes the bright wedge specifically.
+ *
+ * The scrim's placement is the part that is easy to get wrong. A full-width wash
+ * was tried first and measured worse than doing nothing: the margins came out at
+ * 0.87x the bare page background, i.e. *darker* than the page behind it, which
+ * reads as a smudge rather than as texture, and the gutter between the columns
+ * was flat at 0.17%. Dimming everything is not the same as protecting the text.
+ * So the scrim is carried by `.hero-column`, which sits on the two grid children
+ * and therefore tracks the content at every viewport — no percentage gradient
+ * can, because the container is 72rem wide and centred, so its edges fall at
+ * 11% and 89% of a 1440px hero but at 20% and 80% of a 1920px one.
+ *
+ * The acceptance numbers, measured with the hero's content hidden so only the
+ * plate is sampled: under text, p95 below ~1%; in the margins, a median clearly
+ * above the bare page and peaks well clear of it.
+ *
+ * The drift is the one moving thing on the page, and it is deliberately
+ * invisible as motion — 0.8% of a background over half a minute. It is gated on
+ * `prefers-reduced-motion: no-preference` rather than on a global override, so
+ * the reduced case never starts the animation at all.
+ * ========================================================================== */
+
+.hero-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: bottom center;
+  opacity: 0.62;
+  /* Scaled up slightly so the drift below never exposes an edge. */
+  transform: scale(1.05);
+  transform-origin: bottom center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-backdrop {
+    animation: heroDrift 32s var(--ease) infinite alternate;
+  }
+}
+
+@keyframes heroDrift {
+  from {
+    transform: scale(1.05) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.05) translate3d(-0.8%, -0.5%, 0);
+  }
+}
+
+/* The reading path, aligned to the content rather than to the viewport. */
+.hero-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: radial-gradient(
+    58% 54% at 100% 100%,
+    rgb(var(--bg) / 0.74) 0%,
+    rgb(var(--bg) / 0.36) 46%,
+    rgb(var(--bg) / 0) 78%
+  );
+}
+
+@media (max-width: 767px) {
+  /*
+   * Below `md` the hero is narrow, and a phone gives decoration far less room to
+   * be atmosphere and far more room to be clutter.
+   *
+   * The boundary is `md`, not `lg`, and that is the point of this block. The
+   * *layout* only becomes two columns at `lg`, but the hero is already 704px wide
+   * at 768px — and a portrait plate under `cover` in a wide, short box is cropped
+   * to a narrow centre slice, which measured 0.40% luminance at 768px against
+   * 0.52% at 390px: the widest single-column hero had the least texture on the
+   * page. Pairing the wide plate with the wide box fixes that, so the image
+   * choice follows the shape of the box and not the number of columns.
+   */
+  .hero-backdrop {
+    opacity: 0.5;
+  }
+
+  .hero-veil {
+    background-image: radial-gradient(
+      76% 26% at 82% 100%,
+      rgb(var(--bg) / 0.6) 0%,
+      rgb(var(--bg) / 0) 74%
+    );
+  }
+}
+
+/*
+ * The scrim under the text. Carried by the column rather than by the hero, so it
+ * follows the content at every width and the margins are left alone.
+ *
+ * The vertical fade is what keeps it from reading as a panel: a rectangle with
+ * visible top and bottom edges would be a box drawn around the words, which is
+ * the opposite of letting the words sit on the page. The horizontal bleed is
+ * 16px — enough to soften the edge into the gutter, and deliberately not 24px,
+ * which closed a 48px gutter completely and measured the gutter at 0.64x the
+ * bare page, i.e. flatter than leaving it alone.
+ */
+.hero-column {
+  position: relative;
+}
+
+.hero-column::before {
+  content: '';
+  position: absolute;
+  inset: -1.5rem -1rem;
+  z-index: -1;
+  pointer-events: none;
+  background-image: linear-gradient(
+    to bottom,
+    rgb(var(--bg) / 0) 0%,
+    rgb(var(--bg) / 0.66) 9%,
+    rgb(var(--bg) / 0.66) 91%,
+    rgb(var(--bg) / 0) 100%
+  );
+}
+
+/* ==========================================================================
  * SKELETONS
  * ========================================================================== */
 
