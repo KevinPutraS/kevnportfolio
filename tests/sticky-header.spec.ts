@@ -84,20 +84,22 @@ test.describe('sticky header', () => {
     await page.goto('/')
     await settle(page)
 
-    const { navH, headerH, scrollPaddingTop } = await page.evaluate(() => {
-      const root = getComputedStyle(document.documentElement)
-      return {
-        navH: Number.parseFloat(root.getPropertyValue('--nav-h')) * 16,
-        headerH: document.querySelector('header')!.getBoundingClientRect().height,
-        scrollPaddingTop: Number.parseFloat(root.scrollPaddingTop),
-      }
-    })
+        const { navH, headerH, scrollPaddingTop } = await page.evaluate(() => {
+          const root = getComputedStyle(document.documentElement)
+          return {
+            navH: Number.parseFloat(root.getPropertyValue('--nav-h')) * 16,
+            headerH: document.querySelector('header')!.getBoundingClientRect().height,
+            scrollPaddingTop: Number.parseFloat(root.scrollPaddingTop),
+          }
+        })
 
-    // `--nav-h` is documented in globals.css as having to match the header's real
-    // height. It is 4rem against a header that is `h-16` plus a 1px border, so it
-    // is a pixel short and `scroll-padding-top` is a pixel short with it. Asserted
-    // with a pixel of tolerance so this reports a real drift, not rounding.
-    expect(Math.abs(navH - headerH)).toBeLessThanOrEqual(1.5)
-    expect(scrollPaddingTop).toBeGreaterThanOrEqual(headerH)
+        // Equal, not approximately equal. `--nav-h` sizes the header, so any
+        // difference at all means the two have come apart — which is exactly what
+        // happened while the token was a hand-kept copy of `h-16`: the bar was
+        // 65px because the `border-b` sat outside the height, the token said
+        // 64px, and a 1.5px tolerance meant it never failed. Half a pixel of
+        // slack covers subpixel rounding in a scaled viewport and no more.
+        expect(Math.abs(navH - headerH), `--nav-h is ${navH}px, header is ${headerH}px`).toBeLessThanOrEqual(0.5)
+        expect(scrollPaddingTop).toBeGreaterThanOrEqual(headerH)
   })
 })

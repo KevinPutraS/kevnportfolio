@@ -112,13 +112,23 @@ export function Navbar() {
          * `z-50` stays because the wrapper claims the same value, and the header
          * is positioned within it.
          */
-        'z-50 border-b transition-[background-color,border-color,box-shadow] duration-300',
+        'z-50 h-[var(--nav-h)] border-b transition-[background-color,border-color,box-shadow] duration-300',
         lifted
           ? 'border-[rgb(var(--border))] bg-[rgb(var(--bg)/0.85)] shadow-[0_10px_30px_-18px_rgb(0_0_0/0.9)] backdrop-blur-xl'
           : 'border-transparent bg-[rgb(var(--bg)/0.6)] backdrop-blur-md'
       )}
     >
-      <div className="container-custom flex h-16 items-center justify-between gap-3">
+      {/*
+        `h-full`, not `h-16`. The height lives on the <header> so that `--nav-h`
+        and the bar's real height cannot drift apart: the token is what sets it,
+        so the two are the same number by construction. The `border-b` below
+        sits on the header too, and Tailwind's border-box sizing keeps that 1px
+        *inside* `--nav-h` rather than adding to it — which is the entire reason
+        this element owns the height. When the height was on this div instead,
+        the bar measured 65px against a 64px token and `scroll-padding-top` was
+        a pixel short with it, permanently, because nothing failed.
+      */}
+      <div className="container-custom flex h-full items-center justify-between gap-3">
         {/*
           The wordmark is the name and nothing else. It used to carry a small
           "portfolio" label beside it, which was both below the readable size

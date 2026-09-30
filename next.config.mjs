@@ -1,5 +1,24 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  /*
+   * `next build` and `next dev` share `.next` by default, which is a trap rather
+   * than a limitation. A production build rewrites the manifest the dev server
+   * reads and the dev server does not notice: it keeps answering 200 for the HTML
+   * while its stylesheet 404s, so the page renders with none of the CSS and every
+   * fluid size collapses to its fallback. A 200 from the dev server is not
+   * evidence that it is healthy.
+   *
+   * That is not theoretical. It cost a full test run and seventeen failures, none
+   * of which were about the site. The build writes to `.next-build` instead, so the
+   * two never share a directory and the ordering constraints in `check` stop
+   * mattering.
+   *
+   * `.next` stays the default so `next dev` needs no environment, and `start` is
+   * pointed at the same directory the build wrote to, because a production server
+   * has to serve the output the build produced.
+   */
+  distDir: process.env.NEXT_DIST_DIR || '.next',
+
   images: {
     /*
      * Project thumbnails are either bundled local files or objects in the

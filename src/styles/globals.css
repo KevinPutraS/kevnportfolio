@@ -185,10 +185,15 @@
     --dur: 200ms;
     --dur-slow: 380ms;
 
-    /* ---- Chrome -------------------------------------------------------- */
-    /* Must match the header's real height (see `.site-header`). Used by
-     * `scroll-padding-top` so an anchor never lands under the sticky bar. */
-    --nav-h: 4rem;
+        /* ---- Chrome -------------------------------------------------------- */
+        /* The header's height. It *defines* it — `.site-header` is sized from
+         * this token, so the bar and the scroll padding cannot disagree. It used
+         * to be a number to be kept in sync with `h-16` on an inner div, which
+         * put the 1px `border-b` outside the token: the bar measured 65px and
+         * this said 64px, and `scroll-padding-top` was a pixel short forever with
+         * nothing failing. `tests/sticky-header.spec.ts` now asserts the two are
+         * equal, so a future edit cannot reopen it. */
+        --nav-h: 4rem;
     --container-max: 72rem;
 
     /* ---- Semantic aliases ----------------------------------------------
