@@ -90,6 +90,15 @@ export function Navbar() {
   return (
     <header
       data-lifted={lifted ? 'true' : undefined}
+      /*
+        `data-print="hide"` rather than a `header { display: none }` rule in the
+        print block. Element selectors in a print stylesheet are a trap on a site
+        this shape: the public shell's nav is a `<header>`, and so is the resume's
+        own document header, and so is the page header on every route. A blanket
+        rule deleted the resume's name and summary along with the navbar, and it
+        did so silently. An explicit opt-in cannot match a document.
+      */
+      data-print="hide"
       className={classNames(
         'sticky top-0 z-50 border-b transition-[background-color,border-color,box-shadow] duration-300',
         lifted

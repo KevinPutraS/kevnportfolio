@@ -1148,12 +1148,22 @@
  * and cannot be read in daylight. Everything here exists to make "Print or save
  * as PDF" on the resume produce a document worth handing to someone.
  *
- * The approach is to remap the *tokens* rather than override the components. The
- * whole palette is `--bg`, `--text`, `--border` and friends; reassigning them on
- * `:root` inside `@media print` turns the entire page — including every
- * component that reaches for a token — into ink on paper, with no per-component
- * print rules and no second stylesheet to keep in sync. This is the payoff of
- * having tokenised the colour in the first place.
+ * Two separate jobs live in this block, and the resume is now the easier one:
+ *
+ *  - **The site.** The palette is `--bg`, `--text`, `--border` and friends, so
+ *    reassigning them on `:root` turns the whole thing — including every
+ *    component that reaches for a token — into ink on paper, with no per-component
+ *    rules and no second stylesheet. This is the payoff of having tokenised the
+ *    colour in the first place, and it is what makes printing any *other* route
+ *    sane.
+ *
+ *  - **The resume.** Which, after the redesign, needs almost nothing here. The
+ *    document carries its own paper palette on the sheet, is already sized in
+ *    millimetres, and has already been paginated in JavaScript against real
+ *    measured heights. So the resume half of this block is only a *viewer*
+ *    teardown: drop the scale, open the scroll box, one sheet per page. There is
+ *    no print-only arrangement of the content, which is the property that stops
+ *    the PDF and the preview from ever disagreeing.
  *
  * `!important` is necessary and is not a smell here. The print block is an
  * override of a whole system, and specificity cannot express "unless printing",
@@ -1211,41 +1221,53 @@
   body {
     background: #fff !important;
     color: rgb(var(--text)) !important;
+    /*
+      The site sets `overflow-x: clip` on the root so a wide child cannot produce
+      a horizontal scrollbar. On paper that becomes a clip box around the whole
+      document, and a page box the driver considers too large is *scaled down* to
+      fit — which is the one mechanism that could silently shrink the A4 sheet
+      below its real size. Reopened here so the printed page is exactly what the
+      preview showed.
+     */
+    overflow: visible !important;
   }
 
   /*
-    Chrome. The navbar, the footer, the mobile tab bar and the atmosphere
-    overlay are all navigation or decoration, and all of them are screen
-    affordances. Printing them wastes the first page, and several would now
-    print as a solid block over the token-remapped white page.
+    Chrome, by explicit opt-in.
 
-    The tab bar is matched by class rather than by `aria-label`, because both
-    navs in the public shell — the header's and the bottom bar's — are labelled
-    "Main". `class*='fixed'` matches the one that is chrome and leaves any
-    in-content nav the resume might grow alone. It matches the literal Tailwind
-    class in the served HTML.
+    This used to be `header, footer, nav[class*='fixed']`. Element selectors in a
+    print stylesheet are a trap on a site this shape: the public shell's nav is a
+    `<header>`, and so is the resume's *own document header*, and so is the page
+    header on every route. That rule deleted the resume's name, role line, contact
+    block and summary along with the navbar, and it did so silently — the print
+    job still produced a page, just not one with a person on it.
+
+    `[data-print='hide']` is an opt-in, so it cannot match a document. It is set on
+    the navbar, the footer, the mobile tab bar, the mobile menu and the atmosphere
+    overlay, and it is greppable: to find everything that vanishes on paper, search
+    for the attribute.
    */
-  header,
-  footer,
-  nav[class*='fixed'],
-  .page-depth {
-    display: none !important;
-  }
-
-  /* The mobile menu is only ever mounted while it is open, and it renders its
-   * backdrop as a full-screen `fixed` overlay. */
-  div[class*='fixed'][class*='z-[70]'] {
+  [data-print='hide'],
+  .print\:hidden {
     display: none !important;
   }
 
   /*
-    Margins. 16mm is the printer's own default on most desktop drivers, so
-    setting it explicitly means the resume paginates the same way on a machine
-    with unusual defaults — and the page number the browser stamps in the
-    bottom margin lands outside the content rather than inside it.
+    The page box.
+
+    `size: A4` with `margin: 0`, because the sheet carries its own margins as
+    padding. The alternative — `margin: 16mm` here *and* a 210mm-wide sheet — asks
+    the driver for 210mm of page around 210mm of content, and the browser resolves
+    that by scaling the whole document down. It is the single most reliable way to
+    print a CV at 94% of its intended size without anything looking wrong.
+
+    Declaring `size` explicitly also stops the document falling back to whatever
+    the driver's default is, so it paginates identically on a machine set to
+    Letter.
    */
   @page {
-    margin: 16mm;
+    size: A4;
+    margin: 0;
   }
 
   /*
@@ -1253,21 +1275,24 @@
     correct on a screen and wrong on paper: it reserves a full viewport of blank
     space below a document that is one page long, which is how a one-page CV
     becomes a two-page CV with a blank second page.
-   */
+  */
   .min-h-screen {
     min-height: 0 !important;
   }
 
   /*
-    Paged layout.
-
-    `break-after: avoid` on headings keeps a section title from landing alone at
-    the foot of a page with its content overleaf — the single most common way a
-    generated CV looks machine-made. The entries themselves carry
-    `print:break-inside-avoid` in the component, so a work item is never split
-    across a page boundary mid-bullet.
+    Headings may break before themselves but never after, so a section title can
+    never sit alone at the foot of a sheet. This is the *CSS half* of a rule whose
+    other half lives in `src/lib/resume/paginate.ts`; the packer exists because
+    `break-after: avoid` cannot express "the heading and its first unit travel
+    together" — it only knows about the heading — and because the on-screen preview
+    has to obey the same rule as the paper, which CSS media queries cannot do for
+    a screen.
    */
-  h1, h2, h3, h4 {
+  h1,
+  h2,
+  h3,
+  h4 {
     break-after: avoid;
   }
 
@@ -1275,10 +1300,8 @@
     Background art. The hero's full-bleed backdrop and the section washes are
     `position: absolute` at 100% height, so printing them means downloading a
     texture sized to a viewport and then printing it as a full-page image the
-    reader did not ask for. Scoped to the hero section rather than to
-    `[aria-hidden='true']` globally — several decorative elements are aria-hidden
-    and still carry a meaningful hairline.
-   */
+    reader did not ask for.
+  */
   .section-wash,
   .page-depth {
     display: none !important;
@@ -1289,49 +1312,82 @@
     text-decoration: underline;
   }
 
-  /*
-    The three elements the resume page marks as screen-only, restated here so
-    the print behaviour is legible in one place beside the token remap it
-    depends on. `print:hidden` in the markup is what actually does the work.
+  /* ------------------------------------------------------------------------
+   * The resume document on paper
+   * ------------------------------------------------------------------------
+   *
+   * The document is already composed: the paginator has distributed runs across
+   * sheets and each sheet is exactly 210 × 297mm with its own margins as padding.
+   * All that is left to do is to take the *viewer* off it — the scale, the scroll
+   * box, the surround, the controls — and hand the sheets to the driver one per
+   * page.
+   *
+   * `transform: none !important` is the one that matters. The scale is an inline
+   * style, and an inline style beats every class rule in the document, so without
+   * the `!important` the sheets would print at whatever magnification the reader
+   * last chose.
+   *
+   * One thing this block cannot fix, and which is the reason the site chrome is
+   * hidden by `[data-print='hide']` rather than by width queries: a print job is
+   * laid out at the width of the *paper*, so Chrome sees roughly 794px and every
+   * `sm:`/`md:`/`lg:` breakpoint below that resolves as if on a phone. A `lg:hidden`
+   * spacer is invisible on a 1440px screen, which is exactly why the empty 4rem of
+   * it was easy to miss, and visible on paper, where it silently appended a third
+   * page to a two-page CV. Opting elements out explicitly is the only hiding that
+   * survives the switch to a paper-sized viewport.
    */
-  .print\:hidden {
+  .resume-shell {
+    padding: 0 !important;
+    border: 0 !important;
+    background: none !important;
+  }
+
+  .resume-measure {
+    /* Never printed. It is the off-screen measuring pass: `display: none` here is
+       safe, because the pagination it feeds has already happened. */
     display: none !important;
   }
 
-  /*
-    The name, in print only.
-
-    `--text-h2` is a screen token, sized for a 1440px viewport where the resume
-    is one column among several. On A4 that same size is roughly 30% of the
-    width of the page in a single word, and a name that size pushes the contact
-    block and the first date over a page break on a document that should be one
-    page. Print does not get a new token for this — it is the same name, at a
-    size that fits the paper it lands on.
-   */
-  .resume-name {
-    font-size: 1.75rem;
+  .resume-scroller {
+    overflow: visible !important;
+    height: auto !important;
   }
 
-  /*
-    Section headings are allowed to break before themselves but not after, and
-    the Tools grid is held together as a unit. Splitting a two-column definition
-    list mid-way leaves `Backend` on one page and its contents on the next,
-    which reads as a mistake even though nothing is broken.
-   */
-  .resume-dt,
-  .resume-dd {
-    break-inside: avoid;
+  .resume-stack {
+    display: block !important;
+    width: auto !important;
+    transform: none !important;
   }
 
-  /*
-    The header and each entry are held together. A header split across a page
-    break puts the name at the foot of one sheet and the contact block at the
-    head of the next, which is the single most obviously broken thing a generated
-    CV can do.
-   */
-  .resume-header,
-  .resume-entry {
+  .resume-sheet {
+    margin: 0 !important;
+    border-radius: 0;
+    box-shadow: none;
+
+    /*
+     * Open on paper. On screen a run taller than the page is clipped, which is an
+     * honest "this does not fit" and keeps the preview readable; on paper,
+     * clipping silently deletes a line from a CV someone is about to hand in, so
+     * the overflow is allowed to flow on rather than being cut.
+     *
+     * `!important` is required, not decorative. `@media print` carries no extra
+     * specificity, so this competes with the base `.resume-sheet` rule on source
+     * order alone — and the base rule is written *later* in this file, outside the
+     * print block. Without the `!important` the print block loses, and the sheet
+     * stays `overflow: hidden` in exactly the medium where clipping a CV is
+     * expensive. Every other declaration in this print block is marked for the
+     * same reason.
+     */
+    overflow: visible !important;
     break-inside: avoid;
+    page-break-inside: avoid;
+    break-after: page;
+    page-break-after: always;
+  }
+
+  .resume-sheet:last-child {
+    break-after: auto;
+    page-break-after: auto;
   }
 }
 
@@ -1368,202 +1424,916 @@
 .tap { min-height: 2.75rem; min-width: 2.75rem; }
 
 /* ==========================================================================
- * RESUME
+ * RESUME DOCUMENT
  * ==========================================================================
  *
- * Only used by `src/app/(public)/resume/page.tsx`, and the reason these are
- * classes rather than a second Tailwind scheme is the print block at the end of
- * this file: it remaps the colour tokens, and a resume built out of arbitrary
- * values would not follow them. A class can be restyled for paper in one place.
+ * This is a *document*, not a page. The distinction is the whole design, and
+ * everything below follows from it.
  *
- * The type scale is deliberately smaller than the reading scale. A CV is not a
- * web page — it is read at arm's length, in one column, and often on a screen
- * before it is ever printed — so it uses the `--text-sm` / `--text-body-sm`
- * tokens rather than the `--text-h*` ones, with the name as the single large
- * element on the page.
+ * The previous resume was a web page that happened to print. Its sizes were
+ * `rem` and `clamp(…, vw, …)`, inside a 72rem container, with `@media print`
+ * overrides layered on top to hide the chrome. None of those units mean
+ * anything on a 210mm sheet, so the printed result was not a scaled-down version
+ * of what the author reviewed — it was a *different document*, one nobody had
+ * looked at. That is the origin of every symptom in the brief: content too small
+ * on the page, an empty-feeling first page, a cramped date column, and a mobile
+ * preview that bore no resemblance to the PDF.
+ *
+ * So the document is declared in the units paper uses — millimetres for geometry,
+ * points for type — and nothing in it is fluid. There are no breakpoints in this
+ * block, on purpose. A document that reflows is not a document, and a preview
+ * that is not the document is not a preview.
+ *
+ * --------------------------------------------------------------------------
+ * The three numbers the rest of the system depends on
+ * --------------------------------------------------------------------------
+ *
+ * `.resume-viewer` owns the geometry, and `ResumePreview` reads it back out of
+ * the DOM rather than restating it in TypeScript. The paginator needs four
+ * lengths — the page's content box, the continuation rule, the gap between
+ * entries and the gap above a heading — and it needs them in *pixels*, because
+ * that is what the browser measures heights in. Reading them from a set of
+ * `display: block` ruler elements is what converts mm to px without a second
+ * copy of the numbers. A copy in TypeScript would drift the first time a margin
+ * changed, and the symptom would be pages that paginate slightly wrong with no
+ * error and no way to find the cause.
+ *
+ * The arithmetic those four have to agree with is:
+ *
+ *   sheet      210 × 297mm
+ *   content    180mm wide  (210 − 2 × 15mm)
+ *              271mm tall   (297 − 2 × 13mm)
+ *   reserve    12mm on pages 2+ (a 9mm continuation rule plus 3mm of air)
+ *
+ * --------------------------------------------------------------------------
+ * Vertical rhythm and margins
+ * --------------------------------------------------------------------------
+ *
+ * Every child of `.resume-body` has `margin-bottom: 0`, and all the space between
+ * elements comes from their `margin-top`. That is not a style preference — it is
+ * what makes the paginator's arithmetic exact.
+ *
+ * Adjacent vertical margins collapse to the larger of the two, so a heading with
+ * `margin-bottom: 2.6mm` followed by a run with `margin-top: 4.2mm` renders 4.2mm
+ * of gap, while the paginator — which measures border boxes, because
+ * `getBoundingClientRect` excludes margins — adds 2.6 + 4.2 = 6.8mm for the same
+ * boundary. The two disagree by 2.6mm per section, which is invisible on page
+ * one and accumulates into an overflow on the last page. Killing every
+ * `margin-bottom` removes the collapse entirely: the rendered gap and the
+ * counted gap are then the same number, by construction.
+ *
+ * `:first-child` zeroes the leading margin, which is how "do not leave a hole at
+ * the top of a page" is expressed — the paginator applies no gap before the first
+ * element on a page, and this is the CSS that matches it.
  */
 
-/*
-  * Two columns from `sm` up: identity and contact facts side by side.
+.resume-viewer {
+  --resume-page-w: 210mm;
+  --resume-page-h: 297mm;
 
-  * A contact line under the summary was the obvious layout and it is the wrong
-  * one here. The facts a reader looks for in the first two seconds — name, what
-  * they do, how to reach them — are the three things competing for vertical
-  * space on page one, and stacking them spends the top third of A4 before a
-  * single date appears. Splitting them puts the contact block beside the
-  * summary instead of below it, which is also the arrangement every CV template
-  * uses and therefore the one a recruiter's eye already knows how to read.
+  --resume-margin-x: 15mm;
+  --resume-margin-y: 13mm;
 
-  * Below `sm` it collapses to a single column, because two columns of contact
-  * facts on a phone leaves both of them too narrow to hold an email address
-  * without breaking mid-word.
-  */
-.resume-header {
-  display: grid;
-  gap: 1.25rem;
-  padding-bottom: 1.75rem;
-  border-bottom: 1px solid rgb(var(--border));
+  /* Read by the rulers below, and by `.resume-measure`'s own width. */
+  --resume-col-w: calc(var(--resume-page-w) - 2 * var(--resume-margin-x));
+  --resume-page-content-h: calc(var(--resume-page-h) - 2 * var(--resume-margin-y));
+
+  /* Pages 2+: the continuation rule and the air beneath it. */
+  --resume-cont-h: 9mm;
+  --resume-cont-reserve: 12mm;
+
+  /* Gaps. All three are paginated, so none of them may come from a margin the
+     browser is free to collapse. */
+  --resume-gap-section: 6.4mm;
+  --resume-gap-below: 2.4mm;
+  --resume-gap-atom: 4.2mm;
+
+  --resume-sheet-gap: 8mm;
+
+  /* The date rail. Fixed width, always — see `.resume-entry`. */
+  --resume-rail-w: 32mm;
+  --resume-rail-gap: 5mm;
+
+  /* ---- Type scale, in points ----
+   * Points because that is the unit a print driver reasons in, and 1pt is a
+   * fixed 1/72 inch regardless of screen density — so 9.5pt is 9.5pt on a phone,
+   * a 4K monitor and a laser printer. The site's `--text-*` scale is deliberately
+   * not used: those are `clamp()`ed against the viewport, and a fluid name would
+   * make the document 25pt on a desktop and 40pt in a PDF.
+   *
+   * The scale is a real hierarchy with real gaps between the steps, which is what
+   * the brief asked for: name, section, entry title, organisation, body,
+   * metadata. Consecutive sizes differ by 0.5–1pt rather than sitting on top of
+   * each other, because a scale where everything is 9.5pt is a scale that reads
+   * as one undifferentiated grey. */
+  --rd-name: 25pt;
+  --rd-role: 10.5pt;
+  --rd-summary: 10pt;
+  --rd-contact: 9pt;
+  --rd-title: 11pt;
+  --rd-org: 10pt;
+  --rd-body: 9.5pt;
+  --rd-date: 8.5pt;
+  --rd-meta: 8.5pt;
+  --rd-label: 7.5pt;
+  --rd-cont: 7.5pt;
+  --rd-section: 8.5pt;
+
+  position: relative;
 }
 
-@media (min-width: 640px) {
-  .resume-header {
-    grid-template-columns: minmax(0, 1fr) auto;
-    column-gap: 3rem;
-    align-items: start;
-  }
+/* --------------------------------------------------------------------------
+ * The measuring host
+ * --------------------------------------------------------------------------
+ *
+ * Off-screen, laid out, invisible.
+ *
+ * `visibility: hidden` rather than `display: none` is the load-bearing part: a
+ * `display: none` element has no box, reports a height of zero, and would
+ * paginate the entire document onto one overflowing sheet. `overflow: hidden`
+ * then stops the 210mm page ruler from pushing a horizontal scrollbar onto the
+ * site behind a host that is only 180mm wide.
+ */
+.resume-measure {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  width: var(--resume-col-w);
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/*
+ * Rulers. Four elements whose only job is to be measurable, converting the
+ * millimetre values above into the pixel values the paginator compares heights
+ * in. `aria-hidden` comes from the host.
+ */
+.resume-ruler {
+  display: block;
+}
+.resume-ruler--page {
+  width: var(--resume-page-w);
+  height: var(--resume-page-content-h);
+}
+.resume-ruler--cont {
+  height: var(--resume-cont-reserve);
+}
+.resume-ruler--below {
+  height: var(--resume-gap-below);
+}
+.resume-ruler--atom {
+  height: var(--resume-gap-atom);
+}
+.resume-ruler--section {
+  height: var(--resume-gap-section);
+}
+
+/* --------------------------------------------------------------------------
+ * Viewer chrome
+ * --------------------------------------------------------------------------
+ *
+ * A neutral surround, the way a PDF reader has one. The sheet is white whatever
+ * the site theme is, because the document is white: a dark-mode preview of a CV
+ * tells the reader nothing about the paper they will actually receive.
+ */
+.resume-shell {
+  border-top: 1px solid rgb(var(--border));
+  background: rgb(var(--bg-elevated));
+  padding-bottom: var(--space-2xl);
+}
+
+.resume-stage {
+  position: relative;
+  width: 100%;
+}
+
+.resume-scroller {
+  overflow: auto;
+  /* `scrollbar-width: none` is not set here: when the reader zooms past the page
+     width on a phone they need somewhere to pan, and a visible scrollbar is how
+     they find out. */
+}
+
+.resume-stack {
+  position: relative;
+  transform-origin: top left;
+  width: var(--resume-page-w);
+  display: flex;
+  flex-direction: column;
+}
+
+.resume-sheet {
+  position: relative;
+  flex: none;
+  width: var(--resume-page-w);
+  height: var(--resume-page-h);
+  padding: var(--resume-margin-y) var(--resume-margin-x);
+  box-sizing: border-box;
+  margin-bottom: var(--resume-sheet-gap);
+
+  /*
+   * The document's own palette, defined on the sheet rather than inherited from
+   * the site. Two reasons, and the second is the important one:
+   *
+   *  1. The brief asks for "near-black / white depending on the selected resume
+   *     theme", and paper has one theme.
+   *  2. Because the colours live here, the print stylesheet does not need a
+   *     second palette. The preview and the PDF are the same ink because they
+   *     are literally the same declarations — not because a print block
+   *     remembered to remap them, which is how the last two versions drifted.
+   *
+   * Near-black rather than `#000`: pure black on uncoated stock bleeds and reads
+   * heavier than the type is. The accent is the site's amber, darkened from
+   * `245 158 11` to `146 92 6` for the same reason it is darkened in print — it is
+   * illegible on white at 8pt.
+   */
+  --rd-paper: 255 255 255;
+  --rd-ink: 18 18 20;
+  --rd-ink-2: 58 58 64;
+  --rd-ink-3: 112 112 120;
+  --rd-rule: 214 214 218;
+  --rd-rule-2: 168 168 176;
+  --rd-accent: 146 92 6;
+
+  background: rgb(var(--rd-paper));
+  color: rgb(var(--rd-ink));
+  font-family: var(--font-sans);
+  /*
+   * Clipped on screen, open in print.
+   *
+   * The paginator guarantees the content fits, so clipping should never be
+   * visible — but if a substituted font made a run taller than measured, clipping
+   * on screen is the honest outcome (the preview looks like paper and the
+   * shortfall is visible) while clipping in print would silently delete a line
+   * from a CV someone is about to hand in. The print block reopens it, so the
+   * failure mode in print is an extra sheet rather than a missing sentence.
+   */
+  overflow: hidden;
+  box-shadow: 0 18px 40px -28px rgb(0 0 0 / 0.9);
+}
+
+.resume-sheet:last-child {
+  margin-bottom: 0;
+}
+
+.resume-body > * {
+  margin-bottom: 0;
+}
+
+.resume-body > :first-child {
+  margin-top: 0;
+}
+
+/* --------------------------------------------------------------------------
+ * Continuation rule
+ * --------------------------------------------------------------------------
+ *
+ * Page one carries the real header, so it does not need this. Every page after it
+ * restates the name and its own number in the same place, because a loose sheet
+ * two that looks like a different document is the failure mode the brief called
+ * out by name.
+ *
+ * 7.5pt mono, uppercase, in the muted tone: present, not decorative. The version
+ * of this worth having is the one a reader notices when page two comes apart from
+ * the rest; making it louder turns a document into a brochure.
+ */
+.resume-cont {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4mm;
+  height: var(--resume-cont-h);
+  margin-bottom: calc(var(--resume-cont-reserve) - var(--resume-cont-h));
+  border-bottom: 0.5pt solid rgb(var(--rd-rule));
+  font-family: var(--font-mono);
+  font-size: var(--rd-cont);
+  line-height: 1;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgb(var(--rd-ink-3));
+}
+
+.resume-cont__folio {
+  display: flex;
+  align-items: center;
+  gap: 2.4mm;
+}
+
+.resume-cont__rule {
+  width: 10mm;
+  border-top: 0.5pt solid rgb(var(--rd-rule-2));
+}
+
+.resume-cont__number {
+  color: rgb(var(--rd-ink-2));
+}
+
+/* --------------------------------------------------------------------------
+ * Header
+ * --------------------------------------------------------------------------
+ *
+ * Three bands, each with one job: identity, contact, then the pitch.
+ *
+ * The contact block is a *column* beside the name rather than a row beneath the
+ * summary. That is a space decision before it is a design one — a full-width
+ * contact line under the name spends the top third of page one on the three
+ * facts a reader already expects to find, and pushes the first date below the
+ * fold. Beside the name, the same facts cost nothing.
+ *
+ * 58mm is sized to the longest address in the list (`kevinputras798@gmail.com`
+ * is about 39mm at 9pt), with room for a longer one rather than a wrap.
+ */
+.resume-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 58mm;
+  column-gap: 8mm;
+  align-items: start;
+  padding-bottom: 5mm;
+  border-bottom: 0.5pt solid rgb(var(--rd-rule));
 }
 
 .resume-name {
   font-family: var(--font-display);
-  font-size: var(--text-h2);
+  font-size: var(--rd-name);
   font-weight: 700;
-  letter-spacing: -0.03em;
-  line-height: 1.1;
-  color: rgb(var(--text));
+  /* A very small negative tracking, which Space Grotesk needs to set 25pt
+     cleanly. Deliberately not more: the print stylesheet cannot guarantee which
+     face has decoded when the driver lays the sheet out, and negative tracking
+     sized for one face applied to a wider substitute is how glyphs collide. The
+     line-height below is identical in both media for the same reason — a
+     single-line element's height *is* its line-height, so changing it in print
+     would desynchronise the measured pagination from the printed page. */
+  letter-spacing: -0.012em;
+  line-height: 1.12;
+  color: rgb(var(--rd-ink));
 }
 
-.resume-summary {
-  margin-top: 0.625rem;
-  max-width: 62ch;
-  font-size: var(--text-body-sm);
-  line-height: 1.6;
-  color: rgb(var(--text-dim));
+.resume-role {
+  margin-top: 1.6mm;
+  font-size: var(--rd-role);
+  font-weight: 500;
+  line-height: 1.3;
+  color: rgb(var(--rd-ink-2));
 }
 
-/*
-  * Right-aligned in the second column. A left-aligned contact block against a
-  * left-aligned name reads as two separate things; right-aligned against the
-  * rule below it, it reads as one header unit with the details hanging off the
-  * end of it.
-  */
 .resume-contact {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  line-height: 1.5;
-  color: rgb(var(--text-muted));
+  gap: 1.1mm;
+  /* Nudged down so the first address's cap height sits on the name's cap height
+     rather than on its ascender, which is what makes the two columns look
+     deliberately aligned instead of approximately aligned. */
+  margin-top: 1.4mm;
+  font-size: var(--rd-contact);
+  line-height: 1.35;
+  text-align: right;
+  color: rgb(var(--rd-ink-2));
 }
 
-@media (min-width: 640px) {
-  .resume-contact {
-    align-items: flex-end;
-    text-align: right;
-  }
+.resume-contact__link {
+  color: inherit;
+  text-decoration: none;
 }
 
 /*
-  * The date rail.
+ * The pitch, full width under the rule, with a hanging label.
+ *
+ * Constrained to the column beside the name it is forty characters wide and
+ * becomes four lines. Full width under the rule it is two. The rule is also what
+ * tells the reader the identity block above it is finished, so the eye stops
+ * looking for more of it — which is the other half of why it goes here.
+ */
+.resume-summary {
+  display: grid;
+  grid-template-columns: 20mm minmax(0, 1fr);
+  column-gap: 5mm;
+  margin-top: 4.4mm;
+}
 
-  * An entry is a two-column grid from `sm` up: a narrow, fixed-width column of
-  * dates, then the content. This is the format on essentially every printed CV,
-  * and it is here for a specific reason rather than out of convention — it makes
-  * the dates line up in a single readable column, so a reader can see at a
-  * glance how the last few roles overlap or leave gaps. A date floated to the
-  * right of a heading sits at whatever x-position the heading happens to end at,
-  * and the eye has to hunt for it on every entry.
+.resume-summary__label {
+  font-size: var(--rd-label);
+  font-weight: 700;
+  line-height: 1.7;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgb(var(--rd-ink-3));
+}
 
-  * `9.5rem` rather than `auto` so every date in the section starts at the same
-  * x, and right-aligned so the ranges read as a flush column against the
-  * content. A long organisation name cannot widen it, because the content column
-  * takes the remaining space rather than the date column growing.
-  */
+.resume-summary__text {
+  font-size: var(--rd-summary);
+  line-height: 1.45;
+  color: rgb(var(--rd-ink-2));
+}
+
+/* --------------------------------------------------------------------------
+ * Section heading
+ * --------------------------------------------------------------------------
+ *
+ * Uppercase, tracked, with a rule that fills the remaining width. The rule is
+ * what makes it a *band* rather than a label: it closes the section above and
+ * opens the one below, and it is the same gesture as the rule under the header,
+ * so the page reads as one system.
+ */
+.resume-section__head {
+  display: flex;
+  align-items: baseline;
+  gap: 3mm;
+  margin-top: var(--resume-gap-section);
+  break-after: avoid;
+  page-break-after: avoid;
+}
+
+.resume-section__title {
+  flex: none;
+  font-family: var(--font-display);
+  font-size: var(--rd-section);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgb(var(--rd-ink));
+}
+
+.resume-section__rule {
+  flex: 1 1 auto;
+  align-self: center;
+  border-top: 0.5pt solid rgb(var(--rd-rule-2));
+}
+
+/* --------------------------------------------------------------------------
+ * Entry grid
+ * --------------------------------------------------------------------------
+ *
+ *   32mm │ minmax(0, 1fr)
+ *   rail │ content
+ *
+ * Both halves are load-bearing, and this is the layout the brief identified as
+ * the single most important thing to fix.
+ *
+ * **The rail is a fixed track**, so every range starts at the same x and the
+ * reader can see the shape of the history — overlaps, gaps, how long each role
+ * lasted — before reading any of it. `auto` and `min-content` both size the
+ * track to the *longest* date range and leave every other row floating at an
+ * arbitrary position, which is what the first version of this page did.
+ *
+ * **The content track is `minmax(0, 1fr)`**, so a long organisation name takes
+ * space from the content column and never from the rail. "Inspectorate General,
+ * Ministry of Marine Affairs and Fisheries" is the exact row that breaks a naive
+ * grid: with an `auto` first track, that one entry widens the rail for every row
+ * beneath it and squeezes the bullets into a 60mm ribbon. That collision — not
+ * the font size — is what made the old page unreadable.
+ *
+ * 32mm fits the widest date at 8.5pt mono ("— December 2025" is about 19mm) with
+ * room over, so the rail never wraps and never widens.
+ */
 .resume-entry {
   display: grid;
-  gap: 0.25rem 1.5rem;
+  grid-template-columns: var(--resume-rail-w) minmax(0, 1fr);
+  column-gap: var(--resume-rail-gap);
+  align-items: start;
 }
 
-@media (min-width: 640px) {
-  .resume-entry {
-    grid-template-columns: 9.5rem minmax(0, 1fr);
-  }
+.resume-run {
+  margin-top: var(--resume-gap-atom);
 }
 
-.resume-entry-when {
+/* The first unit under a heading sits at the heading's own below-gap, not at the
+   atom gap. Without this, every section's first entry would be set one gap too
+   far down — and the paginator, which counts these gaps, would disagree with the
+   render by the same amount on every section. */
+.resume-section__head + .resume-run {
+  margin-top: var(--resume-gap-below);
+}
+
+/* --------------------------------------------------------------------------
+ * Date rail
+ * --------------------------------------------------------------------------
+ *
+ * Two lines, right-aligned, so the ranges read as a flush column. The range is
+ * split across two lines rather than left to wrap because a string that wraps on
+ * a word boundary breaks the alignment for every entry whose organisation name
+ * happens to be long — which is precisely how the old layout lost its column.
+ *
+ * The ongoing role is the only thing in the document set in the accent. It is the
+ * one date that means "still happening", and a single accent mark is a restrained
+ * way to say so.
+ */
+.resume-entry__rail {
+  min-width: 0;
+  text-align: right;
+}
+
+.resume-entry__period {
   font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  line-height: 1.5;
-  color: rgb(var(--text-muted));
+  font-size: var(--rd-date);
+  line-height: 1.3;
+  color: rgb(var(--rd-ink-2));
 }
 
-@media (min-width: 640px) {
-  .resume-entry-when {
-    padding-top: 0.2em;
-    text-align: right;
-    white-space: nowrap;
-  }
+.resume-entry__from,
+.resume-entry__to {
+  display: block;
 }
 
-.resume-entry-what {
+.resume-entry__to {
+  color: rgb(var(--rd-ink-3));
+}
+
+.resume-entry__to--current {
+  color: rgb(var(--rd-accent));
+}
+
+.resume-entry__kind {
+  margin-top: 1.4mm;
+  font-size: var(--rd-label);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgb(var(--rd-ink-3));
+}
+
+/* --------------------------------------------------------------------------
+ * Entry content
+ * --------------------------------------------------------------------------
+ *
+ * Five tiers, each visually distinct from the next: title, organisation, summary,
+ * bullets, stack. The brief's complaint was that these collided, and the fix is
+ * not size but separation — every tier differs from its neighbour in weight,
+ * colour *and* size, so a glance can tell them apart even at 8pt.
+ */
+.resume-entry__content {
   min-width: 0;
 }
 
-.resume-dt {
-  flex-shrink: 0;
-  min-width: 7.5rem;
+.resume-entry__headline {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 3mm;
+}
+
+.resume-entry__title {
+  font-family: var(--font-display);
+  font-size: var(--rd-title);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.006em;
+  color: rgb(var(--rd-ink));
+}
+
+/*
+ * A link that looks like a heading.
+ *
+ * Underlining the strongest element on each row inverts the hierarchy: the eye
+ * goes to the decoration rather than the title. The destination is not lost,
+ * because it is printed as a monospace address on the line below.
+ */
+.resume-entry__link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.resume-entry__status {
+  flex: none;
+  font-size: var(--rd-label);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgb(var(--rd-ink-3));
+  white-space: nowrap;
+}
+
+.resume-entry__org {
+  margin-top: 0.7mm;
+  font-size: var(--rd-org);
+  line-height: 1.3;
+  color: rgb(var(--rd-ink-2));
+}
+
+.resume-entry__url {
+  margin-top: 0.9mm;
+}
+
+/*
+ * Addresses, in the mono face at the metadata size, never underlined.
+ *
+ * On paper a link label is a promise the reader cannot keep — there is nothing to
+ * click — so the label is dead weight and the address is the entire value. Six
+ * underlined addresses turn the page into a directory; six quiet monospace
+ * addresses read as metadata, which is what they are.
+ */
+.resume-url {
+  font-family: var(--font-mono);
+  font-size: var(--rd-meta);
+  line-height: 1.3;
+  color: rgb(var(--rd-ink-3));
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.resume-entry__summary {
+  margin-top: 1.8mm;
+  font-size: var(--rd-body);
+  line-height: 1.42;
+  color: rgb(var(--rd-ink-2));
+}
+
+/*
+ * Bullets.
+ *
+ * A `::before` dot rather than a wrapped marker span, so the measured box has no
+ * extra children to account for. `text-indent`-free hanging indent via padding,
+ * because `text-indent` applies to the first line only and the wrap point moves
+ * with the text.
+ */
+.resume-bullets {
+  display: grid;
+  row-gap: 1.2mm;
+  margin-top: 2mm;
+}
+
+.resume-bullet {
+  position: relative;
+  padding-left: 3.8mm;
+  font-size: var(--rd-body);
+  line-height: 1.42;
+  color: rgb(var(--rd-ink-2));
+}
+
+.resume-bullet::before {
+  content: '';
+  position: absolute;
+  top: 0.5em;
+  left: 0;
+  width: 1.4mm;
+  height: 1.4mm;
+  border-radius: 50%;
+  background: rgb(var(--rd-rule-2));
+}
+
+/* The technology row. A label and a list, in the two quietest voices in the
+   document, because a technology line is a claim the entries above it are the
+   evidence for — it does not need to compete with either.
+
+   Named `resume-tech`, not `resume-stack`, and the distinction is load-bearing
+   rather than cosmetic. The viewer's page stack is `.resume-stack`, and it
+   carries `width: var(--resume-page-w)` — 210mm. While this row shared that name
+   it inherited the width, so a technology list rendered 210mm wide inside a
+   143mm content column and ran 67mm off the edge of the paper, where
+   `overflow: hidden` silently deleted the tail of every long list. The print
+   block masked it (`width: auto !important` on `.resume-stack`), which is why the
+   PDF looked right and the preview did not: the same collision, repaired in one
+   medium and not the other. */
+.resume-tech {
+  display: flex;
+  align-items: baseline;
+  gap: 2.2mm;
+  margin-top: 2.4mm;
+  /* Belt and braces against a long unbroken token — a URL-shaped technology
+     name — re-introducing an overflow the width no longer causes. */
+  min-width: 0;
+}
+
+.resume-tech__label {
+  flex: none;
+  font-size: var(--rd-label);
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgb(var(--rd-ink-3));
+}
+
+.resume-tech__items {
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: var(--rd-meta);
+  line-height: 1.4;
+  color: rgb(var(--rd-ink-3));
+}
+
+/* --------------------------------------------------------------------------
+ * Certificates
+ * --------------------------------------------------------------------------
+ *
+ * Two columns, two lines each: title with the year set against its right edge,
+ * issuer beneath. No images — a certificate screenshot is bitmap, and printed at
+ * 40mm it is an unreadable grey rectangle costing a quarter of a page to say
+ * nothing the two lines already say.
+ */
+.resume-certs {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: 8mm;
+  row-gap: 3mm;
+}
+
+.resume-cert {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  column-gap: 3mm;
+  min-width: 0;
+}
+
+.resume-cert__title {
+  grid-area: 1 / 1;
+  font-size: var(--rd-body);
+  font-weight: 600;
+  line-height: 1.3;
+  color: rgb(var(--rd-ink));
+}
+
+.resume-cert__year {
+  grid-area: 1 / 2;
+  font-family: var(--font-mono);
+  font-size: var(--rd-meta);
+  line-height: 1.3;
+  color: rgb(var(--rd-ink-3));
+}
+
+.resume-cert__issuer {
+  grid-area: 2 / 1 / auto / -1;
+  font-size: var(--rd-meta);
+  line-height: 1.35;
+  color: rgb(var(--rd-ink-3));
+}
+
+/* --------------------------------------------------------------------------
+ * Tools
+ * --------------------------------------------------------------------------
+ *
+ * A real `<dl>`, so a screen-reader user gets a document outline to jump by — a
+ * grid of `<div>`s gives them nothing. `display: contents` on each pair lifts the
+ * `<dt>`/`<dd>` into the grid so the four labels share one 26mm track and align
+ * into a column, instead of four ragged two-word labels each followed by a
+ * different start position.
+ */
+.resume-skills {
+  display: grid;
+  grid-template-columns: 26mm minmax(0, 1fr);
+  column-gap: 4mm;
+  row-gap: 2.4mm;
+}
+
+.resume-skill {
+  display: contents;
+}
+
+.resume-skill__label {
+  font-size: var(--rd-label);
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgb(var(--rd-ink-3));
+}
+
+.resume-skill__items {
+  margin: 0;
+  font-size: var(--rd-body);
+  line-height: 1.4;
+  color: rgb(var(--rd-ink-2));
+}
+
+/* --------------------------------------------------------------------------
+ * Controls
+ * --------------------------------------------------------------------------
+ *
+ * A floating bar rather than a toolbar above the document, because the whole
+ * point of zooming is that the page you are looking at is not the page you were
+ * looking at a moment ago. Sticky to the bottom of the viewport for as long as
+ * the document is in view, on a solid background — a translucent bar over
+ * half-scaled text is unreadable, which is the same mistake as glassmorphism on
+ * a page whose job is to be read.
+ */
+.resume-controls {
+  position: sticky;
+  bottom: 1rem;
+  z-index: 30;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem 0.75rem;
+  width: fit-content;
+  max-width: calc(100% - 2rem);
+  margin: 1.25rem auto 0;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid rgb(var(--border));
+  border-radius: var(--radius-full);
+  background: rgb(var(--bg-elevated));
+  box-shadow: 0 14px 34px -22px rgb(0 0 0 / 0.95);
+}
+
+.resume-controls__group {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.resume-controls__group + .resume-controls__group {
+  padding-left: 0.75rem;
+  border-left: 1px solid rgb(var(--border));
+}
+
+.resume-controls__value {
+  min-width: 3.25rem;
+  text-align: center;
   font-family: var(--font-mono);
   font-size: var(--text-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
   color: rgb(var(--text-muted));
 }
 
-.resume-dd {
+.resume-controls__of {
+  color: rgb(var(--border-strong));
+}
+
+.resume-control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.25rem;
+  height: 2.25rem;
+  padding: 0 0.5rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-full);
   font-size: var(--text-sm);
+  line-height: 1;
   color: rgb(var(--text-dim));
+  transition: color var(--dur-fast) var(--ease), background-color var(--dur-fast) var(--ease);
 }
 
-/* The status chip inside a work entry's heading. Inline, not a bordered pill —
- * on paper a pill is a shape with no meaning, and the section is already a list
- * of projects with the date beside them. */
-.resume-status {
-  margin-left: 0.625rem;
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+.resume-control:hover:not(:disabled) {
+  color: rgb(var(--text));
+  background: rgb(var(--bg-highlight));
+}
+
+.resume-control[aria-pressed='true'] {
+  color: rgb(var(--accent));
+  background: rgb(var(--accent-bg));
+}
+
+.resume-control:disabled {
   color: rgb(var(--text-muted));
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.resume-control--wide {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.resume-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 /* ==========================================================================
  * PRINT TYPOGRAPHY OVERRIDES
  * ==========================================================================
  *
- * At the end of the file on purpose, and the placement is the fix.
+ * At the end of the file on purpose, and the placement is load-bearing.
  *
- * The bug this addresses is glyphs overlapping each other in the generated PDF.
- * The cause is a mismatch between a typeface and a set of spacing values
- * calibrated for a different one. `--font-display` resolves to Space Grotesk,
- * loaded by `next/font` with `font-display: swap`, and every heading in this
- * file is set with *negative* letter-spacing tuned to Grotesk's tight
- * geometric spacing: -0.045em on the display size, -0.04em on h1, -0.032em on
- * h2, -0.014em on h4.
+ * A `@media print` block adds no specificity — it only adds a condition — so
+ * these rules weigh exactly as much as the ones above and whichever comes last
+ * in the stylesheet wins. Placed here they override without `!important`, which
+ * is what `!important` would be admitting is needed.
  *
- * A print job is not a page load. The browser lays the document out on a
- * headless print surface, and a webfont that has not finished decoding by then
- * is replaced from the fallback chain — Inter, then `system-ui`. Those
- * substitutes are wider and rounder than Grotesk. Negative tracking sized for
- * the tighter face is then applied to the wider one, the advance widths no
- * longer cover the glyphs, and letters collide: capitals cut into the lowercase
- * beside them, descenders bite into the line above.
+ * The bug these address is glyphs overlapping each other in a generated PDF. The
+ * cause is a mismatch between a typeface and spacing values calibrated for a
+ * different one. Every heading in this file is set with *negative* letter-spacing
+ * tuned to Space Grotesk's tight geometric spacing, loaded by `next/font` with
+ * `font-display: swap`.
+ *
+ * A print job is not a page load. The browser lays the document out on a headless
+ * print surface, and a webfont that has not finished decoding by then is
+ * substituted from the fallback chain — Inter, then `system-ui`. Those faces are
+ * wider and rounder than Grotesk, so tracking sized for the tighter face is
+ * applied to the wider one, the advance widths no longer cover the glyphs, and
+ * letters collide: capitals cut into the lowercase beside them.
  *
  * `text-rendering: optimizeLegibility` on `body` compounds it. It asks for
  * kerning and ligature substitution from the font's own tables, which a
- * substituted face does not have, so kerning gets applied from a metrics source
- * that no longer matches the glyphs being positioned.
+ * substituted face does not have.
  *
- * Both properties are reset here. The headings keep their size, weight and
- * colour — the hierarchy is carried by those, and the document still looks like
- * the site — and give up only the two properties that were calibrated to one
- * typeface's spacing.
- *
- * Why the end of the file: a `@media print` block adds no specificity, it only
- * adds a condition. These rules are the same weight as `.resume-name` and
- * `.heading-1` above, so whichever comes last in the stylesheet wins. Placed
- * here they override without `!important`, which is what `!important` would be
- * admitting is needed.
- * ========================================================================== */
+ * The document opts back in at the bottom of this block. Its class selectors
+ * outweigh the bare `h1`–`h6` element selectors above regardless of order, which
+ * is deliberate: the resume's tracking is set for *its* scale — 25pt display, 7.5pt
+ * tracked labels — and is small enough that a substituted face does not collide,
+ * while restoring it is what keeps the printed sheet the same height the paginator
+ * measured. A one-line element's height is its line-height, so a print-only change
+ * to `.resume-name`'s line-height would desynchronise the preview from the paper.
+ */
 @media print {
   html,
   body {
@@ -1577,7 +2347,6 @@
   h4,
   h5,
   h6,
-  .resume-name,
   .heading-1,
   .heading-2,
   .heading-3,
@@ -1586,12 +2355,12 @@
   }
 
   /*
-    The tight leading has the same root cause as the tracking. `.heading-1` sits
-    at line-height 1.02 and `.resume-name` at 1.1 — both correct for a face
-    whose ascender and descender are known, both visibly clipped once a taller
+    The tight leading has the same root cause as the tracking. `.heading-1` sits at
+    line-height 1.02 and the display sizes at 1.1 — both correct for a face whose
+    ascender and descender are known, both visibly clipped once a taller
     substituted face lands in the same box. Print loosens the leading rather than
-    shrinking the type, so the document keeps its proportions and stops losing
-    the tops of its capitals.
+    shrinking the type, so the document keeps its proportions and stops losing the
+    tops of its capitals.
    */
   h1,
   h2,
@@ -1603,22 +2372,32 @@
   h3,
   h4,
   .heading-3,
-  .heading-4,
-  .resume-name {
+  .heading-4 {
     line-height: 1.25;
   }
 
   /*
-    Tailwind's `tracking-tight` and friends are arbitrary values compiled into
-    their own utility classes, so they would need the same treatment as the
-    `.heading-*` rules above but are not named in them. Resetting tracking on
-    every heading catches them, and the uppercase mono labels — which carry a
-    *positive* 0.1em and are spaced for a monospace grid — keep theirs, since
-    extra space between glyphs cannot cause an overlap.
+    The document keeps its own values. See the note above: these are the rules
+    that make the printed sheet the same height the paginator measured, and the
+    class selectors win on specificity rather than on order.
    */
-  .resume-dt,
+  .resume-name {
+    letter-spacing: -0.012em;
+    line-height: 1.12;
+  }
+
+  .resume-section__title {
+    letter-spacing: 0.18em;
+    line-height: 1.2;
+  }
+
+  .resume-cont,
   .resume-contact,
-  .resume-status {
-    letter-spacing: 0.05em;
+  .resume-entry__kind,
+  .resume-entry__status,
+  .resume-tech__label,
+  .resume-skill__label,
+  .resume-summary__label {
+    letter-spacing: 0.1em;
   }
 }

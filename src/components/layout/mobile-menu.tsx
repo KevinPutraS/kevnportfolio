@@ -94,7 +94,7 @@ export function MobileMenu() {
             The dynamic viewport tracks the bars as they collapse, and `top-0` is
             kept explicit so the panel still starts at the very top.
           */
-          <div className="fixed inset-x-0 top-0 z-[70] h-[100dvh] lg:hidden">
+          <div data-print="hide" className="fixed inset-x-0 top-0 z-[70] h-[100dvh] lg:hidden">
             <div
               className="animate-fade-in absolute inset-0 bg-[rgb(0_0_0/0.65)] backdrop-blur-sm"
               onClick={close}

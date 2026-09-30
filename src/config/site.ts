@@ -55,6 +55,25 @@ export const siteConfig = {
    */
   heroSupport: '',
   /**
+   * Resume copy, kept here rather than in the document component for two
+   * reasons.
+   *
+   * First, the register is different. `heroStatement` is first person and
+   * conversational — it has to sound like a person talking to a visitor. A CV
+   * header is read in one glance by someone deciding whether to keep reading, and
+   * it is written in the third person about the role, not to the reader. So the
+   * two strings are genuinely different copy, not the same string at two sizes.
+   *
+   * Second, this is the only prose on the resume that is not generated from the
+   * database. Everything else on the page is curated out of the published
+   * records; the summary is a claim about a person and has to be written by that
+   * person. See `src/lib/resume/content.ts`, which reads these and everything
+   * else from the CMS.
+   */
+  resumeRole: 'Digital Projects · Technology · Experiments',
+  resumeSummary:
+    'Computer science student building web and applied-AI projects, with hands-on IT support experience across hardware, network and software troubleshooting. Comfortable owning a problem end to end — scoping it, building it, and documenting what came of it.',
+  /**
    * Public origin used for canonical URLs, Open Graph and the sitemap.
    * Override with NEXT_PUBLIC_SITE_URL so preview deployments stay correct.
    */

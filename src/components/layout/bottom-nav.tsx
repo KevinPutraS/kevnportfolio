@@ -51,7 +51,7 @@ export function BottomNav() {
   const items = siteConfig.navigation.filter((item) => !DRAWER_ONLY.has(item.href))
 
   return (
-    <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-40 lg:hidden">
+    <nav aria-label="Main" data-print="hide" className="fixed inset-x-0 bottom-0 z-40 lg:hidden">
       <div className="border-t border-[rgb(var(--border))] bg-[rgb(var(--bg)/0.85)] pb-[env(safe-area-inset-bottom)] shadow-[0_-14px_40px_-24px_rgb(0_0_0/0.9)] backdrop-blur-xl">
         <ul className="flex w-full">
           {items.map((item) => {

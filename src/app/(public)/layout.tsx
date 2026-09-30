@@ -18,7 +18,7 @@ import { Navbar } from '@/components/layout/navbar'
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative flex min-h-screen flex-col">
-      <div className="page-depth" aria-hidden="true" />
+      <div className="page-depth" data-print="hide" aria-hidden="true" />
 
       {/*
         Skip link. Off-screen until focused, then pinned to the top-left above
@@ -52,9 +52,21 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
         so the footer's last row would otherwise sit underneath it. The spacer
         pays that height back on the same breakpoints the bar lives on: 4rem of
         row plus the notch inset, `lg` and up get zero.
+
+        `data-print="hide"` is not optional here, and the reason is a trap worth
+        remembering: `lg:hidden` is a *width* query, and the print layout is only
+        as wide as the paper. Chrome lays a print job out at roughly 794px, which
+        is below `lg`, so every width-gated hide reappears on paper — including
+        this spacer. It is 4rem of empty space that exists solely to stop a fixed
+        phone bar from covering a footer, and on paper there is no bar and no
+        footer, so it only ever lands on the resume: 16.93mm of nothing after the
+        second sheet, which is 17mm more than a sheet has to give, and one extra
+        blank page in the PDF. The `data-print` opt-in is the only hiding that
+        survives the switch to a paper-sized viewport.
       */}
       <div
         aria-hidden="true"
+        data-print="hide"
         className="lg:hidden"
         style={{ height: 'calc(env(safe-area-inset-bottom, 0px) + 4rem)' }}
       />

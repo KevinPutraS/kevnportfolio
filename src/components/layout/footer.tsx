@@ -21,7 +21,10 @@ export function Footer() {
   const year = new Date().getFullYear()
 
   return (
-    <footer className="relative isolate overflow-hidden border-t border-[rgb(var(--border))]">
+    <footer
+      data-print="hide"
+      className="relative isolate overflow-hidden border-t border-[rgb(var(--border))]"
+    >
       {/* Final rule, same treatment as the sections above, but one accent
           colour — the three-colour gradient this replaced stopped making sense
           when the palette collapsed to a single accent. */}
