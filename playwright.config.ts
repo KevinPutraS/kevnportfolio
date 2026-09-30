@@ -13,10 +13,11 @@ import { defineConfig, devices } from '@playwright/test'
  *
  * `webServer` starts the dev server only if it is not already up, and
  * `reuseExistingServer` means a running `npm run dev` is borrowed rather than
- * fought with. This matters more than it sounds: `next build` and `next dev`
- * share `.next`, so a production build leaves the dev server serving broken
- * chunks until it is restarted. Borrowing the running server avoids adding one
- * more process to that dance.
+ * fought with. It used to matter more than that: `next build` and `next dev`
+ * shared `.next`, so a production build left the dev server answering 200 for the
+ * HTML with a 404 for its stylesheet until it was restarted. The build now writes
+ * to `.next-build` (see `next.config.mjs`), so the two no longer collide and this
+ * dance is only about not starting a second server.
  */
 export default defineConfig({
   testDir: './tests',
@@ -39,7 +40,26 @@ export default defineConfig({
 
   projects: [
     {
+      /*
+       * Pure functions, no browser.
+       *
+       * `*.unit.ts` is arithmetic over plain data — it needs neither a viewport
+       * nor a dev server, and running it under both the desktop and mobile
+       * projects would execute every assertion twice to learn nothing, because
+       * the answers do not depend on the viewport. It is separated so a failure
+       * in it is unambiguously a logic error and not a rendering one.
+       *
+       * The `webServer` above is still global, so the dev server starts for this
+       * project too. That is the cost of one shared config and it buys a suite
+       * that stays in one runner; a second `defineConfig` would duplicate the
+       * whole file to avoid it.
+       */
+      name: 'unit',
+      testMatch: '**/*.unit.ts',
+    },
+    {
       name: 'desktop',
+      testIgnore: '**/*.unit.ts',
       use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 },
     },
     {
@@ -53,6 +73,7 @@ export default defineConfig({
        * viewport, the touch flag and the DPR are all that is wanted from it.
        */
       name: 'mobile',
+      testIgnore: '**/*.unit.ts',
       use: {
         viewport: { width: 390, height: 780 },
         deviceScaleFactor: 1,

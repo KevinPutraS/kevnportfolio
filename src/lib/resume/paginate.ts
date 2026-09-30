@@ -193,7 +193,14 @@ export function paginateResume({
       openPage()
     }
 
-    cur.used += (empty() ? 0 : sectionGap) + section.height + section.belowHeight
+    /*
+     * Recorded rather than re-derived, because undoing it is the point: a heading
+     * is placed *before* its first unit so the block order is right, which means
+     * the unit's fit is decided again in the loop below. If the heading has to be
+     * taken to the next page, exactly this number has to come back off.
+     */
+    const headingCost = (empty() ? 0 : sectionGap) + section.height + section.belowHeight
+    cur.used += headingCost
     cur.blocks.push({ kind: 'heading', section: section.id })
 
     for (let index = 0; index < section.runIds.length; index += 1) {
@@ -204,7 +211,35 @@ export function paginateResume({
       const gap = index === 0 ? 0 : atomGap
 
       if (!empty() && cur.used + gap + run.height > cur.limit - epsilon) {
+        /*
+         * The heading is stranded if this page is abandoned and the heading is
+         * left on it. For every unit but the first that is fine — the heading is
+         * where the section began. For the *first* unit it is the one thing these
+         * rules exist to prevent, so the heading is lifted and re-placed on the
+         * new page with the unit it belongs to.
+         *
+         * Reachable only by a unit taller than a whole page, which is why the
+         * budgets in `./content` exist: on a normal document the check above has
+         * already placed heading and first unit together and none of this runs.
+         * When it does happen, the unit is then placed on the fresh page and
+         * allowed past the box, as `oversized` documents.
+         */
+        const last = cur.blocks[cur.blocks.length - 1]
+        const moveHeading = index === 0 && last?.kind === 'heading' && last.section === section.id
+
+        if (moveHeading) {
+          cur.blocks.pop()
+          cur.used -= headingCost
+        }
+
         openPage()
+
+        if (moveHeading) {
+          // At the top of a page there is nothing above the heading, so no
+          // section gap applies — the same rule the first placement used.
+          cur.used += section.height + section.belowHeight
+          cur.blocks.push({ kind: 'heading', section: section.id })
+        }
       }
 
       cur.used += (empty() ? 0 : gap) + run.height
