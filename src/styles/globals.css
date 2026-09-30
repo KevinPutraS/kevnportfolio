@@ -299,6 +299,38 @@
 }
 
 /* ==========================================================================
+ * COMPONENT CLASSES
+ * ==========================================================================
+ *
+ * Everything from here to the print-typography block at the end of the file is
+ * wrapped in `@layer components`, and that wrapper is the point.
+ *
+ * `@layer base` above closes on its own, so all of this used to be plain
+ * unlayered CSS sitting *after* `@tailwind utilities` in this file. Tailwind
+ * emits its utilities where the directive is, so every class below them was
+ * emitted after them, and at equal specificity later wins. `text-[…--error]` on
+ * an element with `.eyebrow` did nothing. `px-4` next to `.btn-sm` did nothing.
+ * `max-w-2xl` next to `.prose-block` did nothing. Three of those were shipping
+ * bugs: both error pages rendered their eyebrow grey instead of red, the contact
+ * form's "Sent" confirmation was never green, and a button written
+ * `rounded-[var(--radius-full)]` was not a pill.
+ *
+ * Note what this is *not*. Tailwind treats `@layer` in your own CSS as a
+ * build-time directive, not a CSS cascade layer: it hoists the block's contents
+ * into the `components` slot of its own output, ahead of `utilities`, and the
+ * `@layer` keyword does not survive into the stylesheet. Verified — the served
+ * CSS contains no `@layer` at all. The precedence that makes utilities win is
+ * source *order* in the emitted sheet, which is why `tests/layering.spec.ts`
+ * asserts order and not layer membership.
+ *
+ * The class list in a JSX file is the specification, and it should be true. When
+ * a class here quietly outranked a utility, the only way to change an element
+ * was to add another class here, and that is how a palette of near-duplicates
+ * grows: `.meta` exists, and `.meta-strong` had to be born beside it.
+ */
+@layer components {
+
+/* ==========================================================================
  * LAYOUT
  * ========================================================================== */
 
@@ -2471,16 +2503,26 @@
   gap: 0.75rem;
 }
 
+} /* end @layer components */
+
 /* ==========================================================================
  * PRINT TYPOGRAPHY OVERRIDES
  * ==========================================================================
  *
- * At the end of the file on purpose, and the placement is load-bearing.
+ * Outside `@layer components` on purpose, and the reason is no longer "because
+ * it is last in the file" — that stopped being true when the component classes
+ * above were wrapped, since Tailwind emits the utilities after both. It is here
+ * because it is the block that has to beat them, and it does so on specificity
+ * and on `!important` rather than on order: its selectors are classes where the
+ * bare `h1`–`h6` rules it corrects are elements, and the rest of the block is
+ * marked. The `@media print` token overrides further up are plain declarations
+ * on `:root` and rely only on being later than the screen tokens, which they are.
  *
- * A `@media print` block adds no specificity — it only adds a condition — so
- * these rules weigh exactly as much as the ones above and whichever comes last
- * in the stylesheet wins. Placed here they override without `!important`, which
- * is what `!important` would be admitting is needed.
+ * Verified while making that change: emulating `print` on /resume and diffing
+ * every typography property on all 33 typed elements against the previous
+ * revision produced zero differences. A real PDF is still the untested case —
+ * the bug below is about glyphs colliding when a webfont is substituted, and
+ * that needs a headless print surface to reproduce at all.
  *
  * The bug these address is glyphs overlapping each other in a generated PDF. The
  * cause is a mismatch between a typeface and spacing values calibrated for a
