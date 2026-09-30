@@ -1,5 +1,4 @@
 import { Analytics } from '@vercel/analytics/next'
-import { BottomNav } from '@/components/layout/bottom-nav'
 import { Footer } from '@/components/layout/footer'
 import { Navbar } from '@/components/layout/navbar'
 
@@ -77,29 +76,31 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       </div>
 
       {/*
-        The mobile tab bar (`BottomNav`) is fixed to the bottom of the viewport,
-        so the footer's last row would otherwise sit underneath it. The spacer
-        pays that height back on the same breakpoints the bar lives on: 4rem of
-        row plus the notch inset, `lg` and up get zero.
+        No bottom tab bar, and the 4rem spacer that paid for it goes with it.
 
-        `data-print="hide"` is not optional here, and the reason is a trap worth
-        remembering: `lg:hidden` is a *width* query, and the print layout is only
-        as wide as the paper. Chrome lays a print job out at roughly 794px, which
-        is below `lg`, so every width-gated hide reappears on paper — including
-        this spacer. It is 4rem of empty space that exists solely to stop a fixed
-        phone bar from covering a footer, and on paper there is no bar and no
-        footer, so it only ever lands on the resume: 16.93mm of nothing after the
-        second sheet, which is 17mm more than a sheet has to give, and one extra
-        blank page in the PDF. The `data-print` opt-in is the only hiding that
-        survives the switch to a paper-sized viewport.
+        The bar existed because the top bar was unusable on a phone: five
+        destinations sat behind the hamburger, and the top bar itself never
+        stayed on screen. It was declared `sticky top-0` for as long as it was
+        here, but its containing block was this shell's own wrapper, sized to
+        the header's content, so the travel was 0px and the bar scrolled away
+        the moment the page moved. The header is genuinely sticky now, so the
+        reason the bar was built no longer exists.
+
+        What it cost, measured on a 780px phone: 65px of top bar plus 64px of
+        tab bar plus the safe-area inset is about 16.5% of the viewport
+        permanently occupied by navigation, most of it duplicating the drawer
+        that is already one tap away. The top bar is also nearly empty on mobile
+        by design — a wordmark and one button.
+
+        It is the wrong register for this site as well. The hero calls the whole
+        idea restraint and treats printing the same four titles twice in one
+        screen as filler; a fixed app-shell bar is the opposite of that. The
+        component survives as `admin-tab-bar.tsx` in the dashboard, which is an
+        app and wants one.
+
+        The footer's own `env(safe-area-inset-bottom)` padding is unrelated and
+        stays: that is the iOS home indicator, not the bar.
       */}
-      <div
-        aria-hidden="true"
-        data-print="hide"
-        className="lg:hidden"
-        style={{ height: 'calc(env(safe-area-inset-bottom, 0px) + 4rem)' }}
-      />
-      <BottomNav />
 
       {/*
         Page views, and the reason this lives here rather than in the root
