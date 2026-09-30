@@ -100,7 +100,19 @@ export function Navbar() {
       */
       data-print="hide"
       className={classNames(
-        'sticky top-0 z-50 border-b transition-[background-color,border-color,box-shadow] duration-300',
+        /*
+         * No `sticky top-0` here. It used to be on this element, where it could
+         * never do anything: the sticky was resolved against this header's
+         * containing block, which is the shell's wrapper div sized to its own
+         * content, so the travel was 0px and the bar scrolled away like a
+         * static one. The `sticky top-0` now lives on that wrapper, whose
+         * containing block is the full-height page column. See the comment in
+         * `(public)/layout.tsx`.
+         *
+         * `z-50` stays because the wrapper claims the same value, and the header
+         * is positioned within it.
+         */
+        'z-50 border-b transition-[background-color,border-color,box-shadow] duration-300',
         lifted
           ? 'border-[rgb(var(--border))] bg-[rgb(var(--bg)/0.85)] shadow-[0_10px_30px_-18px_rgb(0_0_0/0.9)] backdrop-blur-xl'
           : 'border-transparent bg-[rgb(var(--bg)/0.6)] backdrop-blur-md'

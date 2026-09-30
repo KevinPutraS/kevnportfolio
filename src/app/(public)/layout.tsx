@@ -35,7 +35,36 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
         Skip to content
       </a>
 
-      <div className="relative z-10">
+      {/*
+        The sticky chrome lives on this wrapper, not on the `<header>` inside
+        it, and the reason is a trap worth writing down.
+
+        `position: sticky` is resolved against an element's *containing block*,
+        and the header's containing block used to be this div — which is exactly
+        as tall as the header, because the header is all it contains. A sticky
+        box can only travel inside its containing block, so the travel was 0px:
+        the moment the page moved one pixel the navbar left with it, exactly as
+        if it had been `static`. Nothing looked broken, which is what made it
+        survive. Three things that were written to depend on a sticky header
+        had never once run: the `lifted` state that swaps the bar's translucent
+        background for a near-opaque one and adds a shadow, the `ScrollProgress`
+        hairline, and the `--nav-h` / `scroll-padding-top` pair in
+        `globals.css` that keeps an anchor target from landing under the bar.
+        The last one was the tell: the token existed and was correct, describing
+        a sticky bar that was not sticky.
+
+        The parent is a full-height `flex-col`, so moving `sticky top-0` up one
+        level gives the containing block the whole page to travel through.
+
+        `z-50` rather than the `z-10` every other content wrapper here carries.
+        `main` and the footer are also `z-10`, and equal z-indexes are resolved
+        by DOM order, so with this wrapper at `z-10` the later `main` painted
+        *over* the navbar's stacking context. It was invisible only because
+        nothing overlapped; the moment the bar became genuinely sticky and
+        started overlapping the page, `main` would have drawn over it. `z-50` is
+        the header's own index, so the wrapper now claims that same value.
+      */}
+      <div className="sticky top-0 z-50">
         <Navbar />
       </div>
 

@@ -136,15 +136,27 @@ export function Hero() {
               <span className="block text-[rgb(var(--text))]">
                 {siteConfig.personName}
                 {/*
-                  The accent mark after the name. Present on desktop only, where
-                  the two-column hero is the centrepiece: a small solid square
-                  that echoes the sculpture's single accent hue. `em`-sized so it
-                  scales with the fluid display type, and aligned to the text
-                  baseline so it does not float in the cap height.
+                  The accent mark after the name: a small solid square that
+                  echoes the sculpture's single accent hue, and the same full stop
+                  the navbar wordmark sets after `siteConfig.name`.
+
+                  It used to be `hidden` with no override below `lg`, so a phone
+                  rendered the name as bare "Kevin" and only wide screens got the
+                  mark. The reasoning behind that was that the mark belonged to
+                  the two-column composition, but it is punctuation on the name
+                  rather than decoration on the layout, and a missing full stop
+                  reads as an oversight on the one element the whole site is named
+                  after. Every width gets it now.
+
+                  Sized in `em` so it tracks the fluid display type, and slightly
+                  smaller with slightly less gap below `sm`, where that type has
+                  resolved to its floor and an `lg`-sized square would crowd the
+                  name rather than punctuate it. `align-baseline` keeps it on the
+                  text baseline instead of floating in the cap height.
                 */}
                 <span
                   aria-hidden="true"
-                  className="hidden text-[rgb(var(--accent))] lg:ml-4 lg:inline-block lg:h-[0.3em] lg:w-[0.3em] lg:rounded-[3px] lg:bg-[rgb(var(--accent))] lg:align-baseline"
+                  className="ml-2.5 inline-block h-[0.22em] w-[0.22em] rounded-[2px] bg-[rgb(var(--accent))] align-baseline sm:ml-4 sm:h-[0.3em] sm:w-[0.3em] sm:rounded-[3px]"
                 />
               </span>
               {/*
