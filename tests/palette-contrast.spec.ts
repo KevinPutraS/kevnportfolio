@@ -1,6 +1,7 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import { contrast } from './contrast'
 import { settle } from './helpers'
+import { THEME_STORAGE_KEY } from '../src/lib/theme'
 
 /**
  * The text tokens against the page background.
@@ -58,7 +59,7 @@ function readTokens(): Token[] {
  * learn that someone ran `next build` against the shared `.next` and the dev
  * server is now serving 200 HTML over a 404 stylesheet.
  */
-const pageBackground = (page: import('@playwright/test').Page) =>
+const pageBackground = (page: Page) =>
   page.evaluate(() => {
     const raw = getComputedStyle(document.documentElement).getPropertyValue('--bg')
     const m = raw.match(/[\d.]+/g)
@@ -72,43 +73,86 @@ const pageBackground = (page: import('@playwright/test').Page) =>
     return [Number(m[0]), Number(m[1]), Number(m[2])] as [number, number, number]
   })
 
-test.describe('palette contrast', () => {
-  test('--text and --text-dim clear AA against the page background', async ({ page }) => {
+const THEMES = ['dark', 'light'] as const
+type ThemeUnderTest = (typeof THEMES)[number]
+
+/**
+ * Select a theme the way a returning visitor has one, not by overriding CSS.
+ *
+ * `addInitScript` runs before any page script on every navigation, so this seeds
+ * `localStorage` ahead of the pre-paint script in `layout.tsx` — the theme under
+ * test is produced by the real mechanism rather than by a stylesheet switch the
+ * production site has no equivalent of. A test that called
+ * `documentElement.dataset.theme = 'light'` itself would keep passing if the
+ * script, the storage key or the toggle were all broken, which is precisely the
+ * part worth testing.
+ */
+async function selectTheme(page: Page, theme: ThemeUnderTest) {
+  await page.addInitScript(
+    ([key, value]) => window.localStorage.setItem(key, value),
+    [THEME_STORAGE_KEY, theme] as const
+  )
+}
+
+/**
+ * Fail loudly if the theme did not take, so a broken mechanism cannot report a
+ * clean pass.
+ *
+ * The risk is not hypothetical: without this, a `localStorage` write that silently
+ * failed — a renamed key, a script that throws on load, a `[data-theme='light']`
+ * block that stopped matching — would leave the page dark, and every ratio below
+ * would be measured against the dark palette while the test name claimed light.
+ * The light run would then "pass" by measuring the exact thing it was written to
+ * catch. Asserting the attribute turns that into an obvious failure.
+ */
+async function expectTheme(page: Page, theme: ThemeUnderTest) {
+  const applied = await page.evaluate(() => document.documentElement.getAttribute('data-theme'))
+  expect(applied, `pre-paint script should resolve data-theme to "${theme}"`).toBe(theme)
+}
+
+function paletteContrast(theme: ThemeUnderTest) {
+  test(`--text and --text-dim clear AA against the page background (${theme})`, async ({ page }) => {
+    await selectTheme(page, theme)
     await page.goto('/')
     await settle(page)
+    await expectTheme(page, theme)
     const background = await pageBackground(page)
 
     for (const t of await page.evaluate(readTokens)) {
       const ratio = contrast(t.value, background)
       console.log(`  ${t.name.padEnd(14)} rgb(${t.value.join(', ')})  ${ratio.toFixed(2)}:1`)
-      expect(ratio, `${t.name} against --bg`).toBeGreaterThanOrEqual(4.5)
+      expect(ratio, `${t.name} against --bg (${theme})`).toBeGreaterThanOrEqual(4.5)
     }
   })
 
-  test('--text-muted clears AA against the page background', async ({ page }) => {
+  test(`--text-muted clears AA against the page background (${theme})`, async ({ page }) => {
     // Was 4.39:1 against --bg and 4.15:1 against --bg-elevated, and was the one
     // token the loop above had to skip. 116 117 136 -> 132 133 152; see the note
     // on the token in globals.css for why the binding surface is not --bg.
+    await selectTheme(page, theme)
     await page.goto('/')
     await settle(page)
+    await expectTheme(page, theme)
     const background = await pageBackground(page)
 
     for (const t of await page.evaluate(readTokens)) {
       if (t.name !== '--text-muted') continue
       const ratio = contrast(t.value, background)
       console.log(`  ${t.name.padEnd(14)} rgb(${t.value.join(', ')})  ${ratio.toFixed(2)}:1  (needs 4.5)`)
-      expect(ratio, `${t.name} against --bg`).toBeGreaterThanOrEqual(4.5)
+      expect(ratio, `${t.name} against --bg (${theme})`).toBeGreaterThanOrEqual(4.5)
     }
   })
 
-  test('no small text on the homepage fails against its own background', async ({ page }) => {
+  test(`no small text on the homepage fails against its own background (${theme})`, async ({ page }) => {
     // The same debt seen from the other end: it was 31-32 elements, and every one
     // of them was this token. Kept as its own test because the palette test above
     // only knows the token, while this one walks the rendered elements and so
     // catches a *new* small-text element landing on a surface the palette test has
     // no visibility of.
+    await selectTheme(page, theme)
     await page.goto('/')
     await settle(page)
+    await expectTheme(page, theme)
 
     /*
      * Measured per element rather than per token, so a token used somewhere the
@@ -223,4 +267,23 @@ test.describe('palette contrast', () => {
       'small text must not be composited down by a semi-transparent ancestor'
     ).toEqual([])
   })
+}
+
+test.describe('palette contrast', () => {
+  /*
+   * Both themes, same assertions.
+   *
+   * The light palette cannot be validated by inspection, and the reason is that
+   * the two themes do not fail in the same direction. A dark palette degrades
+   * gracefully as colours get closer: mid-greys stay readable as they approach
+   * the background. A light palette does not — the greens and reds that clear 10:1
+   * on a near-black canvas drop under 2:1 on near-white, which is why the light
+   * values here are not the dark ones filtered or lightened. Every number in the
+   * `@media screen` block was chosen for a measured target, and these two loops
+   * are the only thing that verifies it.
+   *
+   * The dark run is kept rather than replaced so that adding a theme cannot
+   * quietly stop testing the original.
+   */
+  for (const theme of THEMES) paletteContrast(theme)
 })

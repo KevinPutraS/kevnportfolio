@@ -31,6 +31,26 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:3000',
     channel: 'chrome',
+    /*
+     * Pinned, and it was missing for a reason worth recording.
+     *
+     * Playwright's default is `light`. That was invisible while the site was
+     * dark-only, and it became visible the moment the theme followed the system:
+     * `layering.spec.ts` asserts against literal dark token values such as
+     * `rgb(245, 158, 11)`, and it started reading `rgb(146, 92, 6)` — the light
+     * accent — because the test browser now reported a light system.
+     *
+     * The deeper problem is that those assertions would otherwise depend on the
+     * developer's OS. A machine set to dark would have kept them passing while a
+     * machine set to light failed, which is the worst shape for a test: it
+     * reports a rendering bug that is really an environment difference. Pinning
+     * the baseline makes the dark assertions mean the same thing everywhere.
+     *
+     * Tests that care about theme choice opt in explicitly — `emulateMedia` in
+     * `theme.spec.ts`, or a seeded `localStorage` in `palette-contrast.spec.ts` —
+     * so this only sets the starting point, it does not constrain them.
+     */
+    colorScheme: 'dark',
     // A fixed device pixel ratio keeps the contrast sampling in
     // `hero-contrast.spec.ts` comparable between runs; `devices[...]` defaults
     // vary and would make the numbers move between machines.

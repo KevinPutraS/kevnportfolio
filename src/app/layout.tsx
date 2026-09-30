@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Inter, Space_Grotesk } from 'next/font/google'
 import { siteConfig } from '@/config/site'
 import { buildPersonSchema } from '@/lib/structured-data'
+import { THEME_SCRIPT } from '@/lib/theme'
 import '@/styles/globals.css'
 
 const inter = Inter({
@@ -88,11 +89,25 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  // Matches `--bg` (9 9 15) in globals.css. It used to be #0E0D12, which the
-  // browser chrome rendered a shade off from the page it surrounded. And it was
-  // #08090D before that. The token file is the only authority that has held.
-  themeColor: '#09090F',
-  colorScheme: 'dark',
+  // Two entries keyed on the system preference, matching `--bg` in globals.css.
+  // It used to be a single #0E0D12, which the browser chrome rendered a shade off
+  // from the page it surrounded, and #08090D before that.
+  //
+  // What this cannot express is the *explicit* override: `themeColor` is read by
+  // the browser before the document exists, so a visitor who picked light while
+  // their system is dark keeps a dark address bar. That is a platform limit, not
+  // an oversight here, and the page itself is correct in both themes. The
+  // alternative — leaving it dark always — was wrong for everyone whose system is
+  // light, which is the larger group.
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#FAFAFB' },
+    { media: '(prefers-color-scheme: dark)', color: '#09090F' },
+  ],
+  // Both schemes declared, not `dark`. A single value tells the UA to render
+  // scrollbars, form controls and the caret dark unconditionally, which is the
+  // same fixed-answer mistake the theme itself existed to remove. CSS narrows it
+  // per theme through the `color-scheme` property, which a meta tag cannot do.
+  colorScheme: 'dark light',
   width: 'device-width',
   initialScale: 1,
 }
@@ -101,6 +116,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`}>
       <body className="min-h-screen bg-[rgb(var(--background))] text-[rgb(var(--text-primary))] antialiased">
+        {/*
+          Theme, resolved before anything paints.
+
+          First child of `<body>` on purpose. React streams the document, so this
+          is the earliest point at which a script can run: the `<html>` element
+          already exists, and no page content has been parsed or painted. Setting
+          `data-theme` here puts the right palette in force for the first frame.
+          Moving it into an effect after hydration would flash the dark palette at
+          a visitor who chose light, on every fresh document.
+
+          Self-contained because it runs before any module is loaded — it cannot
+          import `resolveTheme` from `./theme`, which is why that function exists
+          as a separate copy the tests hold both to the same answer.
+        */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
         {/*
           Server-rendered children only. Public navigation and footer live in
           the (public) route group so they can never appear behind /admin.

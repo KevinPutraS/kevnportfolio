@@ -1,6 +1,7 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import { measureBackdrop, parseColor } from './contrast'
 import { settle } from './helpers'
+import { THEME_STORAGE_KEY } from '../src/lib/theme'
 
 /**
  * The hero's text over its backdrop, measured.
@@ -81,36 +82,79 @@ function collect() {
 test.describe('hero contrast over the backdrop', () => {
   test.skip(({ isMobile }) => !!isMobile, 'the two-column composition is a desktop concern; mobile uses a different plate')
 
-  test('every line keeps its contrast with the brightest pixel behind it', async ({ page }) => {
-    await page.goto('/')
-    await settle(page)
-
-    const results = await measureBackdrop(page, HERO, collect)
-
-    for (const [name, s] of Object.entries(results)) {
-      const needed = name === 'name' ? 3 : 4.5
-      // Reported whether or not it passes, so a failure says what to strengthen.
-      console.log(
-        `  ${name.padEnd(14)} ${s.ratio.toFixed(2)}:1 (needs ${needed})   p95 ${(s.p95 * 100).toFixed(2)}%  backdrop rgb(${s.worstBackdrop.join(', ')})`
+  /*
+   * The hero is measured in both themes because the scrim is built from `--bg`.
+   *
+   * `hero-veil` washes the plate with `rgb(var(--bg) / 0.7)`, so the scrim is
+   * black in the dark theme and white in the light one. The plate underneath is a
+   * dark bitmap either way, which means the light theme is not the dark theme
+   * with different text — it is a different composition, and it has to be measured
+   * rather than assumed to inherit the dark numbers.
+   */
+  for (const theme of ['dark', 'light'] as const) {
+    async function useTheme(page: Page) {
+      await page.addInitScript(
+        ([key, value]) => window.localStorage.setItem(key, value),
+        [THEME_STORAGE_KEY, theme] as const
       )
     }
 
-    for (const [name, s] of Object.entries(results)) {
-      const needed = name === 'name' ? 3 : 4.5
-      expect(s.ratio, `${name} lost contrast over the backdrop`).toBeGreaterThanOrEqual(needed)
+    test(`every line keeps its contrast with the brightest pixel behind it (${theme})`, async ({ page }) => {
+      await useTheme(page)
+      await page.goto('/')
+      await settle(page)
+
+      const results = await measureBackdrop(page, HERO, collect)
+
+      for (const [name, s] of Object.entries(results)) {
+        const needed = name === 'name' ? 3 : 4.5
+        // Reported whether or not it passes, so a failure says what to strengthen.
+        console.log(
+          `  ${name.padEnd(14)} ${s.ratio.toFixed(2)}:1 (needs ${needed})   p95 ${(s.p95 * 100).toFixed(2)}%  backdrop rgb(${s.worstBackdrop.join(', ')})`
+      )
     }
-  })
 
-  test('the plate reads as atmosphere, not as an image', async ({ page }) => {
-    await page.goto('/')
-    await settle(page)
+        for (const [name, s] of Object.entries(results)) {
+          const needed = name === 'name' ? 3 : 4.5
+          expect(s.ratio, `${name} lost contrast over the backdrop (${theme})`).toBeGreaterThanOrEqual(needed)
+        }
+      })
 
-    const results = await measureBackdrop(page, HERO, collect)
-    const worst = Math.max(...Object.values(results).map((s) => s.p95))
+    test(`the plate reads as atmosphere, not as an image (${theme})`, async ({ page }) => {
+      await useTheme(page)
+      await page.goto('/')
+      await settle(page)
 
-    // A ceiling rather than a floor. If this fails, the artwork has started
-    // competing with the words and the scrim needs to come back up, not the
-    // page background.
-    expect(worst, `backdrop p95 reached ${(worst * 100).toFixed(1)}% under the text`).toBeLessThan(0.05)
-  })
+      const results = await measureBackdrop(page, HERO, collect)
+      const worst = Math.max(...Object.values(results).map((s) => s.p95))
+      console.log(`  worst p95 under text ${(worst * 100).toFixed(2)}%`)
+
+      if (theme === 'dark') {
+        // A ceiling rather than a floor. If this fails, the artwork has started
+        // competing with the words and the scrim needs to come back up, not the
+        // page background.
+        expect(worst, `backdrop p95 reached ${(worst * 100).toFixed(1)}% under the text`).toBeLessThan(0.05)
+      } else {
+        /*
+         * The same intent, mirrored.
+         *
+         * "Reads as atmosphere, not as an image" is not a claim that the backdrop
+         * is dark; it is a claim that the plate has been flattened far enough that
+         * the artwork cannot compete with the type. In the light theme the scrim is
+         * white, so flattening means pushing the plate *up* toward the canvas, and
+         * the number that matters is that it got there — a low p95 here would mean
+         * the artwork is still showing through as a dark mass under dark-ink text.
+         *
+         * The floor is deliberately modest. The plate is a dark bitmap under a 70%
+         * white veil, so it cannot reach the lightness of the bare canvas, and
+         * asking it to would mean a heavier veil and a more bleached hero.
+         */
+        expect(
+          worst,
+          `backdrop p95 only reached ${(worst * 100).toFixed(1)}% — the scrim is not holding the plate flat, ` +
+            `so the dark artwork is still reading as a shape behind the text`
+        ).toBeGreaterThan(0.6)
+      }
+    })
+  }
 })

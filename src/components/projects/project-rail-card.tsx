@@ -62,10 +62,26 @@ export function ProjectRailCard({
             zoom={false}
           />
 
+          {/*
+            Scrim under the date. The date used to be `text-white/80` and nothing
+            else, which is a bet that the thumbnail beneath it is dark — and
+            `thumbnail_url` comes from the CMS, so that bet is not ours to make.
+            A white screenshot put white text on white and the badge disappeared.
+
+            The gradient is `from --bg`, not `from-black`, so it darkens the corner
+            in the dark theme and lightens it in the light theme, following the
+            page rather than fighting it. Same construction as the gallery overlay
+            in `project-gallery.tsx`.
+          */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[rgb(var(--bg)/0.75)] via-transparent to-transparent"
+          />
+
           {project.project_date && (
             <time
               dateTime={project.project_date}
-              className="absolute bottom-4 left-4 z-20 font-mono text-xs tabular-nums text-white/80"
+              className="absolute bottom-4 left-4 z-20 font-mono text-xs tabular-nums text-[rgb(var(--text))]"
             >
               {formatMonth(project.project_date)}
             </time>
