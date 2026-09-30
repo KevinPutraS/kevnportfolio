@@ -1024,15 +1024,25 @@
  *      margins and the gutter keep the artwork's own character;
  *   3. a corner scrim removes the bright wedge specifically.
  *
- * The scrim's placement is the part that is easy to get wrong. A full-width wash
- * was tried first and measured worse than doing nothing: the margins came out at
- * 0.87x the bare page background, i.e. *darker* than the page behind it, which
- * reads as a smudge rather than as texture, and the gutter between the columns
- * was flat at 0.17%. Dimming everything is not the same as protecting the text.
- * So the scrim is carried by `.hero-column`, which sits on the two grid children
- * and therefore tracks the content at every viewport — no percentage gradient
- * can, because the container is 72rem wide and centred, so its edges fall at
- * 11% and 89% of a 1440px hero but at 20% and 80% of a 1920px one.
+ * The scrim's shape is the part that is easy to get wrong, and it was wrong twice.
+ * A full-width wash was tried first and measured worse than doing nothing: the
+ * margins came out at 0.87x the bare page background, i.e. *darker* than the
+ * page behind it, which reads as a smudge rather than as texture, and the gutter
+ * between the columns was flat at 0.17%. Dimming everything is not the same as
+ * protecting the text.
+ *
+ * A per-column panel was tried second, as a rectangle on each grid child, and
+ * that fixed the margins but introduced the worse problem: a rectangle with
+ * straight left and right edges reads as a box drawn around the words. The
+ * vertical edges cannot be feathered without either bleeding so far into the
+ * margins that the texture disappears again, or fading so fast that the edge is
+ * still a line. Both were measured; both are bad.
+ *
+ * So there is no panel. The scrim is one ellipse, centred on the content and
+ * falling to nothing in every direction, which has no straight edge to see —
+ * the shape that was wanted in the first place. The plate is darkened where the
+ * words are and left alone in the margins, and the transition between the two is
+ * a curve rather than a border.
  *
  * The acceptance numbers, measured with the hero's content hidden so only the
  * plate is sampled: under text, p95 below ~1%; in the margins, a median clearly
@@ -1079,12 +1089,33 @@
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background-image: radial-gradient(
-    58% 54% at 100% 100%,
-    rgb(var(--bg) / 0.74) 0%,
-    rgb(var(--bg) / 0.36) 46%,
-    rgb(var(--bg) / 0) 78%
-  );
+  background-image:
+    /* The corner wedge: the single brightest cell on the plate, sitting under
+       the index rows. Its own radial, so it too contributes no straight edge. */
+    radial-gradient(
+      58% 54% at 100% 100%,
+      rgb(var(--bg) / 0.74) 0%,
+      rgb(var(--bg) / 0.36) 46%,
+      rgb(var(--bg) / 0) 78%
+    ),
+    /*
+     * And the main one: a single ellipse over the content, falling away in every
+     * direction. `farthest-side` is not used, so the plateau is set by the stops —
+     * fully opaque out to 46% of the radius, which is wider than either text
+     * column, then gone by 74%. That leaves the margins to the plate.
+     *
+     * It is sized off the hero rather than off the container because it is a
+     * soft shape, not a boundary: a hard edge would have to track the container's
+     * width at every viewport, and this does not care that those edges fall at
+     * 11%/89% of a 1440px hero and 20%/80% of a 1920px one.
+     */
+    radial-gradient(
+      ellipse 64% 74% at 50% 50%,
+      rgb(var(--bg) / 0.7) 0%,
+      rgb(var(--bg) / 0.7) 46%,
+      rgb(var(--bg) / 0.34) 60%,
+      rgb(var(--bg) / 0) 74%
+    );
 }
 
 @media (max-width: 767px) {
@@ -1111,36 +1142,6 @@
       rgb(var(--bg) / 0) 74%
     );
   }
-}
-
-/*
- * The scrim under the text. Carried by the column rather than by the hero, so it
- * follows the content at every width and the margins are left alone.
- *
- * The vertical fade is what keeps it from reading as a panel: a rectangle with
- * visible top and bottom edges would be a box drawn around the words, which is
- * the opposite of letting the words sit on the page. The horizontal bleed is
- * 16px — enough to soften the edge into the gutter, and deliberately not 24px,
- * which closed a 48px gutter completely and measured the gutter at 0.64x the
- * bare page, i.e. flatter than leaving it alone.
- */
-.hero-column {
-  position: relative;
-}
-
-.hero-column::before {
-  content: '';
-  position: absolute;
-  inset: -1.5rem -1rem;
-  z-index: -1;
-  pointer-events: none;
-  background-image: linear-gradient(
-    to bottom,
-    rgb(var(--bg) / 0) 0%,
-    rgb(var(--bg) / 0.66) 9%,
-    rgb(var(--bg) / 0.66) 91%,
-    rgb(var(--bg) / 0) 100%
-  );
 }
 
 /* ==========================================================================

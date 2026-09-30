@@ -57,9 +57,8 @@ export function Hero() {
         `.hero-backdrop` rather than here, because the measurements that justify
         them are about luminance against the page background and there is no way
         to express that as a class list on the element. `.hero-veil` is the second
-        layer: the scrim that keeps the artwork out from under the two text
-        columns without flattening the margins where it is meant to be seen, and
-        `.hero-column` carries that per column.
+        layer: the scrim that keeps the artwork out from under the words without
+        flattening the margins where it is meant to be seen.
       */}
       <div
         aria-hidden="true"
@@ -126,7 +125,7 @@ export function Hero() {
           index being squeezed into a sidebar.
         */}
         <div className="grid gap-x-12 gap-y-10 py-12 sm:py-20 lg:grid-cols-12 lg:flex-1 lg:items-center lg:gap-y-0 lg:py-0">
-          <div className="hero-column lg:col-span-7">
+          <div className="lg:col-span-7">
             <h1 className="display-1 animate-fade-in">
               {/*
                 Solid, not a gradient. A gradient fill across a display-size name
@@ -200,7 +199,7 @@ export function Hero() {
             to carry `pl-[2.125rem]`, which is the width of two mono digits plus
             a 1rem gap on one font size and wrong on every other.
           */}
-          <aside className="hero-column order-2 lg:order-none lg:col-span-5 lg:col-start-8">
+          <aside className="order-2 lg:order-none lg:col-span-5 lg:col-start-8">
             {/*
               The index's frame changes with the layout. Below `lg` it is a
               section of its own with a rule above it. From `lg` the rule moves
