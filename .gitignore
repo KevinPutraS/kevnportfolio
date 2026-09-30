@@ -29,6 +29,14 @@ yarn-error.log*
 
 # Testing
 coverage
+# Playwright. `trace: 'retain-on-failure'` writes a trace per failing test, and a
+# failing run on a sweep of ten viewports would otherwise leave a dozen zip files
+# in the tree.
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
 
 # Supabase
 supabase/.temp
