@@ -1585,12 +1585,31 @@
   .resume-scroller {
     overflow: visible !important;
     height: auto !important;
+    /*
+     * The screen caps this box at one viewport's worth so that a document of
+     * unknown height does not reflow the page under the reader (see the base
+     * rule). On paper there is no viewport to be capped against and no scrolling
+     * — a clipped page is a deleted line of someone's CV — so the cap is removed
+     * rather than overridden with a larger number.
+     */
+    max-height: none !important;
+  }
+
+  .resume-sizer {
+    /* On screen this is a sized box with the scaled stack positioned inside it.
+       On paper it must not exist at all, or it would cap the document's height
+       at whatever the screen reserved. */
+    display: contents !important;
   }
 
   .resume-stack {
     display: block !important;
     width: auto !important;
     transform: none !important;
+    /* Back in normal flow for the same reason as `.resume-sizer`: an out-of-flow
+       stack has no box for the sheets to lay out in, and the page count comes
+       from the sheet boxes. */
+    position: static !important;
   }
 
   .resume-sheet {
@@ -1744,6 +1763,14 @@
 
   --resume-sheet-gap: 8mm;
 
+  /*
+   * How tall the preview is allowed to be on screen. Read by `.resume-scroller`,
+   * which reserves it before the document has been measured — see the reasoning
+   * on that rule. It is a viewer inside a page, not the page: the reader scrolls
+   * the document here and the rest of the page stays where it is.
+   */
+  --resume-stage-max: max(420px, 80svh);
+
   /* The date rail. Fixed width, always — see `.resume-entry`. */
   --resume-rail-w: 32mm;
   --resume-rail-gap: 5mm;
@@ -1845,13 +1872,62 @@
 
 .resume-scroller {
   overflow: auto;
+
+  /*
+   * One viewport's worth, capped — and the reservation is made *before* the
+   * document has been measured, which is the whole point.
+   *
+   * The preview is a measuring machine: the sheet stack cannot exist until
+   * `ResumePreview` has laid the document out off-screen and read every run
+   * back. Until that finishes there are no sheets, so a scroller sized to its
+   * content has nothing to be tall — it measured 0px against a final 2206px on
+   * a 1440px desktop, and every element below it moved down by the difference
+   * about 250ms after the page appeared. That is a Cumulative Layout Shift of
+   * 0.32, which is "poor", and it is the kind of poor a reader feels: the page
+   * grows under a thumb that has already started scrolling.
+   *
+   * So the unmeasured state reserves the cap instead of nothing, and the
+   * measured state is capped at the same number. Whenever the document is taller
+   * than the cap — which for a CV with more than one page is always — the box is
+   * the same height before and after measurement and nothing moves at all. A
+   * document shorter than the cap still shrinks once, and that shrink is a
+   * fraction of what the growth was.
+   *
+   * The floor is for landscape phones, where 80svh is a letterbox too short to
+   * page through.
+   */
+  max-height: var(--resume-stage-max);
+
   /* `scrollbar-width: none` is not set here: when the reader zooms past the page
      width on a phone they need somewhere to pan, and a visible scrollbar is how
      they find out. */
 }
 
-.resume-stack {
+/*
+ * The scaled document's footprint, in laid-out pixels.
+ *
+ * `.resume-stack` is 210mm wide and `N` sheets tall *in layout space*, and the
+ * scale is a `transform`, which does not change layout. So without this box the
+ * scroller would scroll the unscaled height while only the scaled part is
+ * painted: on a phone, 3369px of scroll for 1516px of document, the last 1853px
+ * of it blank. Giving the stack a sized, positioned parent makes the scrollable
+ * height the height that is actually painted, which is the only number a
+ * scrollbar has any business reporting.
+ */
+.resume-sizer {
   position: relative;
+}
+
+.resume-stack {
+  /*
+   * Absolute rather than relative because of `.resume-sizer` above. The sheets
+   * keep the same `offsetTop` either way — the stack still starts at the sizer's
+   * origin — so `scrollToPage` and the page indicator, which both multiply an
+   * `offsetTop` by the scale, are unaffected.
+   */
+  position: absolute;
+  top: 0;
+  left: 0;
   transform-origin: top left;
   width: var(--resume-page-w);
   display: flex;

@@ -29,6 +29,10 @@ import type { ResumeContent } from '@/lib/resume/content'
  * document's internal proportions are identical at every viewport width; only the
  * magnification changes, capped at 1 so a sheet is never blown up past its real
  * size. The transform is dropped entirely in `@media print`.
+ *
+ * The preview is also capped at one viewport in height and scrolls internally,
+ * which is a stability decision rather than a layout one: see `.resume-scroller`
+ * in `globals.css` for the layout shift it removes.
  */
 
 /** `useLayoutEffect` on the server is a warning; here it wants to run before paint. */
@@ -266,12 +270,17 @@ export function ResumePreview({ content }: { content: ResumeContent }) {
   const pageCount = measurement?.pages.length ?? 0
 
   /*
-   * A `transform` does not change layout, so a scaled stack leaves its
-   * untransformed box behind and the page below overlaps the second sheet. The
-   * scroller's height and the centring offset are therefore both read back from
-   * the DOM rather than recomputed from the page count — the sheets carry real
-   * margins and a real shadow, and arithmetic in JavaScript would have to know
-   * about all of it.
+   * A `transform` does not change layout, so the stack's own box is the unscaled
+   * one: 210mm wide and every sheet tall. Two consequences, and the second is
+   * why `.resume-sizer` exists at all.
+   *
+   * The scroller's height is therefore read back from the DOM rather than
+   * recomputed from the page count — the sheets carry real margins and a real
+   * shadow, and arithmetic in JavaScript would have to know about all of it.
+   *
+   * Its *scrollable* height, on the other hand, must be the painted height. The
+   * sizer supplies that: the stack is positioned inside it rather than flowing in
+   * it, so what the scroller can scroll over is what it can scroll over.
    *
    * The centring is part of the transform rather than a flex `align-items: center`
    * because the stack is 210mm wide in *layout* space, so a flex container would
@@ -372,52 +381,70 @@ export function ResumePreview({ content }: { content: ResumeContent }) {
           className="resume-scroller"
           ref={scrollRef}
           style={{
-            height: reserved > 0 ? `${reserved}px` : undefined,
+            /*
+             * The cap before there is anything to show, the measured height after.
+             *
+             * `.resume-scroller` caps this box at `--resume-stage-max`, so for any
+             * document taller than the cap both of these resolve to the same used
+             * height and the page below the viewer does not move when the sheets
+             * arrive. Reserving nothing instead cost 2200px of reflow about 250ms
+             * after paint — the footer was sitting under the header and then
+             * jumped the length of the document.
+             */
+            height: reserved > 0 ? `${reserved}px` : 'var(--resume-stage-max)',
             overflowX: layout?.panX,
           }}
         >
-          <div
-            className="resume-stack"
-            ref={stackRef}
-            style={{
-              transform: `translateX(${layout?.offsetX ?? 0}px) scale(${scale})`,
-              visibility: layout ? undefined : 'hidden',
-            }}
-          >
-            {measurement &&
-              measurement.pages.map((plan, index) => (
-                <ResumeSheet
-                  key={index}
-                  index={index + 1}
-                  continuationName={content.name.toUpperCase()}
-                >
-                  {plan.blocks.map((block) => {
-                    /*
-                     * `plan.blocks` is already in printed order, so this is a
-                     * straight walk. A heading is emitted as a *direct* child of
-                     * `.resume-body` with no wrapper: `.resume-body > :first-child`
-                     * and `.resume-section__head + .resume-run` are the two rules
-                     * that keep the rendered gaps identical to the ones the
-                     * paginator counted, and an intervening `<div>` defeats both —
-                     * the first block on a page keeps its leading margin, and every
-                     * section's first unit falls to the atom gap instead of the
-                     * heading's below-gap. The measuring host above is built the
-                     * same way for the same reason.
-                     */
-                    if (block.kind === 'heading') {
-                      const section = built.sections.find((item) => item.id === block.section)
-                      return section?.headingNode ?? null
-                    }
+          {/*
+            `.resume-sizer` is the scaled document's real footprint. The stack
+            below is out of flow inside it, so the scrollable height is the
+            painted height rather than the 210mm layout height — without it a
+            phone scrolls 1853px past the last sheet into nothing.
+          */}
+          <div className="resume-sizer" style={{ height: reserved > 0 ? `${reserved}px` : undefined }}>
+            <div
+              className="resume-stack"
+              ref={stackRef}
+              style={{
+                transform: `translateX(${layout?.offsetX ?? 0}px) scale(${scale})`,
+                visibility: layout ? undefined : 'hidden',
+              }}
+            >
+              {measurement &&
+                measurement.pages.map((plan, index) => (
+                  <ResumeSheet
+                    key={index}
+                    index={index + 1}
+                    continuationName={content.name.toUpperCase()}
+                  >
+                    {plan.blocks.map((block) => {
+                      /*
+                       * `plan.blocks` is already in printed order, so this is a
+                       * straight walk. A heading is emitted as a *direct* child of
+                       * `.resume-body` with no wrapper: `.resume-body > :first-child`
+                       * and `.resume-section__head + .resume-run` are the two rules
+                       * that keep the rendered gaps identical to the ones the
+                       * paginator counted, and an intervening `<div>` defeats both —
+                       * the first block on a page keeps its leading margin, and every
+                       * section's first unit falls to the atom gap instead of the
+                       * heading's below-gap. The measuring host above is built the
+                       * same way for the same reason.
+                       */
+                      if (block.kind === 'heading') {
+                        const section = built.sections.find((item) => item.id === block.section)
+                        return section?.headingNode ?? null
+                      }
 
-                    const node = measurement.nodes.get(block.id)
-                    return node ? (
-                      <div key={block.id} className="resume-run">
-                        {node}
-                      </div>
-                    ) : null
-                  })}
-                </ResumeSheet>
-              ))}
+                      const node = measurement.nodes.get(block.id)
+                      return node ? (
+                        <div key={block.id} className="resume-run">
+                          {node}
+                        </div>
+                      ) : null
+                    })}
+                  </ResumeSheet>
+                ))}
+            </div>
           </div>
         </div>
       </div>
