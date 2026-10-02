@@ -26,9 +26,12 @@
   :root {
     /*
      * Not a comment for its own sake: this is what makes the UA render scrollbars,
-     * form controls, the caret and the default canvas in the right colours. Set
-     * in CSS rather than only in `<meta name="color-scheme">` so the light theme
-     * can change it, which a meta tag cannot do.
+     * form controls, the caret and the default canvas in the right colours.
+     *
+     * Dark is the whole palette, so this is a fixed answer rather than a resolved
+     * one — the site has one theme and it is declared in exactly two places, this
+     * and the `colorScheme` field in `viewport`. They are the same statement, and
+     * the meta tag is the one the browser reads before the document exists.
      */
     color-scheme: dark;
 
@@ -217,103 +220,6 @@
     --text-secondary: var(--text-dim);
     --accent-hover-soft: var(--accent-hover);
     --accent-muted: var(--accent);
-  }
-
-  /* ---- Light theme ------------------------------------------------------
-   * The site was dark-only, and hardcoded `colorScheme: 'dark'` to match, which
-   * is a choice made for the visitor rather than offered to them. More than a
-   * quarter of people have a light system, and neither `prefers-contrast` nor
-   * `forced-colors` was reachable while the answer was fixed in `<head>`.
-   *
-   * Dark stays the base `:root` block, so `:root[data-theme='light']` is the only
-   * thing that has to exist here: there is one light palette, not two, and a
-   * theme that is not light needs no rule at all. Every component reaches its
-   * colour through a token, so this block is the whole implementation.
-   *
-   * `@media screen` is load-bearing twice over. It keeps the light theme out of
-   * print, so the `@media print` block below stays the only authority on paper;
-   * and it sidesteps a specificity fight. `:root[data-theme='light']` scores
-   * (0,2,0) against the print block's `:root` at (0,1,0), so without this the
-   * light theme would win *inside* a print job and a visitor who chose light
-   * would get a white-themed but dark-tokened page on paper.
-   *
-   * None of these values are the dark ones nudged. Every one is a different
-   * colour, because the two themes fail in opposite directions: the dark amber
-   * that reads well on near-black is illegible on white at 12px, and the light
-   * greens and reds that work on a dark canvas drop below 3:1 on a light one.
-   * The print palette is the closest existing relative and is ink-on-paper
-   * rather than a screen theme, so the values below start there and are
-   * verified by `tests/palette-contrast.spec.ts` in both themes rather than
-   * trusted from this comment.
-   */
-  @media screen {
-    :root[data-theme='light'] {
-      color-scheme: light;
-
-      /* Canvas. Not pure white: a full-bleed pure white page is harsher than
-       * the dark theme's charcoal, and cards are then lifted *above* it. */
-      --bg: 250 250 251;
-      --bg-elevated: 255 255 255;
-      --bg-highlight: 241 241 245;
-      --bg-accent: 254 243 226;
-
-      --border: 226 226 232;
-      --border-strong: 196 196 205;
-
-      --text: 17 17 24;
-      --text-dim: 58 58 71;
-      --text-muted: 92 92 107;
-      /* Flips. In the dark theme this is ink drawn on the accent; there the
-       * accent is bright amber, here it is dark, so it is white. */
-      --text-inverse: 255 255 255;
-
-      /* The single hue, darkened to the print palette's value. The screen
-       * accent at `245 158 11` clears 12:1 on near-black and about 2.1:1 on
-       * white, which is why `--accent` cannot simply be reused. */
-      --accent: 146 92 6;
-      --accent-bright: 161 101 6;
-      --accent-dim: 120 74 4;
-      --accent-hover: 106 64 3;
-      --accent-contrast: 255 255 255;
-      --accent-bg: 146 92 6 / 0.1;
-      --accent-bg-strong: 146 92 6 / 0.16;
-      --accent-glow: 146 92 6 / 0.22;
-
-      /* The category rings and their labels. `--cat-neutral` is the only one
-       * redefined because every category aliases it above. */
-      --cat-neutral: 79 84 94;
-
-      /* Status. These are the reason a light theme cannot be a filter on the
-       * dark one: `52 211 153` green is 13:1 on charcoal and about 1.9:1 on
-       * white, so a dark-theme green on a light page is invisible rather than
-       * merely soft. The contact form's "Sent" line is one of these. */
-      --success: 4 120 87;
-      --warning: 146 88 6;
-      --error: 185 28 28;
-    }
-  }
-
-  /* ---- Theme toggle ----------------------------------------------------
-   * The active pair is `display: none`, never `opacity` and never `sr-only`.
-   *
-   * `sr-only` clips rather than removes, so a screen reader would announce both
-   * labels and tell a visitor already in the light theme to switch to the light
-   * theme. `display: none` takes the element out of the accessibility tree, which
-   * is the intent: exactly one icon drawn, exactly one label announced.
-   *
-   * Selected on `:root[data-theme='light']` with no fallback to `prefers-color-
-   * scheme` on purpose. The pre-paint script always writes a resolved
-   * `data-theme`, and a media query here would disagree with it during the frame
-   * before that script runs — the one frame the whole mechanism exists to avoid.
-   */
-  :root[data-theme='light'] [data-theme-icon='dark'],
-  :root[data-theme='light'] [data-theme-label='dark'] {
-    display: none;
-  }
-
-  :root:not([data-theme='light']) [data-theme-icon='light'],
-  :root:not([data-theme='light']) [data-theme-label='light'] {
-    display: none;
   }
 
   /* ---- Base ------------------------------------------------------------

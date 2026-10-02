@@ -7,7 +7,6 @@ import { siteConfig } from '@/config/site'
 import { classNames, isActiveRoute } from '@/lib/utils/helpers'
 import { buttonStyles } from '@/components/ui/button-styles'
 import { MobileMenu } from './mobile-menu'
-import { ThemeToggle } from './theme-toggle'
 
 /**
  * Scroll progress hairline.
@@ -194,7 +193,6 @@ export function Navbar() {
           </ul>
         </nav>
 
-        <ThemeToggle />
         <MobileMenu />
       </div>
 

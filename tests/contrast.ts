@@ -38,12 +38,6 @@ export function contrast(a: [number, number, number], b: [number, number, number
   return (hi + 0.05) / (lo + 0.05)
 }
 
-/** `'rgb(9 9 15)'` / `'rgb(9, 9, 15)'` / `'rgba(9 9 15 / 0.6)'` to a triple. */
-export function parseColor(value: string): [number, number, number] {
-  const nums = value.match(/[\d.]+/g)?.slice(0, 3).map(Number)
-  return [nums?.[0] ?? 0, nums?.[1] ?? 0, nums?.[2] ?? 0]
-}
-
 export type Rect = { x: number; y: number; width: number; height: number }
 
 export type Target = {
