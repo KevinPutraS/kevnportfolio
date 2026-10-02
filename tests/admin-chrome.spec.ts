@@ -1,7 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
-import { settle } from './helpers'
+import { classListIn, settle, sourceOf } from './helpers'
 
 /**
  * The CMS form's save bar must sit *above* the bottom tab bar, and must get out
@@ -31,32 +29,7 @@ import { settle } from './helpers'
  * passing.
  */
 
-const source = (path: string) => readFileSync(join(process.cwd(), path), 'utf8')
-
-/**
- * Every quoted class list in the JSX tag that `needle` appears in, joined.
- *
- * Read out of the source rather than copied, because a copy is a second place
- * for these classes to live and it is the one that does not change when the
- * component does. The tag is sliced whole and *all* of its strings are taken, not
- * just the one holding the needle: the phone and `sm:` treatments are separate
- * literals, so pulling out only the one with the token in it would build a probe
- * made of the mobile half alone — which then fails its own desktop assertions for
- * reasons that have nothing to do with the component. Single quotes only, so the
- * prose in the surrounding comments cannot be mistaken for markup, though note
- * that "the bar's own height" in a comment is still an apostrophe in a comment and
- * the needle has to be specific enough that no sentence can match it.
- */
-const classListIn = (contents: string, needle: string): string => {
-  const at = contents.indexOf(needle)
-  if (at < 0) throw new Error(`no class list containing "${needle}" — has the markup moved?`)
-  // Back up to the opening quote of the string the needle is inside, otherwise
-  // the slice starts mid-literal and the first match is a fragment.
-  const tag = contents.slice(contents.lastIndexOf("'", at), contents.indexOf('>', at))
-  const lists = [...tag.matchAll(/'([^']*)'/g)].map((m) => m[1]).filter((s) => s.trim())
-  if (!lists.length) throw new Error(`found "${needle}" but no class list around it`)
-  return lists.join(' ')
-}
+const source = sourceOf
 
 const ACTIONS_NEEDLE = 'sticky bottom-[calc(var(--admin-tabbar-h)'
 const TAB_ROW_NEEDLE = 'min-h-[var(--admin-tabbar-h)]'

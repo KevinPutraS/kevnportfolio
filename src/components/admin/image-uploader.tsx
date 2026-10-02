@@ -125,12 +125,20 @@ export function ImageUploader({
           />
 
           <div className="flex flex-wrap gap-2">
+            {/*
+              44px, not `h-9`. These two sit in the only place on a project form
+              where the whole row is below the fold on a phone, so they are the
+              controls a thumb is aiming at while the page is also scrolling —
+              and they are the only way to attach or remove the thumbnail. The
+              height costs nothing here: the pair is `flex-wrap` in a column that
+              already has a 16:9 preview above it.
+            */}
             <button
               type="button"
               onClick={() => inputRef.current?.click()}
               disabled={isUploading}
               className={classNames(
-                'inline-flex h-9 items-center gap-2 border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] px-3 text-xs transition-colors hover:border-[rgb(var(--text-muted))] disabled:opacity-50'
+                'inline-flex h-11 items-center gap-2 border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] px-3 text-xs transition-colors hover:border-[rgb(var(--text-muted))] disabled:opacity-50'
               )}
             >
               {isUploading ? (
@@ -149,7 +157,7 @@ export function ImageUploader({
                   setStatus('')
                   setLocalError(null)
                 }}
-                className="inline-flex h-9 items-center border border-[rgb(var(--border))] px-3 text-xs text-[rgb(var(--text-muted))] transition-colors hover:border-[rgb(var(--error))] hover:text-[rgb(var(--error))]"
+                className="inline-flex h-11 items-center border border-[rgb(var(--border))] px-3 text-xs text-[rgb(var(--text-muted))] transition-colors hover:border-[rgb(var(--error))] hover:text-[rgb(var(--error))]"
               >
                 Remove
               </button>

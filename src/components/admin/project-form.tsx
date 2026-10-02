@@ -333,15 +333,20 @@ export function ProjectForm({ project }: { project?: Project }) {
         {technologyList.length > 0 && (
           <ul className="flex flex-wrap gap-2">
             {technologyList.map((technology) => (
-              <li
-                key={technology}
-                className="inline-flex items-center gap-1 rounded-[var(--radius-full)] border border-[rgb(var(--border))] bg-[rgb(var(--bg-highlight))] py-1 pl-3 pr-1.5 font-mono text-[length:var(--text-xs)] text-[rgb(var(--text-dim))]"
-              >
+<li
+                  key={technology}
+                  className="inline-flex items-center gap-0.5 rounded-[var(--radius-full)] border border-[rgb(var(--border))] bg-[rgb(var(--bg-highlight))] py-0.5 pl-3 pr-0.5 font-mono text-[length:var(--text-xs)] text-[rgb(var(--text-dim))] sm:py-1 sm:pr-1"
+                >
                 {technology}
                 {/*
                   The chip's own height is the target, not just the glyph. A 16px
                   `X` in a 24px pill is unclickable on a phone, and this is the
                   one control in the form a thumb has to aim at.
+
+                  So the button is 40px below `sm` — the same two-tier size as
+                  `RowAction`, for the same reason: 44px in a chip would make the
+                  pill taller than the text it is wrapped around, and the desktop
+                  figure can stay tight because a mouse does not have a thumb.
                 */}
                 <button
                   type="button"
@@ -354,7 +359,7 @@ export function ProjectForm({ project }: { project?: Project }) {
                     )
                   }
                   aria-label={`Remove ${technology}`}
-                  className="-mr-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[rgb(var(--text-muted))] transition-colors hover:bg-[rgb(var(--error)/0.14)] hover:text-[rgb(var(--error))]"
+                  className="-mr-1.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[rgb(var(--text-muted))] transition-colors hover:bg-[rgb(var(--error)/0.14)] hover:text-[rgb(var(--error))] sm:-mr-0.5 sm:h-8 sm:w-8"
                 >
                   <X className="h-3.5 w-3.5" aria-hidden="true" />
                 </button>
