@@ -192,8 +192,7 @@ export function ProjectTableClient({ projects }: { projects: Project[] }) {
                       <RowAction
                         busy={isBusy}
                         onClick={() => actions.toggle(project, 'published')}
-                        label={`${project.published ? 'Unpublish' : 'Publish'} ${project.title}`}
-                        pressed={project.published}
+                        toggle={{ name: `Published: ${project.title}`, pressed: project.published }}
                       >
                         {project.published ? (
                           <EyeOff className="h-4 w-4" aria-hidden="true" />
@@ -208,8 +207,7 @@ export function ProjectTableClient({ projects }: { projects: Project[] }) {
                       <RowAction
                         busy={isBusy}
                         onClick={() => actions.toggle(project, 'featured')}
-                        label={`${project.featured ? 'Remove from' : 'Add to'} featured: ${project.title}`}
-                        pressed={project.featured}
+                        toggle={{ name: `Featured: ${project.title}`, pressed: project.featured }}
                       >
                         <Star className="h-4 w-4" aria-hidden="true" />
                         <span className="sr-only">

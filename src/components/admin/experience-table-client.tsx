@@ -152,8 +152,7 @@ export function ExperienceTableClient({ experiences }: { experiences: Experience
                       <RowAction
                         busy={isBusy}
                         onClick={() => actions.toggle(experience, 'published')}
-                        label={`${experience.published ? 'Unpublish' : 'Publish'} ${experience.title}`}
-                        pressed={experience.published}
+                        toggle={{ name: `Published: ${experience.title}`, pressed: experience.published }}
                       >
                         {experience.published ? (
                           <EyeOff className="h-4 w-4" aria-hidden="true" />
@@ -168,8 +167,7 @@ export function ExperienceTableClient({ experiences }: { experiences: Experience
                       <RowAction
                         busy={isBusy}
                         onClick={() => actions.toggle(experience, 'current')}
-                        label={`${experience.current ? 'Remove the current flag from' : 'Mark as current'} ${experience.title}`}
-                        pressed={experience.current}
+                        toggle={{ name: `Current role: ${experience.title}`, pressed: Boolean(experience.current) }}
                       >
                         <Briefcase className="h-3.5 w-3.5" aria-hidden="true" />
                         <span className="sr-only">

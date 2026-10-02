@@ -71,14 +71,22 @@ export function FormSection({
 /**
  * The save/cancel pair.
  *
- * Sticky below `sm`, inline above it. Two details that are easy to get wrong:
+ * Sticky below `sm`, inline above it. Three details that are easy to get wrong:
  *
  * - The bar is `sticky`, not `fixed`. `fixed` takes it out of flow entirely, so
  *   the bottom of the form would end up permanently underneath it and the last
  *   field could never be scrolled clear.
+ * - Below `sm` it is pinned above `--admin-tabbar-h`, the CMS bottom tab bar's
+ *   height. Both were `bottom: 0` and both were `z`-indexed, and the tab bar won:
+ *   the Save button sat underneath a 56px strip of blurred chrome and could not
+ *   be pressed at all on a phone or a tablet in portrait. The offset is the tab
+ *   bar's *own* height plus the safe-area inset it already pads itself with, so
+ *   the pair can never disagree — `tests/admin-chrome.spec.ts` holds them to it.
  * - The padding clears the iOS home indicator via `env(safe-area-inset-bottom)`,
  *   and the bar is a blurred panel so content scrolling underneath stays
- *   legible rather than colliding with a solid block.
+ *   legible rather than colliding with a solid block. At `sm`+ the tab bar is
+ *   still on the page but this bar is in normal flow above `main`'s `pb-28`, so
+ *   the inset is the bar's own problem again.
  *
  * The label of the primary action is passed in rather than defaulted to
  * "Save", so it always says what will happen: create vs. save vs. delete.
@@ -99,12 +107,19 @@ export function FormStickyActions({
   return (
     <div
       className={classNames(
-        // `-mx-6` / `px-6` negate the container's 1.5rem gutter so the bar spans
-        // the full width of a phone rather than floating inside the column.
-        'sticky bottom-0 z-30 -mx-6 mt-2 border-t border-[rgb(var(--border))] bg-[rgb(var(--bg)/0.88)] px-6 backdrop-blur-xl sm:mx-0 sm:rounded-[var(--radius-lg)] sm:border sm:bg-transparent sm:p-0 sm:backdrop-blur-none',
+        /*
+         * `-mx-6` / `px-6` negate the container's 1.5rem gutter so the bar spans
+         * the full width of a phone rather than floating inside the column.
+         *
+         * The padding is a class rather than the inline style it used to be. An
+         * inline `paddingBottom` outranks every utility in the file, which meant
+         * `sm:p-0` could not undo it — so the "inline above sm" treatment had
+         * quietly been a rounded panel with 1rem of padding under it ever since.
+         */
+        'sticky bottom-[calc(var(--admin-tabbar-h)+env(safe-area-inset-bottom))] z-30 -mx-6 mt-2 border-t border-[rgb(var(--border))] bg-[rgb(var(--bg)/0.88)] px-6 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-xl',
+        'sm:static sm:mx-0 sm:rounded-[var(--radius-lg)] sm:border sm:bg-transparent sm:p-0 sm:pb-[max(1rem,env(safe-area-inset-bottom))] sm:backdrop-blur-none',
         className
       )}
-      style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
     >
       <div className="flex items-center gap-3 pt-4 sm:pt-0">
         {/*

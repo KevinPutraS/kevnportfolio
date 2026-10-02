@@ -81,7 +81,19 @@ export function useFocusTrap<T extends HTMLElement>(
       )
 
       if (focusable.length === 0) {
-        event.preventDefault()
+        /*
+         * Close rather than swallow.
+         *
+         * An empty candidate list used to mean "keep the Tab", which is the worst
+         * possible response: the trap stayed mounted, the page stayed locked, and
+         * every keypress was consumed. That is what happened when the navigation
+         * drawer's overlay was hidden by a breakpoint change while the trap was
+         * still active — the container was `display: none`, so all of its
+         * children had a null `offsetParent`, so nothing was focusable and the
+         * keyboard simply stopped working. Closing hands the page back, which is
+         * the correct outcome whenever there is nothing left to trap.
+         */
+        onCloseRef.current()
         return
       }
 

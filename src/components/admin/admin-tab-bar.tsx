@@ -31,6 +31,11 @@ import { ICONS, adminItems } from './admin-navigation'
  *
  * The icons come from the same `ICONS` map the sidebar uses, and the items from
  * the same `siteConfig.adminNavigation`, so neither surface can drift.
+ *
+ * The row height is `var(--admin-tabbar-h)` rather than a literal, because
+ * `FormStickyActions` pins itself to the bottom of the viewport on a phone and
+ * has to clear this bar to stay usable. Two numbers written down twice is a
+ * number that will drift; one token read by both cannot.
  */
 export function AdminTabBar() {
   const pathname = usePathname()
@@ -51,7 +56,7 @@ export function AdminTabBar() {
                 href={item.href}
                 aria-current={current ? 'page' : undefined}
                 className={classNames(
-                  'relative flex min-h-14 flex-col items-center justify-center gap-1 px-0.5 pt-1.5 text-center transition-colors',
+                  'relative flex min-h-[var(--admin-tabbar-h)] flex-col items-center justify-center gap-1 px-0.5 pt-1.5 text-center transition-colors',
                   current
                     ? 'text-[rgb(var(--accent))]'
                     : 'text-[rgb(var(--text-muted))] hover:text-[rgb(var(--text))]'

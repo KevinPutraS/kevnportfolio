@@ -11,6 +11,20 @@ import { classNames } from '@/lib/utils/helpers'
  * copies had drifted: one of them lost the `disabled` state and let a second
  * click fire a duplicate request while the first was still in flight.
  *
+ * **Two shapes, on purpose.** An action button (`label`) and a toggle button
+ * (`toggle`) are different ARIA shapes and cannot share one prop. A toggle has to
+ * carry `aria-pressed`, and `aria-pressed` states the *state*; so does the
+ * accessible name. Passing "Unpublish Atlas" as the name next to
+ * `aria-pressed={true}` announced "Unpublish Atlas, toggle button, pressed" — the
+ * label claiming one thing and the state claiming the opposite, from five call
+ * sites at once.
+ *
+ * So the toggle's `name` is the subject and must not change with the state:
+ * `Published: Atlas UI` announces "Published: Atlas UI, toggle button, pressed"
+ * when it is live and "… not pressed" when it is not. That is the ARIA Authoring
+ * Practices toggle pattern, and it means there is no prop combination left that
+ * can put an action label next to a state.
+ *
  * **Size.** This was a fixed `h-8 w-8` — 32px — at every viewport. That is a
  * fine pointer target on a desktop monitor and roughly a third of the size of a
  * fingertip on a phone, and these tables are the main way content gets edited
@@ -19,32 +33,38 @@ import { classNames } from '@/lib/utils/helpers'
  * `.tap`-style growth is not applied here on purpose: the buttons sit in a
  * flex row, so padding them out would push the row's other actions off screen.
  */
-export function RowAction({
-  busy,
-  onClick,
-  label,
-  pressed,
-  danger,
-  children,
-}: {
+type RowActionProps = {
   busy: boolean
   onClick: () => void
-  label: string
-  /** Renders the button as a toggle and exposes it to assistive tech. */
-  pressed?: boolean
   danger?: boolean
   children: ReactNode
-}) {
+} & (
+  | {
+      /** Accessible name for a plain action, phrased as what pressing does. */
+      label: string
+      toggle?: never
+    }
+  | {
+      /**
+       * A toggle's state. `name` is the *subject* and stays the same in both
+       * states; `pressed` carries the state.
+       */
+      toggle: { name: string; pressed: boolean }
+      label?: never
+    }
+)
+
+export function RowAction({ busy, onClick, label, toggle, danger, children }: RowActionProps) {
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={busy}
-      aria-label={label}
-      aria-pressed={pressed}
+      aria-label={toggle ? toggle.name : label}
+      aria-pressed={toggle ? toggle.pressed : undefined}
       className={classNames(
         'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] border transition-colors disabled:cursor-not-allowed disabled:opacity-50 sm:h-[34px] sm:w-[34px]',
-        pressed
+        toggle?.pressed
           ? 'border-[rgb(var(--accent)/0.5)] bg-[rgb(var(--accent)/0.12)] text-[rgb(var(--accent))]'
           : 'border-[rgb(var(--border))] text-[rgb(var(--text-dim))] hover:border-[rgb(var(--border-strong))] hover:bg-[rgb(var(--bg-highlight))] hover:text-[rgb(var(--text))]',
         danger &&

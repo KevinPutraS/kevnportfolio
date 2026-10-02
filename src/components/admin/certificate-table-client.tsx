@@ -138,8 +138,7 @@ export function CertificateTableClient({ certificates }: { certificates: Certifi
                       <RowAction
                         busy={isBusy}
                         onClick={() => actions.toggle(certificate, 'published')}
-                        label={`${certificate.published ? 'Unpublish' : 'Publish'} ${certificate.title}`}
-                        pressed={certificate.published}
+                        toggle={{ name: `Published: ${certificate.title}`, pressed: certificate.published }}
                       >
                         {certificate.published ? (
                           <EyeOff className="h-4 w-4" aria-hidden="true" />

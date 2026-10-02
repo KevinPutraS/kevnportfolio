@@ -100,5 +100,24 @@ export default defineConfig({
     url: 'http://localhost:3000',
     reuseExistingServer: true,
     timeout: 120_000,
+    /*
+     * The contact page renders the form only when a delivery channel exists —
+     * `process.env.CONTACT_WEBHOOK_URL` is read per request, and with nothing set
+     * the page shows the email address instead of the form. Left to the machine's
+     * own environment, `tests/contact-form.spec.ts` would pass by skipping itself
+     * on a checkout without a webhook and run on the one with it, which is a
+     * suite whose coverage depends on which developer is running it.
+     *
+     * A URL that resolves nowhere is enough: the page only checks that it is set,
+     * and the tests that submit intercept the contact API request themselves, so
+     * nothing is ever actually delivered.
+     *
+     * Note the interaction with `reuseExistingServer`: a dev server the developer
+     * started by hand was not launched with this, so the form will not be there.
+     * The spec skips with an explanation rather than failing when it finds no
+     * form, because the page is behaving correctly — it is the harness that
+     * cannot supply the variable.
+     */
+    env: { CONTACT_WEBHOOK_URL: 'https://webhook.invalid/contact-form-test' },
   },
 })

@@ -205,6 +205,19 @@
          * nothing failing. `tests/sticky-header.spec.ts` now asserts the two are
          * equal, so a future edit cannot reopen it. */
         --nav-h: 4rem;
+
+    /*
+     * The CMS bottom tab bar's height, for the same reason `--nav-h` exists: it
+     * is needed in two places, and a number written down twice is a number that
+     * will drift.
+     *
+     * The second place is `FormStickyActions`, which is pinned to the bottom of
+     * the viewport and has to sit *above* this bar. Both read this token, and
+     * `tests/admin-chrome.spec.ts` asserts they both still do — the failure it
+     * guards against is the two silently disagreeing, which puts the Save button
+     * under the tab bar with nothing failing and no way to tell from the markup.
+     */
+    --admin-tabbar-h: 3.5rem;
     --container-max: 72rem;
 
     /* ---- Semantic aliases ----------------------------------------------

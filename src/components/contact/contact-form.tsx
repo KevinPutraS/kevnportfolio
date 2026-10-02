@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -26,6 +26,26 @@ export function ContactForm() {
   const [errors, setErrors] = useState<ContactFieldErrors>({})
   const [status, setStatus] = useState<Status>('idle')
   const [feedback, setFeedback] = useState('')
+  const successRef = useRef<HTMLDivElement>(null)
+
+  /*
+   * Moving focus to the confirmation is the whole of the fix.
+   *
+   * On success the form — including the button that was just pressed — is
+   * unmounted and replaced by the confirmation panel. Unmounting the focused
+   * element drops focus onto `<body>`, so a screen reader was told nothing at
+   * all: `role="status"` was on a node that did not exist when the text landed
+   * in it, which is the same "mount and announce together" mistake
+   * `FieldShell` was making, and it is why this one needed focus as well as a
+   * live region. A `role="status"` that is focused reads its content out on the
+   * move, so the two mechanisms agree instead of one being swallowed.
+   *
+   * `tabIndex={-1}` makes the panel focusable without putting it in the tab
+   * order — it is not a control, and it should not be something Tab walks into.
+   */
+  useEffect(() => {
+    if (status === 'success') successRef.current?.focus()
+  }, [status])
 
   function update<K extends keyof ContactFormValues>(key: K, value: ContactFormValues[K]) {
     setValues((previous) => ({ ...previous, [key]: value }))
@@ -86,8 +106,10 @@ export function ContactForm() {
   if (status === 'success') {
     return (
       <div
+        ref={successRef}
+        tabIndex={-1}
         role="status"
-        className="border-t-2 border-t-[rgb(var(--success))] bg-[rgb(var(--surface))] p-8"
+        className="border-t-2 border-t-[rgb(var(--success))] bg-[rgb(var(--surface))] p-8 focus:outline-none"
       >
         <p className="eyebrow text-[rgb(var(--success))]">Sent</p>
         <p className="heading-3 mt-4">Message received</p>

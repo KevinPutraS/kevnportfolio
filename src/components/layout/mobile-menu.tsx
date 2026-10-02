@@ -69,6 +69,33 @@ export function MobileMenu() {
     setIsOpen(false)
   }, [pathname])
 
+  /*
+   * Crossing the breakpoint must close the drawer too.
+   *
+   * The trigger and the overlay are both `lg:hidden`, but this component is not,
+   * so `isOpen` outlives the breakpoint. It used to: rotating an iPad, or
+   * dragging a window across 1024px, hid the drawer while its focus trap stayed
+   * active. Two things then went wrong at once, and neither was visible from the
+   * markup — the trap holds `body { overflow: hidden }` until it unmounts, so
+   * the page stopped scrolling; and it filtered Tab candidates with
+   * `offsetParent !== null`, which is null for everything inside a
+   * `display: none` subtree, so *every* keypress was swallowed and the keyboard
+   * was frozen page-wide rather than merely trapped. Escape or a navigation was
+   * the only way out.
+   *
+   * The breakpoint is written out rather than imported because the whole site
+   * spells it as a Tailwind `lg:` class; the `navbar.tsx` comment above
+   * `hidden lg:block` is the other end of the same decision.
+   */
+  useEffect(() => {
+    const desktop = window.matchMedia('(min-width: 1024px)')
+    const closeIfDesktop = (event: MediaQueryListEvent) => {
+      if (event.matches) setIsOpen(false)
+    }
+    desktop.addEventListener('change', closeIfDesktop)
+    return () => desktop.removeEventListener('change', closeIfDesktop)
+  }, [])
+
   return (
     <>
       <button
