@@ -168,6 +168,13 @@ export const siteConfig = {
    */
   adminNavigation: [
     { label: 'Dashboard', href: '/admin', icon: 'dashboard' },
+    /*
+     * "Inbox", not "Messages". This list is also the mobile bottom tab bar, and
+     * a sixth item leaves ~53px per item at 320px — enough for five characters
+     * at the tab bar's 10px label, not eleven. The page heading still spells it
+     * out in full.
+     */
+    { label: 'Inbox', href: '/admin/messages', icon: 'inbox' },
     { label: 'Projects', href: '/admin/projects', icon: 'projects' },
     { label: 'Experience', href: '/admin/experience', icon: 'experience' },
     { label: 'Certificates', href: '/admin/certificates', icon: 'certificates' },

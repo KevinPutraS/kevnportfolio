@@ -16,16 +16,35 @@ import type { ActionMessageState } from '@/components/admin/row-action'
 
 export interface ToggleableRow {
   id: string
+  /**
+   * The row's human label, used in the delete confirmation. Every caller
+   * supplies one — a project title, a certificate title, and for the inbox a
+   * message's subject.
+   */
   title: string
-  published: boolean
+  /**
+   * Optional because not every table has a publish state: the inbox exposes
+   * `is_read` and nothing else. The hook reads the switch generically off
+   * {@link RowToggle.field}, so this declaration only ever documented the most
+   * common case and forced a fake `published: false` on rows that have no such
+   * column.
+   */
+  published?: boolean
 }
 
 export interface RowToggle<TRow> {
-  /** The column to flip. Every table exposes `published`; some add more. */
-  field: 'published' | 'featured' | 'current'
+  /**
+   * The column to flip. The published-content tables use `published`, `featured`
+   * and `current`; the inbox uses `is_read`.
+   */
+  field: 'published' | 'featured' | 'current' | 'is_read'
   /**
    * Sentence shown after a successful flip. Receives the caller's own row type,
    * so the message can mention the organization, the issuer, and so on.
+   *
+   * It is handed the row as it was *before* the flip, so the sentence has to
+   * describe the state it is moving into rather than the state it read — that is
+   * why these all read `is now ${row.published ? 'a draft' : 'published'}`.
    */
   describe: (row: TRow) => string
 }
@@ -55,7 +74,7 @@ export interface RowActions<TRow extends ToggleableRow> {
 /**
  * Reads a toggle column off a row.
  *
- * The field is one of three known booleans, but the row types are unrelated
+ * The field is one of a known set of booleans, but the row types are unrelated
  * interfaces, so a single localized cast beats widening every table row to
  * `Record<string, boolean>` and losing the real field types everywhere else.
  */

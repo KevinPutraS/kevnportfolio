@@ -118,6 +118,23 @@ export default defineConfig({
      * form, because the page is behaving correctly — it is the harness that
      * cannot supply the variable.
      */
-    env: { CONTACT_WEBHOOK_URL: 'https://webhook.invalid/contact-form-test' },
+    env: {
+      CONTACT_WEBHOOK_URL: 'https://webhook.invalid/contact-form-test',
+      /*
+       * Keeps `tests/contact-inbox.spec.ts` from writing to a real inbox.
+       *
+       * The suite posts valid payloads to `/api/contact`, and once the inbox
+       * table exists those writes succeed — against whichever project
+       * `.env.local` points at. Without this, every `npm run test` would add a
+       * handful of undeletable-by-the-test "Ada Lovelace" rows to a live inbox,
+       * and the unread count that the feature exists to provide would be
+       * measuring the test suite.
+       *
+       * Note the same `reuseExistingServer` caveat as above: a dev server
+       * started by hand did not get this variable, so run the suite against a
+       * server this config started, or export it yourself.
+       */
+      CONTACT_INBOX_DISABLED: '1',
+    },
   },
 })

@@ -4,6 +4,7 @@ import { ContactForm } from '@/components/contact/contact-form'
 import { ArrowLink } from '@/components/ui/arrow-link'
 import { PageHeader } from '@/components/ui/page-header'
 import { socialLinks, siteConfig } from '@/config/site'
+import { isSupabaseConfigured } from '@/lib/supabase/config'
 
 export const metadata: Metadata = {
   title: 'Contact',
@@ -35,18 +36,25 @@ export const dynamic = 'force-dynamic'
  * instead of two stacked cards with their own headings.
  *
  * On the copy: this page used to promise the form "goes straight to me", which
- * is not true in every deployment. `/api/contact` only forwards when
- * `CONTACT_WEBHOOK_URL` is configured; otherwise it returns `delivered: false`
- * and asks the visitor to email instead. So the promise is now conditional on
- * the same check, read here on the server.
+ * is not true in every deployment. `/api/contact` has two independent delivery
+ * channels — the CMS inbox and `CONTACT_WEBHOOK_URL` — and with neither
+ * configured it returns `delivered: false` and asks the visitor to email
+ * instead. So the promise is now conditional on the same check, read here on
+ * the server.
  *
- * The check is deliberately NOT a `NEXT_PUBLIC_` variable — a webhook URL is a
- * secret endpoint, and prefixing it would ship it to the browser. It stays
- * server-side, this is a Server Component, and only the resulting boolean
+ * Both channels are checked rather than just the webhook. Any deploy with
+ * Supabase configured already has a working inbox, and the CMS requires
+ * Supabase, so on such a deploy the form does work — it just used to refuse to
+ * render because the one channel it knew about was unset.
+ *
+ * The webhook check is deliberately NOT a `NEXT_PUBLIC_` variable — a webhook
+ * URL is a secret endpoint, and prefixing it would ship it to the browser. It
+ * stays server-side, this is a Server Component, and only the resulting boolean
  * reaches the client.
  */
 export default function ContactPage() {
-  const formDelivers = Boolean(process.env.CONTACT_WEBHOOK_URL?.trim())
+  const formDelivers =
+    Boolean(process.env.CONTACT_WEBHOOK_URL?.trim()) || isSupabaseConfigured()
 
   return (
     <>
@@ -65,13 +73,14 @@ export default function ContactPage() {
             The layout changes shape depending on whether the form works at all,
             rather than always rendering it and apologising in prose.
 
-            When there is no webhook configured, the previous version still put a
-            complete contact form in the primary column, seven fields and a send
-            button, and then explained *below* it that nothing would arrive. That
-            is the worst of both: the page's main action is a dead end, and the
-            visitor has to read a paragraph to find out. With `formDelivers`
-            false, the email address becomes the primary column and the form is
-            not rendered at all, so there is exactly one thing to do and it works.
+            When there is no channel configured at all, the previous version
+            still put a complete contact form in the primary column, seven fields
+            and a send button, and then explained *below* it that nothing would
+            arrive. That is the worst of both: the page's main action is a dead
+            end, and the visitor has to read a paragraph to find out. With
+            `formDelivers` false, the email address becomes the primary column
+            and the form is not rendered at all, so there is exactly one thing to
+            do and it works.
           */}
           {formDelivers ? (
             <div className="rhythm-lg grid gap-x-10 gap-y-16 lg:grid-cols-12">

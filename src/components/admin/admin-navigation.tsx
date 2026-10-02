@@ -9,6 +9,7 @@ import {
   FolderKanban,
   Briefcase,
   Award,
+  Inbox,
   Settings2,
   type LucideIcon,
 } from 'lucide-react'
@@ -31,8 +32,8 @@ export const adminItems = siteConfig.adminNavigation.filter((item) => !item.href
 /**
  * Section icon, keyed by the `icon` name in `siteConfig.adminNavigation`.
  *
- * Exported because the mobile tab bar maps the same five sections. Desktop gets
- * a sidebar list, mobile gets a bottom bar, and neither is allowed to invent its
+ * Exported because the mobile tab bar maps the same sections. Desktop gets a
+ * sidebar list, mobile gets a bottom bar, and neither is allowed to invent its
  * own items or its own glyphs.
  *
  * A map with a `Record` type rather than a bare object so that adding a section
@@ -41,6 +42,7 @@ export const adminItems = siteConfig.adminNavigation.filter((item) => !item.href
  */
 export const ICONS: Record<(typeof adminItems)[number]['icon'], LucideIcon> = {
   dashboard: LayoutDashboard,
+  inbox: Inbox,
   projects: FolderKanban,
   experience: Briefcase,
   certificates: Award,

@@ -101,6 +101,28 @@ export type CertificateInsert = Omit<CertificateRow, 'id' | 'created_at' | 'upda
 
 export type CertificateUpdate = Partial<Omit<CertificateRow, 'id' | 'created_at' | 'updated_at'>>
 
+export interface ContactMessageRow {
+  id: string
+  name: string
+  email: string
+  subject: string
+  message: string
+  is_read: boolean
+  created_at: string
+}
+
+/*
+ * No `updated_at`: a message is never edited, only flipped or deleted.
+ *
+ * `is_read` is NOT in `Insert`'s optional half on purpose. It has a database
+ * default, and the INSERT policy pins it to `false`, so the public contact
+ * route must not be able to supply it — an optimistic type would invite exactly
+ * that.
+ */
+export type ContactMessageInsert = Omit<ContactMessageRow, 'id' | 'created_at'>
+
+export type ContactMessageUpdate = Partial<Pick<ContactMessageRow, 'is_read'>>
+
 export interface Database {
   public: {
     Tables: {
@@ -120,6 +142,12 @@ export interface Database {
         Row: CertificateRow
         Insert: CertificateInsert
         Update: CertificateUpdate
+        Relationships: []
+      }
+      contact_messages: {
+        Row: ContactMessageRow
+        Insert: ContactMessageInsert
+        Update: ContactMessageUpdate
         Relationships: []
       }
     }
