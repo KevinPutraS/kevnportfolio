@@ -2,8 +2,55 @@
 
 import { useEffect, useRef } from 'react'
 
-const FOCUSABLE =
-  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+/**
+ * What counts as a tab stop inside a trapped surface.
+ *
+ * The negative-`tabindex` clause is `[tabindex^="-"]`, not `[tabindex="-1"]`,
+ * and the difference is the whole reason this constant is exported rather than
+ * inlined where it is used.
+ *
+ * `tabindex` is not a binary. Any negative value means "focusable in script,
+ * never by Tab" — `-1` is the convention for exactly that, and there is no
+ * reason for a component to stop at `-1`: `-2`, `-3` are all legal and mean the
+ * same. The trap would count `[tabindex="-2"]` as a stop, wrap focus onto it, and
+ * then move focus to an element the user cannot Tab back to. `Tab` would appear
+ * to do nothing on that control, with no indication of why.
+ *
+ * `tests/focus-trap.spec.ts` runs this selector in a real browser against a
+ * fixture containing every one of those cases, so a regression here is a failing
+ * assertion rather than a control nobody can leave.
+ */
+export const FOCUSABLE =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex^="-"])'
+
+/**
+ * Whether a candidate element can actually take focus right now.
+ *
+ * `:disabled`, and not the `[disabled]` attribute the selector above uses. The
+ * two disagree about one case that matters here: a button inside a
+ * `<fieldset disabled>` has no attribute of its own and is still not a tab stop.
+ * The trap would count it, wrap focus onto it, and `.focus()` on a disabled
+ * control silently does nothing — the same freeze this list exists to prevent,
+ * reached one level up from where the attribute check is looking.
+ *
+ * It lives in a filter rather than in the selector because `:disabled` is the
+ * browser's own answer to "can this be focused" and covers every element kind
+ * at once, instead of four selectors each guessing at it. `offsetParent` is null
+ * for `display: none` subtrees, which is how a hidden control is excluded
+ * without maintaining a parallel list.
+ *
+ * Free of module scope on purpose: `tests/focus-trap.spec.ts` evaluates this
+ * function's own source in the browser against a fixture, so it asserts shipped
+ * behaviour instead of a transcription of it.
+ */
+export function isTabStop(element: HTMLElement): boolean {
+  return element.offsetParent !== null && !element.matches(':disabled')
+}
+
+/** The tab stops inside `container`, in tab order. */
+function getTabStops(container: HTMLElement): HTMLElement[] {
+  return Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(isTabStop)
+}
 
 /**
  * Traps Tab focus inside a container while `active`, closes on Escape, locks
@@ -74,11 +121,12 @@ export function useFocusTrap<T extends HTMLElement>(
 
       if (event.key !== 'Tab' || !container) return
 
-      const focusable = Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
-        // `offsetParent` is null for `display: none` subtrees, which is how a
-        // hidden control is excluded without maintaining a parallel list.
-        (element) => element.offsetParent !== null
-      )
+      /*
+       * Counted once per Tab, which is the only moment the answer can change:
+       * a control can be disabled, hidden or swapped out by whatever re-rendered
+       * the surface since the last keystroke.
+       */
+      const focusable = getTabStops(container)
 
       if (focusable.length === 0) {
         /*
@@ -118,7 +166,13 @@ export function useFocusTrap<T extends HTMLElement>(
       const preferred = initialFocusRef.current
         ? container?.querySelector<HTMLElement>(initialFocusRef.current)
         : null
-      const fallback = container?.querySelector<HTMLElement>(FOCUSABLE) ?? container
+      /*
+       * The fallback is a real tab stop rather than the selector's first match,
+       * so the surface cannot open with its focus request swallowed by a control
+       * that cannot hold it — which leaves focus on the page behind the overlay
+       * while the page is scroll-locked, with Tab intercepted by the trap.
+       */
+      const fallback = container ? (getTabStops(container)[0] ?? container) : container
       ;(preferred ?? fallback)?.focus()
     }, 20)
 
