@@ -13,7 +13,7 @@ There are two halves:
 | | |
 | --- | --- |
 | **Public site** | `/`, `/projects`, `/projects/[slug]`, `/about`, `/contact` |
-| **CMS** | `/admin/login`, `/admin`, `/admin/projects`, `/admin/projects/new`, `/admin/projects/[id]/edit` |
+| **CMS** | `/admin/login`, `/admin`, `/admin/projects`, `/admin/projects/new`, `/admin/projects/[id]/edit`, `/admin/preview/project/[id]` |
 
 The CMS is a working, authenticated CRUD interface backed by Supabase Postgres,
 Supabase Auth and Supabase Storage. It is not a mock.
@@ -273,7 +273,8 @@ To load them on a hosted project, paste the seed into **SQL Editor** and run it.
     │   │       │   ├── new/page.tsx
     │   │       │   └── [id]/edit/page.tsx
     │   │       ├── experience/     # same three routes
-    │   │       └── certificates/   # same three routes
+    │   │       ├── certificates/   # same three routes
+    │   │       └── preview/project/[id]/page.tsx   # draft case study, session only
     │   ├── api/
     │   │   ├── admin/
     │   │   │   ├── projects/       # GET/POST, GET/PATCH/DELETE, stats
@@ -293,7 +294,8 @@ To load them on a hosted project, paste the seed into **SQL Editor** and run it.
     │   │                           # currently-exploring, about-preview,
     │   │                           # credentials-preview, contact-cta
     │   ├── projects/               # project-card, project-grid, project-filter,
-    │   │                           # project-thumbnail, related-projects, gallery
+    │   │                           # project-thumbnail, project-detail (shared with
+    │   │                           # the admin draft preview), related-projects, gallery
     │   ├── experience/             # experience-entry
     │   ├── certificates/           # certificate-card (+ lightbox)
     │   ├── about/                  # background-summary
@@ -305,7 +307,8 @@ To load them on a hosted project, paste the seed into **SQL Editor** and run it.
     │   ├── api/admin-guard.ts      # auth guard + validation helpers
     │   ├── auth/                   # getUser, signIn, signOut
     │   ├── db/                     # projects.ts, experience.ts, certificates.ts
-    │   ├── hooks/                  # use-focus-trap, use-row-actions
+    │   ├── hooks/                  # use-focus-trap, use-row-actions,
+    │   │                           # use-unsaved-changes
     │   ├── storage/                # images.ts (server) + image-types.ts (client-safe)
     │   ├── supabase/               # server, public, client, config
     │   ├── utils/                  # helpers, rate-limit
@@ -578,13 +581,64 @@ position, and the type owns its own optional fields.
 
 | Type | Public route | Admin routes |
 | --- | --- | --- |
-| Project | `/projects`, `/projects/[slug]` | `/admin/projects`, `/new`, `/[id]/edit` |
+| Project | `/projects`, `/projects/[slug]` | `/admin/projects`, `/new`, `/[id]/edit`, `/admin/preview/project/[id]` |
 | Experience | `/experience` | `/admin/experience`, `/new`, `/[id]/edit` |
 | Certificate | `/certificates` | `/admin/certificates`, `/new`, `/[id]/edit` |
 
 Publishing in the CMS makes a record appear publicly within 60 seconds, with no
 redeploy. `/experience` and `/certificates` are ISR at `revalidate = 60`; the
 homepage and About page previews read the same tables.
+
+**Draft preview.** `/projects/[slug]` filters on `published = true`, so before
+publishing there was no way to see the page a project would produce: the only
+options were to publish and hope, or to read the row in a database console. Neither
+is a review step. `/admin/preview/project/[id]` renders the real case-study layout
+from the saved row, drafts included, behind the admin session, with a banner saying
+which state it is in.
+
+It works because the case-study body lives in one component,
+`src/components/projects/project-detail.tsx`, shared by both routes rather than
+copied into the preview. A preview assembled by copying the public page would
+drift from it silently — still rendering a plausible older design, so the mistake
+would read as "the preview looks fine" right up until publish.
+
+Two deliberate details:
+
+- **The preview reads through `getProjectById`, the public route through
+  `getProjectBySlug`.** Only the first returns drafts. That asymmetry is the whole
+  feature, and it lives in a query builder rather than a permission check, so
+  nothing at runtime stops a later edit from tidying it away. `tests/draft-preview.unit.ts`
+  is the tripwire.
+- **There is no preview button in the editor.** The preview reads the database, not
+  the form, so a button beside an open form would show the previous title directly
+  above the one being typed — confidently wrong, and more confusing than not
+  offering one. The link is on the projects table instead, where nothing is
+  half-edited.
+
+The route is `force-dynamic` for the same reason the public one is, and more
+sharply: caching it would cache the draft, so saving a fix and reopening the
+preview would show the pre-fix page. A preview that can be stale is worse than no
+preview, because it looks like an answer.
+
+**Unsaved changes.** All three editors hold their state in React and write on
+submit, so anything that unmounts them loses the edit — and because they are not
+`<form method="post">`, the browser offers no unsaved-work protection of its own.
+`useUnsavedChanges` (`src/lib/hooks/use-unsaved-changes.ts`) compares the form
+against the row it opened with and, while they differ, installs a `beforeunload`
+handler and a capture-phase click listener on `document`.
+
+The click listener is not redundant with `beforeunload`. The admin's own navigation
+is client-side, and a client-side transition never fires `beforeunload`, so without
+it the guard would cover leaving the site but not leaving the page — which is the
+common case, since "All projects" is one tap away. A create form passes `null` as
+its baseline and is never guarded: nothing has been written yet, so nothing is lost.
+
+Known gaps, deliberately not covered: browser back/forward within the session is a
+`popstate` and would need a sentinel history entry that fights the App Router; the
+`router.push` after a successful save is not intercepted, because prompting on the
+save that just worked would be the guard breaking the thing it protects; and a
+`<form>` submit such as sign-out is neither a click nor an unload, and intercepting
+submits would also intercept the editor's own Save button.
 
 **Ordering.** Every listing sorts by `sort_order` descending, then falls back to
 the natural date descending and finally `created_at`, which means a freshly
