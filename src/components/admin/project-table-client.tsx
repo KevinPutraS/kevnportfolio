@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { Eye, EyeOff, Pencil, Star, Trash2 } from 'lucide-react'
+import { Eye, EyeOff, MonitorPlay, Pencil, Star, Trash2 } from 'lucide-react'
 import { classNames, formatMonth } from '@/lib/utils/helpers'
 import { Modal } from '@/components/ui/modal'
 import { Button } from '@/components/ui/button'
@@ -214,6 +214,23 @@ export function ProjectTableClient({ projects }: { projects: Project[] }) {
                           {project.featured ? 'Unfeature' : 'Feature'}
                         </span>
                       </RowAction>
+
+                      {/*
+                        Preview opens the saved project in the real case-study
+                        layout, drafts included. It sits on the row rather than in
+                        the editor because it reads the database, not the form: a
+                        preview button beside unsaved input would show the previous
+                        title next to the one being typed, which is worse than not
+                        offering it. Save first, then look.
+                      */}
+                      <Link
+                        href={`/admin/preview/project/${project.id}`}
+                        prefetch={false}
+                        className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-[var(--radius-md)] border border-[rgb(var(--border))] px-3 text-xs text-[rgb(var(--text-dim))] transition-colors hover:border-[rgb(var(--border-strong))] hover:bg-[rgb(var(--bg-highlight))] hover:text-[rgb(var(--text))] sm:h-[34px]"
+                      >
+                        <MonitorPlay className="h-3.5 w-3.5" aria-hidden="true" />
+                        Preview
+                      </Link>
 
                       {/*
                         A plain <a> rather than <Link>: these are admin routes

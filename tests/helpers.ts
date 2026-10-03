@@ -84,3 +84,22 @@ export const classListIn = (contents: string, needle: string): string => {
 
 /** Reads a workspace source file, for specs that measure markup they cannot render. */
 export const sourceOf = (path: string) => readFileSync(join(process.cwd(), path), 'utf8')
+
+/**
+ * A source file with its comments removed.
+ *
+ * For assertions about what code *does*, as opposed to what it says. Written after
+ * a first draft failed three assertions against prose it had itself written: the
+ * comment explaining why the public route never calls `getProjectById` contains
+ * the string `getProjectById`, so the assertion failed on the explanation of the
+ * rule it was checking.
+ *
+ * A test that breaks when a comment is reworded gets deleted rather than fixed,
+ * and these files are heavily commented on purpose — so the needles are matched
+ * against code and the comments stay free to explain.
+ *
+ * Block comments first: a `//` inside one would otherwise truncate the line and
+ * leave the tail of that block looking like code.
+ */
+export const codeOf = (source: string): string =>
+  source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
