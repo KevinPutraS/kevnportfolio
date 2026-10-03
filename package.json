@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "db:generate": "npx supabase gen types typescript --local > src/types/database.ts",
     "db:reset": "npx supabase db reset",
+    "resume:pdf": "node scripts/generate-resume-pdf.mjs",
     "check": "npm run typecheck && npm run lint && npm run test && npm run build",
     "test": "playwright test"
   },
