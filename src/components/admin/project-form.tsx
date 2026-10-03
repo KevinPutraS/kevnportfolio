@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { FormJumpNav, FormSection, FormStickyActions } from '@/components/ui/form-layout'
+import { useUnsavedChanges } from '@/lib/hooks/use-unsaved-changes'
 import { ImageUploader } from './image-uploader'
 import { projectCategories, type ProjectCategory } from '@/config/site'
 import { projectStatuses, type ProjectStatus } from '@/config/project-status'
@@ -93,6 +94,15 @@ export function ProjectForm({ project }: { project?: Project }) {
   const [formError, setFormError] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const slugManuallyEdited = useRef(Boolean(project))
+
+  /*
+   * Guarded against `toFormData(project)` rather than the state the form opened
+   * with, so the baseline is the saved row itself and stays correct even though
+   * the state is initialised inline above. A create form passes `null`: there is
+   * nothing to lose from a blank one, and the first few keystrokes should not
+   * arm a dialog.
+   */
+  const isDirty = useUnsavedChanges(values, project ? toFormData(project) : null)
 
   function update<K extends keyof ProjectFormData>(key: K, value: ProjectFormData[K]) {
     setValues((previous) => {
@@ -451,6 +461,7 @@ export function ProjectForm({ project }: { project?: Project }) {
       <FormStickyActions
         onCancel={() => router.back()}
         saveLabel={isEditing ? 'Save changes' : 'Create project'}
+        status={isDirty ? 'Unsaved changes' : ''}
         isPending={isSaving}
       />
     </form>

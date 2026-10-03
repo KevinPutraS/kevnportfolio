@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
 import { FormJumpNav, FormSection, FormStickyActions } from '@/components/ui/form-layout'
+import { useUnsavedChanges } from '@/lib/hooks/use-unsaved-changes'
 import { ImageUploader } from '@/components/admin/image-uploader'
 import {
   certificateFieldErrors,
@@ -20,6 +21,30 @@ interface CertificateFormProps {
   returnTo?: string
 }
 
+/**
+ * The row as the form holds it.
+ *
+ * Extracted so the unsaved-changes guard can compare against the same mapping the
+ * effect below applies. Reading it off the prop rather than off the state is what
+ * lets the guard be correct from the first render — the state is still the empty
+ * form until that effect runs.
+ */
+function toFormData(certificate: Certificate): CertificateFormData {
+  return {
+    title: certificate.title,
+    issuer: certificate.issuer,
+    issue_date: toMonthInput(certificate.issue_date),
+    expiration_date: toMonthInput(certificate.expiration_date),
+    credential_id: certificate.credential_id ?? '',
+    credential_url: certificate.credential_url ?? '',
+    certificate_image_url: certificate.certificate_image_url ?? '',
+    description: certificate.description ?? '',
+    skills: formatList(certificate.skills),
+    sort_order: String(certificate.sort_order ?? 0),
+    published: certificate.published,
+  }
+}
+
 export function CertificateForm({ certificate, returnTo = '/admin/certificates' }: CertificateFormProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -27,22 +52,12 @@ export function CertificateForm({ certificate, returnTo = '/admin/certificates' 
   const [errors, setErrors] = useState<CertificateFieldErrors>({})
   const [message, setMessage] = useState<{ tone: 'error' | 'success'; text: string } | null>(null)
 
+  const isDirty = useUnsavedChanges(form, certificate ? toFormData(certificate) : null)
+
   useEffect(() => {
     if (!certificate) return
 
-    setForm({
-      title: certificate.title,
-      issuer: certificate.issuer,
-      issue_date: toMonthInput(certificate.issue_date),
-      expiration_date: toMonthInput(certificate.expiration_date),
-      credential_id: certificate.credential_id ?? '',
-      credential_url: certificate.credential_url ?? '',
-      certificate_image_url: certificate.certificate_image_url ?? '',
-      description: certificate.description ?? '',
-      skills: formatList(certificate.skills),
-      sort_order: String(certificate.sort_order ?? 0),
-      published: certificate.published,
-    })
+    setForm(toFormData(certificate))
   }, [certificate])
 
   function update<K extends keyof CertificateFormData>(key: K, value: CertificateFormData[K]) {
@@ -246,6 +261,7 @@ export function CertificateForm({ certificate, returnTo = '/admin/certificates' 
       <FormStickyActions
         onCancel={() => router.push(returnTo)}
         saveLabel={certificate ? 'Save changes' : 'Create certificate'}
+        status={isDirty ? 'Unsaved changes' : ''}
         isPending={isPending}
       />
     </form>

@@ -95,12 +95,24 @@ export function FormStickyActions({
   onCancel,
   cancelLabel = 'Cancel',
   saveLabel,
+  status,
   isPending,
   className,
 }: {
   onCancel: () => void
   cancelLabel?: string
   saveLabel: string
+  /**
+   * Text for the reserved status slot while the form is idle.
+   *
+   * The editors use it to say whether there is anything to save. Two reasons that
+   * belongs here rather than above the form: the slot was already reserved for a
+   * status line, so the bar does not change size when the message appears; and an
+   * unsaved-changes marker that sits next to Save tells the reader what the
+   * browser's own dialog is about to ask them about, so the prompt is not a
+   * surprise the first time they see it.
+   */
+  status?: string
   isPending: boolean
   className?: string
 }) {
@@ -126,12 +138,15 @@ export function FormStickyActions({
           Reserved slot for the status line. Fixed height so the bar does not
           change size when the pending label appears — a bar that grows by a few
           pixels mid-save shifts everything above it.
+
+          `isPending` wins over `status`: an idle "unsaved changes" note next to a
+          button reading "Saving…" would claim the opposite of what is happening.
         */}
         <p
           className="min-w-0 flex-1 truncate text-[length:var(--text-sm)] text-[rgb(var(--text-muted))]"
           aria-live="polite"
         >
-          {isPending ? 'Saving…' : ''}
+          {isPending ? 'Saving…' : status ?? ''}
         </p>
 
         <button type="button" onClick={onCancel} disabled={isPending} className="btn btn-ghost shrink-0">

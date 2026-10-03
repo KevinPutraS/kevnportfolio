@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { FormJumpNav, FormSection, FormStickyActions } from '@/components/ui/form-layout'
+import { useUnsavedChanges } from '@/lib/hooks/use-unsaved-changes'
 import { ImageUploader } from '@/components/admin/image-uploader'
 import { experienceTypes } from '@/config/site'
 import {
@@ -25,6 +26,33 @@ interface ExperienceFormProps {
   returnTo?: string
 }
 
+/**
+ * The row as the form holds it.
+ *
+ * Extracted so the unsaved-changes guard can compare against the same mapping the
+ * effect below applies. Reading it off the prop rather than off the state is what
+ * lets the guard be correct from the first render — the state is still the empty
+ * form until that effect runs.
+ */
+function toFormData(experience: Experience): ExperienceFormData {
+  return {
+    title: experience.title,
+    organization: experience.organization,
+    location: experience.location ?? '',
+    employment_type: experience.employment_type,
+    start_date: toMonthInput(experience.start_date),
+    end_date: toMonthInput(experience.end_date),
+    current: experience.current,
+    description: experience.description ?? '',
+    responsibilities: formatLines(experience.responsibilities),
+    technologies: formatList(experience.technologies),
+    organization_logo_url: experience.organization_logo_url ?? '',
+    project_url: experience.project_url ?? '',
+    sort_order: String(experience.sort_order ?? 0),
+    published: experience.published,
+  }
+}
+
 export function ExperienceForm({ experience, returnTo = '/admin/experience' }: ExperienceFormProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -32,25 +60,12 @@ export function ExperienceForm({ experience, returnTo = '/admin/experience' }: E
   const [errors, setErrors] = useState<ExperienceFieldErrors>({})
   const [message, setMessage] = useState<{ tone: 'error' | 'success'; text: string } | null>(null)
 
+  const isDirty = useUnsavedChanges(form, experience ? toFormData(experience) : null)
+
   useEffect(() => {
     if (!experience) return
 
-    setForm({
-      title: experience.title,
-      organization: experience.organization,
-      location: experience.location ?? '',
-      employment_type: experience.employment_type,
-      start_date: toMonthInput(experience.start_date),
-      end_date: toMonthInput(experience.end_date),
-      current: experience.current,
-      description: experience.description ?? '',
-      responsibilities: formatLines(experience.responsibilities),
-      technologies: formatList(experience.technologies),
-      organization_logo_url: experience.organization_logo_url ?? '',
-      project_url: experience.project_url ?? '',
-      sort_order: String(experience.sort_order ?? 0),
-      published: experience.published,
-    })
+    setForm(toFormData(experience))
   }, [experience])
 
   function update<K extends keyof ExperienceFormData>(key: K, value: ExperienceFormData[K]) {
@@ -297,6 +312,7 @@ export function ExperienceForm({ experience, returnTo = '/admin/experience' }: E
       <FormStickyActions
         onCancel={() => router.push(returnTo)}
         saveLabel={experience ? 'Save changes' : 'Create entry'}
+        status={isDirty ? 'Unsaved changes' : ''}
         isPending={isPending}
       />
     </form>
