@@ -50,7 +50,7 @@ export default async function CertificatesPage() {
         />
       </div>
 
-      <SectionShell tone="section-tone-school">
+      <SectionShell tone="section-tone-school" index="01">
         <div className="container-custom py-16 lg:py-20">
           {certificates.length === 0 ? (
             <EmptyState

@@ -36,78 +36,74 @@
     color-scheme: dark;
 
     /* ---- Canvas --------------------------------------------------------
-     * Not pure black. Pure black under a large dark page makes every raised
-     * surface read as a hole punched through it; these are soft, slightly
-     * blue-violet charcoals so the coloured elements sit *on* the page.
+     * Neutral ink, not blue-violet.
+     *
+     * The previous canvas ran a blue channel 4 to 6 above the red all the way up
+     * the ladder (`9 9 15`, `17 17 25`, `25 25 36`), which is the tint that makes
+     * a dark portfolio read as a developer template rather than as print. Every
+     * surface is now neutral to within one step, so the page reads as ink and the
+     * only colour on it is the one thing that is meant to be colour.
+     *
+     * Still not pure black: pure black under a large dark page makes every raised
+     * surface read as a hole punched through it.
      */
-    --bg: 9 9 15;
-    --bg-elevated: 17 17 25;
-    --bg-highlight: 25 25 36;
-    --bg-accent: 34 33 47;
+    --bg: 12 12 13;
+    --bg-elevated: 20 20 22;
+    --bg-highlight: 30 30 33;
+    --bg-accent: 38 37 40;
 
-    /* ---- Lines --------------------------------------------------------- */
-    --border: 39 39 52;
-    --border-strong: 60 60 78;
-
-    /* ---- Type ---------------------------------------------------------- */
-    --text: 244 244 250;
-    --text-dim: 169 170 186;
-    /*
-     * Was `116 117 136`, which measures 4.39:1 against `--bg` and 4.15:1 against
-     * `--bg-elevated`. Both are under the 4.5:1 WCAG AA asks of text this size,
-     * and this token is set on 86 elements across 38 files, so the whole palette
-     * was a little bit non-compliant and nothing local could fix it. The hero had
-     * already grown a `.meta-strong` class built on `--text-dim` purely to dodge
-     * it, which is the shape that drifts: a per-component patch for a palette
-     * problem, with the other 37 files still failing.
-     *
-     * `132 133 152` keeps the same cool blue-violet relationship the other
-     * greys have — the blue channel runs about 20 above the red, and green 1
-     * above it, exactly as in `--text-dim` — so the palette's temperature does
-     * not move. The three text steps stay a ladder rather than a pair:
-     *
-     *   --text        18.12:1   on --bg
-     *   --text-dim     8.65:1
-     *   --text-muted   5.47:1
-     *
-     * The number is set by the *lightest* surface the token lands on, not by the
-     * page. Against `--bg` alone a value as low as `122 123 142` would have
-     * cleared 4.5:1, which is the mistake worth recording: `--bg-elevated`
-     * (`17 17 25`) is brighter than the page, so it costs the same mid-grey more
-     * contrast, and `--bg-highlight` (`25 25 36`) costs it more again. Measured
-     * on the worst of the three, this value gives 4.80:1, which is the margin
-     * that matters. Anything that lightens the surfaces will need it rechecked;
-     * `tests/palette-contrast.spec.ts` walks the real elements and will say so.
+    /* ---- Lines ---------------------------------------------------------
+     * Warm greys rather than blue-greys, so a hairline sits in the same family as
+     * the text it separates. `--border` is the only line weight the design uses.
      */
-    --text-muted: 132 133 152;
-    /* Text placed *on top of* an accent fill. Dark, so it clears 10:1. */
-    --text-inverse: 7 9 14;
+    --border: 42 42 45;
+    --border-strong: 66 66 71;
+
+    /* ---- Type ----------------------------------------------------------
+     * Paper white, faintly warm (`242 241 236` rather than a neutral 250s). The
+     * old `244 244 250` was blue-white, which fought the warm greys above.
+     *
+     * Ladder on `--bg-elevated`, the lightest surface these land on:
+     *
+     *   --text        16.4:1
+     *   --text-dim     8.3:1
+     *   --text-muted   5.1:1
+     *
+     * `--text-muted` is the binding one and it clears AA at 5.1:1. Anything that
+     * lightens `--bg-elevated` or `--bg-highlight` costs this token contrast and
+     * has to be rechecked; `tests/palette-contrast.spec.ts` walks the real
+     * elements and will say so rather than being taken at its word.
+     */
+    --text: 242 241 236;
+    --text-dim: 170 169 163;
+    --text-muted: 134 133 128;
+    /* Text placed *on top of* an accent fill. Dark, so it clears AA against the
+     * vermilion -- see `--accent-contrast`, which is the same idea for buttons. */
+    --text-inverse: 14 12 12;
 
     /* ---- Accent --------------------------------------------------------
-     * Amber, not cyan.
+     * Vermilion. A newspaper spot colour.
      *
-     * The canvas is cold — every surface here runs blue-violet, from `9 9 15`
-     * up to `34 33 47` — so a warm hue is the one that separates from the page
-     * without needing a glow to do it. Cyan sat *on* the background rather
-     * than against it, and it is the most-default accent a developer reaches
-     * for, which is exactly what made the old hero read as a template.
+     * Amber was the right *idea* -- a warm hue separating from a cold canvas --
+     * but amber on near-black is the single most recognisable palette in developer
+     * portfolios, and a redesign that keeps it has not redesigned anything a
+     * visitor can name. Vermilion sits at the same warmth and the same
+     * separation, and no portfolio is using it by default.
      *
-     * Green and red are deliberately not candidates: they are already spoken
-     * for by `--success` and `--error`, and an accent in either hue makes a
-     * "Valid until" badge read as part of a link.
+     * Measured against `--bg`: 5.51:1, so it is safe for the small `meta` labels
+     * it is set on, not only for large type. Against `--bg-elevated` it is 5.0:1.
      *
-     * `--accent-contrast` is what is drawn *on top of* the accent, so it is a
-     * near-black rather than white. White on `#F59E0B` is about 2.2:1; this
-     * clears 10:1.
+     * `--accent-contrast` is what gets drawn *on top of* the accent. Near-black,
+     * not white: white on this vermilion is 3.4:1, and near-black is 5.6:1.
      */
-    --accent: 245 158 11;
-    --accent-bright: 252 187 60;
-    --accent-dim: 180 108 6;
-    --accent-hover: 252 202 90;
-    --accent-contrast: 9 7 3;
-    --accent-bg: 245 158 11 / 0.12;
-    --accent-bg-strong: 245 158 11 / 0.2;
-    --accent-glow: 245 158 11 / 0.3;
+    --accent: 234 84 48;
+    --accent-bright: 246 118 80;
+    --accent-dim: 178 58 30;
+    --accent-hover: 255 140 102;
+    --accent-contrast: 14 12 12;
+    --accent-bg: 234 84 48 / 0.14;
+    --accent-bg-strong: 234 84 48 / 0.22;
+    --accent-glow: 234 84 48 / 0.3;
 
     /* ---- Category ------------------------------------------------------
      * One neutral, not seven hues.
@@ -152,13 +148,20 @@
      * Fluid, mobile-first: every clamp starts at its 360px value and only
      * grows from there, so a heading is correctly sized on the smallest phone
      * in the matrix and never needs a breakpoint of its own.
+     *
+     * The display end is pushed much further open than the old scale
+     * (`2.5→6rem` display, `2→3.5rem` h1). A page whose largest type is 6rem and
+     * whose body is 1rem has a 6:1 jump, which flattens into "a heading"; the
+     * range below runs to 9rem at the masthead, so display type is a genuinely
+     * different object from body copy rather than a bold version of it.
      */
-    --text-display: clamp(2.5rem, 1.1rem + 6.2vw, 6rem);
-    --text-h1: clamp(2rem, 1.35rem + 3vw, 3.5rem);
-    --text-h2: clamp(1.5rem, 1.22rem + 1.4vw, 2.25rem);
-    --text-h3: clamp(1.25rem, 1.13rem + 0.6vw, 1.625rem);
+    --text-masthead: clamp(3rem, 0.9rem + 11vw, 9rem);
+    --text-display: clamp(2.75rem, 1.15rem + 7.4vw, 7rem);
+    --text-h1: clamp(2.25rem, 1.45rem + 3.6vw, 4.25rem);
+    --text-h2: clamp(1.625rem, 1.28rem + 1.6vw, 2.5rem);
+    --text-h3: clamp(1.3125rem, 1.15rem + 0.7vw, 1.75rem);
     --text-h4: clamp(1.0625rem, 1rem + 0.3vw, 1.25rem);
-    --text-lead: clamp(1.0625rem, 1rem + 0.45vw, 1.3125rem);
+    --text-lead: clamp(1.125rem, 1.02rem + 0.5vw, 1.375rem);
     --text-base: 1rem;
     --text-body-sm: 0.9375rem;
     --text-sm: 0.875rem;
@@ -180,13 +183,39 @@
     --space-3xl: 4.5rem;
     --space-4xl: clamp(4rem, 2rem + 8vw, 7rem);
 
-    /* ---- Radii --------------------------------------------------------- */
-    --radius-sm: 6px;
-    --radius-md: 10px;
-    --radius-lg: 14px;
-    --radius-xl: 18px;
-    --radius-2xl: 24px;
+    /* ---- Radii ---------------------------------------------------------
+     * Zero.
+     *
+     * This is the single most visible token change in the redesign. The ladder
+     * ran 6 → 24px and every surface in the build inherited it — cards, buttons,
+     * inputs, thumbnails, badges — which is the rounded-rectangle grammar of an
+     * app interface, and no amount of type or colour work reads as a redesign
+     * while every corner stays soft. Print does not round its corners; the
+     * hairlines and the type scale are the same on paper, so the corners should
+     * be too.
+     *
+     * `--radius-full` is the deliberate exception: a timeline node, a status dot
+     * and a pill badge are round *as shapes*, not as a style, so they keep it.
+     */
+    --radius-sm: 0px;
+    --radius-md: 0px;
+    --radius-lg: 0px;
+    --radius-xl: 0px;
+    --radius-2xl: 0px;
     --radius-full: 9999px;
+
+    /* ---- Measure -------------------------------------------------------
+     * Line length, separated from the container width.
+     *
+     * `--container-*` decides how wide the *canvas* of a block is; `--measure-*`
+     * decides how wide the *text* in it is. Keeping them apart is what lets a
+     * block sit on a 12-column grid while its prose stays at a readable 68ch,
+     * instead of every section inheriting one width for both and producing the
+     * same centred column on every page.
+     */
+    --measure-prose: 68ch;
+    --measure-tight: 46ch;
+    --measure-lede: 54ch;
 
     /* ---- Motion -------------------------------------------------------- */
     --ease: cubic-bezier(0.22, 0.8, 0.28, 1);
@@ -219,6 +248,13 @@
      */
     --admin-tabbar-h: 3.5rem;
     --container-max: 72rem;
+    /*
+     * The gutter. Fluid rather than stepped, because it is used both as the
+     * container's own padding and as the bound on a section's offset — and a
+     * stepped value would make the two disagree at the widths between the
+     * breakpoints, which is exactly where an offset layout breaks first.
+     */
+    --gutter: clamp(1.5rem, 0.5rem + 3vw, 3.5rem);
 
     /* ---- Semantic aliases ----------------------------------------------
      * Two names for the same surface. `--bg-elevated` and `--surface` are both
@@ -406,6 +442,25 @@
 /* ==========================================================================
  * TYPE
  * ========================================================================== */
+
+/*
+ * The masthead. One step above `.display-1`, and it exists to be set once, across
+ * the full trim, on the name.
+ *
+ * `.display-1` was the largest type on the site at 7rem and it was still not
+ * enough to make the name read as the *title* of the document rather than as a
+ * heading inside a hero box: at 1440px it set on two lines inside a 7-column
+ * track, which is a hero. Set at 9rem across the whole 72rem it sets on one line
+ * and reads as the nameplate of a publication.
+ */
+.display-0 {
+  font-family: var(--font-display);
+  font-size: var(--text-masthead);
+  line-height: 0.86;
+  letter-spacing: -0.055em;
+  font-weight: 700;
+  text-wrap: balance;
+}
 
 .display,
 .display-1 {
@@ -1034,23 +1089,78 @@
 .section-tone-experiment { --tone: var(--accent); }
 .section-tone-school { --tone: var(--accent); }
 
+/*
+ * The break between two sections is a single 1px hairline in `--border`.
+ *
+ * It was a 2px gradient bar in the accent colour, fading to transparent by 100%,
+ * sitting on an accent-tinted gradient wash. Applied to all seventeen sections,
+ * that is the single strongest reason the pages read as a stack of widgets: every
+ * boundary announces itself in colour at the same weight, so the eye learns to
+ * skip all of them, and the coloured bar stops meaning "a new part begins".
+ *
+ * Print breaks a section with a thin rule and nothing else. So does this.
+ */
 .section-rule {
-  height: 2px;
-  background: linear-gradient(
-    to right,
-    rgb(var(--tone) / 0.85) 0%,
-    rgb(var(--tone) / 0.3) 40%,
-    transparent 100%
-  );
+  height: 1px;
+  background-color: rgb(var(--border));
 }
 
+/*
+ * The wash is gone.
+ *
+ * It was `rgb(var(--tone) / 0.06)` fading down the section — a coloured tint on
+ * every band, which is how a page of sections turns into a page of panels. The
+ * class stays, because seventeen call sites render it and removing the element
+ * would be a larger change than the design warrants, but it now paints nothing:
+ * the separation is carried by the rule and by the vertical rhythm.
+ */
 .section-wash {
-  background: linear-gradient(
-    to bottom,
-    rgb(var(--tone) / 0.06) 0%,
-    rgb(var(--tone) / 0.015) 45%,
-    transparent 100%
-  );
+  background: transparent;
+}
+
+/*
+ * Section structure, not decoration.
+ *
+ * `--container-max` stays at 72rem deliberately. Asymmetry comes from placing
+ * content asymmetrically *inside* the trim, the way a magazine page does, rather
+ * than from a wider canvas — and a wider canvas would also drop long prose below
+ * the 70%-of-its-container floor that `tests/responsive.spec.ts` enforces.
+ *
+ * `.section-break` aligns the rule to the text column and hangs the section's
+ * index in the left margin. The index is `aria-hidden`: it is a wayfinding
+ * device borrowed from print, and announcing "01" to a screen reader before five
+ * sections of real content would be noise, not navigation.
+ */
+.section-break {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding-top: 0.625rem;
+}
+
+.section-index {
+  font-family: var(--font-geist-mono);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: rgb(var(--accent));
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* A section whose body sits in a reading measure rather than the full trim. */
+.section-measure {
+  max-width: var(--measure-prose);
+}
+
+/*
+ * A section pushed off the left edge of the trim. Used sparingly — one per page
+ * at most — because an offset that appears everywhere is not an offset. The
+ * negative margin is cancelled by the container's own padding, so the shift is
+ * bounded by the gutter and can never push content off a narrow screen.
+ */
+.section-offset {
+  margin-left: calc(var(--gutter) * -1);
 }
 
 .section-eyebrow {
@@ -1067,9 +1177,8 @@
 .section-eyebrow::before {
   content: '';
   width: 1.5rem;
-  height: 2px;
+  height: 1px;
   flex-shrink: 0;
-  border-radius: 2px;
   background-color: rgb(var(--tone, var(--accent)));
 }
 
@@ -1612,16 +1721,18 @@
 
     /* The accent is the one colour kept. It is the only hue in the system, it
      * is used for small marks and links, and a CV with no colour at all reads
-     * as a photocopy of a CV. Darkened: the 245 158 11 amber that works on a
-     * near-black screen is illegible on white at 12px. */
-    --accent: 146 92 6;
-    --accent-bright: 146 92 6;
-    --accent-dim: 146 92 6;
-    --accent-hover: 120 74 4;
+     * as a photocopy of a CV. Darkened well past the screen vermilion: the
+     * `234 84 48` that clears 5.5:1 on near-black is only 3.5:1 on white, which
+     * is illegible at the 12px this is actually set at. `168 54 28` measures
+     * 6.55:1 on paper. */
+    --accent: 168 54 28;
+    --accent-bright: 168 54 28;
+    --accent-dim: 168 54 28;
+    --accent-hover: 136 42 20;
     --accent-contrast: 255 255 255;
-    --accent-bg: 146 92 6;
-    --accent-bg-strong: 146 92 6;
-    --accent-glow: 146 92 6;
+    --accent-bg: 168 54 28;
+    --accent-bg-strong: 168 54 28;
+    --accent-glow: 168 54 28;
 
     --cat-neutral: 90 90 90;
     --cat-web: var(--cat-neutral);
@@ -2137,8 +2248,8 @@
    *     remembered to remap them, which is how the last two versions drifted.
    *
    * Near-black rather than `#000`: pure black on uncoated stock bleeds and reads
-   * heavier than the type is. The accent is the site's amber, darkened from
-   * `245 158 11` to `146 92 6` for the same reason it is darkened in print — it is
+   * heavier than the type is. The accent is the site's vermilion, darkened from
+   * `234 84 48` to `168 54 28` for the same reason it is darkened in print — it is
    * illegible on white at 8pt.
    */
   --rd-paper: 255 255 255;
@@ -2147,7 +2258,7 @@
   --rd-ink-3: 112 112 120;
   --rd-rule: 214 214 218;
   --rd-rule-2: 168 168 176;
-  --rd-accent: 146 92 6;
+  --rd-accent: 168 54 28;
 
   background: rgb(var(--rd-paper));
   color: rgb(var(--rd-ink));

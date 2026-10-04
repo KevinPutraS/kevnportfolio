@@ -1,22 +1,24 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Kevin — personal digital portfolio">
   <!--
-    Mark: a single amber K on the site's near-black tile.
+    Mark: a single vermilion K on the site's near-black tile.
 
     It stands for the wordmark — "Kevin" — drawn the way the rest of the
-    identity draws things: one amber accent on the page's own background. The
+    identity draws things: one accent on the page's own background. The
     old mark was a mosaic of the seven category hues the pre-redesign palette
     used; that palette is gone, so the icon is the same size of tile with one
     resolved colour and one resolved letter.
 
-    Drawn at 32px on a 4px grid, stem and arms as uniform 5.5px strokes with
-    round joins. The two arms leave the stem a beat apart rather than meeting
-    on the same pixel, so the knot keeps its weight when the whole mark
-    shrinks into a 16px browser tab.
+    `rx` is 0, not 7: the tile carries the site's `--bg` (`#0C0C0D`) and the
+    redesign sets every radius token to zero, so a rounded favicon would be the
+    one place the old grammar survived. Drawn at 32px on a 4px grid, stem and
+    arms as uniform 5.5px strokes with round joins. The two arms leave the stem
+    a beat apart rather than meeting on the same pixel, so the knot keeps its
+    weight when the whole mark shrinks into a 16px browser tab.
   -->
 
-  <rect width="32" height="32" rx="7" fill="#09090F" />
+  <rect width="32" height="32" rx="0" fill="#0C0C0D" />
 
-  <g fill="none" stroke="#F59E0B" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round">
+  <g fill="none" stroke="#EA5430" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="M 10.5 7 V 25" />
     <path d="M 10.5 14.25 L 21.5 8" />
     <path d="M 10.5 17.25 L 21.5 24.5" />

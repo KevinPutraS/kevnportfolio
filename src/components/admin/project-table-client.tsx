@@ -60,7 +60,7 @@ export function ProjectTableClient({ projects }: { projects: Project[] }) {
         category, and the status badges carry the only colour that means
         anything.
       */}
-      <div className="overflow-hidden rounded-xl border border-[rgb(var(--border))]">
+      <div className="overflow-hidden rounded-[var(--radius-lg)] border border-[rgb(var(--border))]">
         <table className="w-full border-collapse text-left">
           <caption className="sr-only">
             All projects with their category, progress status, date, publication state and
@@ -105,7 +105,7 @@ export function ProjectTableClient({ projects }: { projects: Project[] }) {
                 >
                   <th scope="row" className="block px-4 pb-1 pt-4 font-normal lg:table-cell lg:py-3">
                     <span className="flex items-center gap-3">
-                      <span className="relative h-10 w-14 shrink-0 overflow-hidden rounded-md border border-[rgb(var(--border))] bg-[rgb(var(--bg-highlight))]">
+                      <span className="relative h-10 w-14 shrink-0 overflow-hidden rounded-[var(--radius-md)] border border-[rgb(var(--border))] bg-[rgb(var(--bg-highlight))]">
                         {project.thumbnail_url ? (
                           <Image
                             src={project.thumbnail_url}

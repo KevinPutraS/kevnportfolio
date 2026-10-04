@@ -61,7 +61,7 @@ export function OrganizationLogo({
   return (
     <span
       className={classNames(
-        'flex shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[rgb(250_250_252)] shadow-[inset_0_0_0_1px_rgb(0_0_0/0.08)]',
+        'flex shrink-0 items-center justify-center overflow-hidden rounded-[var(--radius-lg)] bg-[rgb(250_250_252)] shadow-[inset_0_0_0_1px_rgb(0_0_0/0.08)]',
         className
       )}
     >

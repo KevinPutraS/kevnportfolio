@@ -154,7 +154,7 @@ export function ProjectDetail({ project, related, isPreview = false }: ProjectDe
           */}
         {project.thumbnail_url && (
           <div className="sm:-mx-8 lg:-mx-12 xl:-mx-14">
-            <div className="overflow-hidden rounded-xl border-y border-[rgb(var(--cat)/0.35)] sm:border">
+            <div className="overflow-hidden rounded-[var(--radius-lg)] border-y border-[rgb(var(--cat)/0.35)] sm:border">
               <ProjectThumbnail
                 src={project.thumbnail_url}
                 alt={`${project.title} preview`}

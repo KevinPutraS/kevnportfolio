@@ -65,7 +65,7 @@ export function MessageInbox({ messages }: { messages: ContactMessageRow[] }) {
         </p>
       )}
 
-      <ul className="overflow-hidden rounded-xl border border-[rgb(var(--border))]">
+      <ul className="overflow-hidden rounded-[var(--radius-lg)] border border-[rgb(var(--border))]">
         {messages.map((message) => {
           const isBusy = actions.busyId === message.id
           const unread = !message.is_read

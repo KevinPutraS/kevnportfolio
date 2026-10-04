@@ -10,9 +10,9 @@ import { ProjectThumbnail } from './project-thumbnail'
  * The featured-work card, rail only.
  *
  * The shared card used to have four variants (standard, rail, feature, compact)
- * and every one of them shipped the same chrome: `rounded-2xl`, a card border, a
- * category-coloured edge, a translate-and-shadow hover and a lifted title. That
- * single object was the template look of the whole site.
+ * and every one of them shipped the same chrome: a soft 24px radius, a card
+ * border, a category-coloured edge, a translate-and-shadow hover and a lifted
+ * title. That single object was the template look of the whole site.
  *
  * The projects index is now a column of hairlined rows, so the only card left is
  * this one, and a card left alone in a rail should be a frame for its image, not
@@ -23,8 +23,8 @@ import { ProjectThumbnail } from './project-thumbnail'
  *    of the card lifting off the page.
  *  - Category and date sit on one mono line under the title — same as the index
  *    rows — so the two surfaces share one type system.
- *  - The corners are quiet (`rounded-xl)`, the border is the site hairline, and
- *    nothing shifts, glows or casts a coloured shadow.
+ *  - The corners are square (`--radius-lg`, which is 0), the border is the site
+ *    hairline, and nothing shifts, glows or casts a coloured shadow.
  *
  * The focus ring is drawn inside the card. The track is a scroll container, so
  * an outside ring on the first card at scroll position 0 would be clipped by the
@@ -57,7 +57,7 @@ export function ProjectRailCard({
 
   return (
     <article
-      className={`group relative isolate flex h-full flex-col overflow-hidden rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--bg-elevated))] transition-colors duration-500 focus-within:outline focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-[rgb(var(--text))] ${className ?? ''}`}
+      className={`group relative isolate flex h-full flex-col overflow-hidden rounded-[var(--radius-lg)] border border-[rgb(var(--border))] bg-[rgb(var(--bg-elevated))] transition-colors duration-500 focus-within:outline focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-[rgb(var(--text))] ${className ?? ''}`}
     >
       <Link
         href={`/projects/${project.slug}`}

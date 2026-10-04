@@ -1,4 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { settle } from './helpers'
 
 /**
@@ -19,8 +21,35 @@ import { settle } from './helpers'
  *    them rather than by layering over them.
  */
 
-const DARK_BG = '9, 9, 15'
-const PRINT_BG = '255, 255, 255'
+/*
+ * The expected backgrounds are read out of the stylesheet rather than written
+ * here as literals.
+ *
+ * They used to be `'9, 9, 15'` and `'255, 255, 255'`, which is a trap: the
+ * redesign changed the canvas and the suite went red on a *correct* page, because
+ * the assertion was really asserting "the palette is still the old one" and
+ * calling that a theme test. Reading the authored value keeps the thing this file
+ * is actually about — that the page renders the palette it was given, and that a
+ * light system does not change it — and lets the palette move without a red
+ * build that means nothing.
+ *
+ * `--bg-elevated`, `--bg-highlight` and `--bg-accent` all begin with the same
+ * characters, so the pattern requires the colon immediately after `bg` and cannot
+ * match them.
+ */
+const stylesheet = readFileSync(join(process.cwd(), 'src/styles/globals.css'), 'utf8')
+
+const readAuthoredBg = (source: string): string => {
+  const m = source.match(/--bg:\s*([\d.]+)\s+([\d.]+)\s+([\d.]+)\s*;/)
+  if (!m) throw new Error('no authored --bg found; globals.css is not where it was expected')
+  return `${Number(m[1])}, ${Number(m[2])}, ${Number(m[3])}`
+}
+
+const printBlockStart = stylesheet.indexOf('@media print')
+if (printBlockStart === -1) throw new Error('no @media print block; print theming is gone')
+
+const SCREEN_BG = readAuthoredBg(stylesheet.slice(0, printBlockStart))
+const PRINT_BG = readAuthoredBg(stylesheet.slice(printBlockStart))
 
 const canvas = (page: Page) =>
   page.evaluate(() => {
@@ -43,7 +72,7 @@ test.describe('one palette', () => {
     await page.goto('/')
     await settle(page)
 
-    expect(await canvas(page), 'the page must not follow the system').toBe(DARK_BG)
+    expect(await canvas(page), 'the page must not follow the system').toBe(SCREEN_BG)
     expect(await scheme(page), 'form controls and scrollbars must be rendered dark').toBe('dark')
 
     const themeColor = await page
@@ -73,17 +102,27 @@ test.describe('print', () => {
   test('paper replaces the screen palette rather than sitting on top of it', async ({ page }) => {
     await page.goto('/')
     await settle(page)
-    expect(await canvas(page), 'precondition: the screen palette is dark').toBe(DARK_BG)
+    expect(await canvas(page), 'precondition: the screen palette is the authored one').toBe(SCREEN_BG)
 
     await page.emulateMedia({ media: 'print' })
     expect(await canvas(page), 'print must use the paper palette').toBe(PRINT_BG)
+    expect(PRINT_BG, 'print has to be paper, not another dark screen').not.toBe(SCREEN_BG)
 
     const textDim = await page.evaluate(() => {
       const m = getComputedStyle(document.documentElement).getPropertyValue('--text-dim').match(/[\d.]+/g)
       return m ? `${Number(m[0])}, ${Number(m[1])}, ${Number(m[2])}` : ''
     })
-    // 55 55 55, not the screen's 169 170 186.
-    expect(textDim, 'print ink must not be the screen token').toBe('55, 55, 55')
+    // The print ink, not the screen's `--text-dim`. Read from the print block so
+    // the assertion is "print replaces the token" rather than "print is still
+    // the ink it was".
+    expect(textDim, 'print ink must not be the screen token').toBe(
+      (() => {
+        const m = stylesheet
+          .slice(printBlockStart)
+          .match(/--text-dim:\s*([\d.]+)\s+([\d.]+)\s+([\d.]+)\s*;/)
+        return m ? `${Number(m[1])}, ${Number(m[2])}, ${Number(m[3])}` : ''
+      })()
+    )
   })
 
   test('the navbar and footer are not printed', async ({ page }) => {

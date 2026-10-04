@@ -44,6 +44,12 @@ type PageHeaderProps = {
  * one-sentence answer are what a visitor needs in the first screen, and the
  * action is the last thing they need. The action becomes a full-width button so
  * it is a comfortable target rather than a small link under a paragraph.
+ *
+ * The title moved from `.h1` to `.display-1` in the redesign. At 4.25rem an
+ * inner page opened with something smaller than the homepage's supporting copy
+ * read as, and every route below `/` looked like a settings screen rather than a
+ * page of the same publication. The cap is 14ch, because at the display scale
+ * the previous 18ch produced four words a line.
  */
 export function PageHeader({
   eyebrow,
@@ -56,23 +62,27 @@ export function PageHeader({
 }: PageHeaderProps) {
   return (
     <header className={classNames('relative', tone, className)}>
-      {/* Fading hairline that carries the section's hue, so a page is
-          identifiable from its opening frame alone. */}
-      <div aria-hidden="true" className="section-rule absolute inset-x-0 top-0 w-full" />
+      {/*
+        The hairline is inside the container, not full-bleed. It was an absolutely
+        positioned 2px accent gradient spanning the viewport, which put a coloured
+        edge above every page; as a 1px `--border` rule aligned to the text column
+        it reads as the top of the page rather than as a banner above it.
+      */}
+      <div className="container-custom">
+        <div aria-hidden="true" className="section-rule" />
+      </div>
 
-      <div className="pt-12 sm:pt-16 lg:pt-20">
+      <div className="container-custom pt-12 sm:pt-16 lg:pt-20">
         <div className="grid gap-8 lg:grid-cols-12 lg:items-end lg:gap-10">
           <div className="lg:col-span-7">
             <p className="section-eyebrow">{eyebrow}</p>
             {/*
-              `.h1` carries the fluid type scale. It is applied here rather than
-              left to the call site because the previous version styled the
-              element with `.page-header-title`, which set a margin and a max
-              width but no `font-size` at all — so every page using this header
-              rendered its `<h1>` at the browser default of 2em in the body
+              `.display-1` rather than `.page-header-title`, which set a margin and
+              a max width but no `font-size` at all — so every page using that
+              class rendered its `<h1>` at the browser default of 2em in the body
               typeface, indistinguishable from body copy at a glance.
             */}
-            <h1 className="h1 mt-5 max-w-[18ch] text-balance sm:mt-6">{title}</h1>
+            <h1 className="display-1 mt-6 max-w-[14ch] text-balance sm:mt-7">{title}</h1>
           </div>
 
           {action && (

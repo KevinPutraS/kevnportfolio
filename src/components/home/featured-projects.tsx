@@ -33,7 +33,7 @@ export async function FeaturedProjects({ projects }: { projects?: Project[] }) {
 
   if (list.length === 0) {
     return (
-      <SectionShell tone="section-tone-web">
+      <SectionShell tone="section-tone-web" index="01">
         <div className="container-custom">
           <div className="py-20 text-center">
             <SectionEyebrow>Projects</SectionEyebrow>
@@ -54,7 +54,7 @@ export async function FeaturedProjects({ projects }: { projects?: Project[] }) {
   }
 
   return (
-    <SectionShell tone="section-tone-web">
+    <SectionShell tone="section-tone-web" index="01">
       <div className="container-custom">
         <div className="py-16 lg:py-24">
           <SectionHeader

@@ -89,7 +89,7 @@ export function CertificateEntry({ certificate }: { certificate: Certificate }) 
   }, [isExpanded, certificate.description])
 
   return (
-    <article className="group relative flex flex-col gap-4 rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--bg-elevated))] p-5 transition-colors duration-300 hover:border-[rgb(var(--accent)/0.45)] sm:flex-row sm:gap-6 sm:p-6">
+    <article className="group relative flex flex-col gap-4 rounded-[var(--radius-lg)] border border-[rgb(var(--border))] bg-[rgb(var(--bg-elevated))] p-5 transition-colors duration-300 hover:border-[rgb(var(--accent)/0.45)] sm:flex-row sm:gap-6 sm:p-6">
       {/*
         The thumbnail is a lead-in block on a phone and a narrow column from
         `sm`. Below `sm` it is moved to the top with `order-first` on the

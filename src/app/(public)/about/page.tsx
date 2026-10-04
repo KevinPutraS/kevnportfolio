@@ -92,13 +92,13 @@ export default function AboutPage() {
       {/*
         ---- Focus areas, one line each -----------------------------------
         Each of the three sections below uses `SectionShell`, whose hairline and
-        wash mark the top edge of a distinct room. The tones used to be three
-        different hues so the rooms read as different colours; they are the same
-        amber now, which is exactly the point of a one-accent palette — the
-        hairlines are what separate the rooms, and the accent no longer pretends
-        the content inside them has its own identity.
+        index mark the top edge of a distinct room. The tones used to be three
+        different hues so the rooms read as different colours; they resolve to
+        one accent now, and the rule plus the running number are what separate
+        the rooms. The accent no longer pretends the content inside them has its
+        own identity.
       */}
-      <SectionShell tone="section-tone-web">
+      <SectionShell tone="section-tone-web" index="01">
         <div className="container-custom py-16 lg:py-20">
           <div className="grid gap-x-12 gap-y-10 lg:grid-cols-12">
             <div className="lg:col-span-4">
@@ -133,7 +133,7 @@ export default function AboutPage() {
       </SectionShell>
 
       {/* ---- Toolkit, as chips -------------------------------------------- */}
-      <SectionShell tone="section-tone-networking">
+      <SectionShell tone="section-tone-networking" index="02">
         <div className="container-custom py-16 lg:py-20">
           <div className="grid gap-x-12 gap-y-10 lg:grid-cols-12">
             <div className="lg:col-span-4">
@@ -145,11 +145,11 @@ export default function AboutPage() {
               {technologies.map((group) => (
                 <div key={group.group}>
                   <dt className="meta-strong">{group.group}</dt>
-<dd className="mt-2.5 flex flex-wrap gap-1.5">
+                  <dd className="mt-2.5 flex flex-wrap gap-1.5">
                     {group.items.map((item) => (
                       <span
                         key={item}
-                        className="rounded-full border border-[rgb(var(--border))] px-2.5 py-1 font-mono text-[length:var(--text-xs)] text-[rgb(var(--text-dim))]"
+                        className="border border-[rgb(var(--border))] px-2.5 py-1 font-mono text-[length:var(--text-xs)] text-[rgb(var(--text-dim))]"
                       >
                         {item}
                       </span>
@@ -170,7 +170,7 @@ export default function AboutPage() {
       <BackgroundSummary />
 
       {/* ---- Right now + method ------------------------------------------- */}
-      <SectionShell tone="section-tone-experiment">
+      <SectionShell tone="section-tone-experiment" index="04">
         <div className="container-custom py-16 lg:py-20">
           <div className="grid gap-x-12 gap-y-12 lg:grid-cols-12">
             <div className="lg:col-span-5">
