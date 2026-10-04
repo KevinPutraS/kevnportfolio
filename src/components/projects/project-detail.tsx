@@ -131,12 +131,30 @@ export function ProjectDetail({ project, related, isPreview = false }: ProjectDe
         </div>
 
         {/* ---- Hero image, full bleed ---------------------------------------
-          * Escapes the container on wide screens. A case study opens on the work,
-          * and the work should be as large as the viewport allows.
+          * A case study opens on the work, and the work should be as large as the
+          * viewport allows.
+          *
+          * This comment used to claim the plate "escapes the container on wide
+          * screens" while doing the opposite: the wrapper sat *inside*
+          * `container-custom` and then added `px-5 sm:px-8 lg:px-12 xl:px-16` on
+          * top of the container's own padding. The result was a hero inset by
+          * twice its neighbours — its left edge sat 48px right of the title above
+          * it and of every section below it — and a `max-w-[100rem]` that could
+          * never apply, because the 72rem container had already won.
+          *
+          * It is a real escape now. The negative margins cancel exactly the
+          * `container-custom` padding at each breakpoint (2rem at `sm`, 3rem at
+          * `lg`, 3.5rem at `xl`), so from `lg` the plate runs to both edges of the
+          * screen and the rest of the page keeps its column. Below `lg` there is
+          * no negative margin at all: the plate aligns to the text column, which
+          * on a phone is the right answer and on a tablet is the same one.
+          *
+          * Safe to bleed because `globals.css` sets `overflow-x: clip` on `html`
+          * and `body` — the plate cannot produce a horizontal scrollbar.
           */}
         {project.thumbnail_url && (
-          <div className="px-5 sm:px-8 lg:px-12 xl:px-16">
-            <div className="mx-auto w-full max-w-[100rem] overflow-hidden rounded-xl border border-[rgb(var(--cat)/0.35)]">
+          <div className="sm:-mx-8 lg:-mx-12 xl:-mx-14">
+            <div className="overflow-hidden rounded-xl border-y border-[rgb(var(--cat)/0.35)] sm:border">
               <ProjectThumbnail
                 src={project.thumbnail_url}
                 alt={`${project.title} preview`}

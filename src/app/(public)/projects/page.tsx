@@ -4,7 +4,7 @@ import type { Metadata } from 'next'
 import { getCategoryCounts, getProjects, PROJECTS_PAGE_SIZE } from '@/lib/db/projects'
 import { isProjectCategory, type ProjectCategoryFilter } from '@/config/site'
 import { ProjectFilter, buildFilterOptions } from '@/components/projects/project-filter'
-import { ProjectIndex } from '@/components/projects/project-index'
+import { ProjectIndex, ProjectIndexWithHierarchy } from '@/components/projects/project-index'
 import { ProjectPagination, projectsHref } from '@/components/projects/project-pagination'
 import { EmptyState } from '@/components/ui/empty-state'
 import { ButtonLink } from '@/components/ui/button-link'
@@ -196,8 +196,9 @@ async function ProjectResults({
         </div>
 
         {projects.length > 0 ? (
-          <>
-            <ProjectIndex
+<>
+            <ProjectIndexWithHierarchy
+              featuredCount={page === 1 ? 2 : 0}
               projects={projects}
               startIndex={(page - 1) * PROJECTS_PAGE_SIZE}
               className="mt-12 sm:mt-16"
@@ -242,3 +243,4 @@ async function ProjectResults({
  * cookie-less public client and are protected by Row Level Security.
  */
 export const dynamic = 'force-dynamic'
+

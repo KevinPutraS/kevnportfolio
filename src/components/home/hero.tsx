@@ -53,24 +53,29 @@ export function Hero() {
         which measured *less* texture at 768px than at 390px. The wide plate goes
         with the wide box; the two-column layout still begins at `lg`.
 
-        Both sit below the words. Their intensity, framing and drift live in
-        `.hero-backdrop` rather than here, because the measurements that justify
-        them are about luminance against the page background and there is no way
-        to express that as a class list on the element. `.hero-veil` is the second
-        layer: the scrim that keeps the artwork out from under the words without
-        flattening the margins where it is meant to be seen.
+        Both sit below the words, and both are `aria-hidden`. Their intensity,
+        framing and drift live in CSS rather than here, because the measurements
+        that justify them are about luminance against the page background and
+        there is no way to express that as a class list on the element.
+
+        `--composed` is the asymmetric treatment: subject pushed right, opacity
+        down to 0.28, and a scrim split so the plate is hidden behind the type
+        column and left visible behind the index. The base `.hero-backdrop` and
+        `.hero-veil` are the centred version and stay in the stylesheet for the
+        measurement notes that justify them; see HERO — COMPOSED VARIANT in
+        `globals.css`.
       */}
       <div
         aria-hidden="true"
-        className="hero-backdrop hidden md:block"
+        className="hero-backdrop hero-backdrop--composed hidden md:block"
         style={{ backgroundImage: "url('/images/bgdesktop.webp')" }}
       />
       <div
         aria-hidden="true"
-        className="hero-backdrop md:hidden"
+        className="hero-backdrop hero-backdrop--composed md:hidden"
         style={{ backgroundImage: "url('/images/bgmobile.webp')" }}
       />
-      <div aria-hidden="true" className="hero-veil" />
+      <div aria-hidden="true" className="hero-veil hero-veil--composed" />
 
       {/*
         The container is `container-custom` and nothing else. It used to carry

@@ -1,20 +1,43 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter, Space_Grotesk } from 'next/font/google'
+import { GeistSans } from 'geist/font/sans'
+import { GeistMono } from 'geist/font/mono'
 import { siteConfig } from '@/config/site'
 import { buildPersonSchema } from '@/lib/structured-data'
 import '@/styles/globals.css'
 
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
-  display: 'swap',
-})
-
-const spaceGrotesk = Space_Grotesk({
-  subsets: ['latin'],
-  variable: '--font-grotesk',
-  display: 'swap',
-})
+/*
+ * Two faces, both self-hosted through `next/font`, both variable.
+ *
+ * The redesign dropped the third face. There used to be Inter for body, Space
+ * Grotesk for display and a system mono stack — three families, so the display
+ * voice was a third design idea competing with two others, and the grotesk's
+ * wide apertures and single-storey `a` were carrying "display" on their own
+ * against a grotesque body. Two faces let the *scale* do that work: `--font-display`
+ * is now Geist Sans at a heavier weight and tighter tracking, so hierarchy comes
+ * from size and spacing rather than from a change of alphabet.
+ *
+ * `geist/font/*` rather than `next/font/google`: these ship as woff2 in the
+ * package, so there is no build-time fetch from Google's CDN. That matters for a
+ * portfolio whose whole argument is that it is fast, and it removes the one part
+ * of the build that fails without a network.
+ *
+ * The variable names must match the ones `globals.css` composes in `--font-sans`,
+ * `--font-display` and `--font-mono`. They did not, for a while: the tokens
+ * referenced `--font-geist-sans`/`--font-geist-mono` while this file still loaded
+ * Inter and Space Grotesk, so both custom properties resolved to nothing and the
+ * entire site silently fell back to `system-ui`. Nothing failed — an undefined
+ * `var()` inside a font stack is not an error, it is just absent — which is why
+ * it survived as long as it did. `font-sans`, `font-display`, `font-mono` and
+ * every `.meta`/`.eyebrow`/`.caption` class all route through these three
+ * tokens, so this file is the only place the names are written.
+ *
+ * Note the import is of a value, not a factory: `geist/font/sans` ships
+ * `GeistSans` already constructed, so there is no `subsets` or `display` option
+ * to pass. It is `next/font` under the hood, which is what makes the woff2
+ * self-hosted and the swap behaviour automatic.
+ */
+const geistSans = GeistSans
+const geistMono = GeistMono
 
 /**
  * `metadataBase` is what makes Next resolve relative OG/canonical URLs into
@@ -105,7 +128,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`}>
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body className="min-h-screen bg-[rgb(var(--background))] text-[rgb(var(--text-primary))] antialiased">
         {/*
           Server-rendered children only. Public navigation and footer live in

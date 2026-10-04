@@ -56,6 +56,47 @@ test.describe('resume viewer stability', () => {
       await page.goto('/resume', { waitUntil: 'commit' })
       await page.waitForSelector('.resume-scroller')
 
+      /*
+       * Both of these are about making `before` mean something, and neither of
+       * them hides the bug this file exists for.
+       *
+       * **The stylesheet.** The reservation is a `max-height` in CSS, and Next
+       * injects that from JS — so `commit` plus a selector is a race with the
+       * stylesheet, not the unmeasured state. Before the CSS lands the scroller
+       * has no cap and no height, and the delta reported is the stylesheet
+       * arriving rather than the viewer resizing itself. That is why this file
+       * was reliable in isolation and failed under the suite's parallel workers:
+       * the assertion was measuring the machine's load, wearing the costume of a
+       * layout bug. The original failure — a scroller sized to its content, 0px
+       * against a final 2206px — is 0px with the stylesheet applied just as much
+       * as without it, so waiting for the reservation catches it still.
+       *
+       * **The webfont.** Fonts are loaded with `display: 'swap'`, which is
+       * correct for this site and is not going to change: the display face is the
+       * identity, and permanently falling back to `system-ui` for a first-time
+       * visitor would be a worse outcome than a reflow. But a swap does reflow,
+       * and on a 390px screen the lede above the viewer rewraps by two lines when
+       * it lands — measured at 29px, with the viewer's own height correctly
+       * unchanged at 624px in both samples. Asserting on that would be asserting
+       * that the webfont arrives before first paint, which is not a property of
+       * this page and not reliably true of any page.
+       *
+       * So `before` is taken with the stylesheet applied and the fonts resolved:
+       * styled, typeset, and unmeasured. That is the state the viewer is supposed
+       * to hold still across. Anything that moves after that is the viewer's own
+       * measurement, which is the subject of this file. Font loading is a real
+       * source of layout shift and deserves its own budget somewhere else; it is
+       * not this assertion's job, and folding it in only made this one flaky.
+       */
+      await page.waitForFunction(() => {
+        const el = document.querySelector('.resume-scroller')
+        return !!el && getComputedStyle(el).maxHeight !== 'none'
+      })
+      await page.evaluate(() => document.fonts.ready)
+      await page.evaluate(
+        () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+      )
+
       // The frame before the sheets exist: no measurement, no scale, nothing.
       const before = await viewerBox(page)
 

@@ -87,9 +87,9 @@ export default function AboutPage() {
             </div>
           </div>
         </div>
-      </section>
+</section>
 
-{/*
+      {/*
         ---- Focus areas, one line each -----------------------------------
         Each of the three sections below uses `SectionShell`, whose hairline and
         wash mark the top edge of a distinct room. The tones used to be three
@@ -145,8 +145,8 @@ export default function AboutPage() {
               {technologies.map((group) => (
                 <div key={group.group}>
                   <dt className="meta-strong">{group.group}</dt>
-                  <dd className="mt-2.5 flex flex-wrap gap-1.5">
-{group.items.map((item) => (
+<dd className="mt-2.5 flex flex-wrap gap-1.5">
+                    {group.items.map((item) => (
                       <span
                         key={item}
                         className="rounded-full border border-[rgb(var(--border))] px-2.5 py-1 font-mono text-[length:var(--text-xs)] text-[rgb(var(--text-dim))]"
@@ -183,7 +183,7 @@ export default function AboutPage() {
               <p className="eyebrow">Method</p>
               <h2 className="heading-2 mt-5 text-balance">How I work.</h2>
 
-<ol className="mt-8 grid gap-x-8 gap-y-9 sm:grid-cols-2">
+              <ol className="mt-8 grid gap-x-8 gap-y-9 sm:grid-cols-2">
                 {projectApproach.map((item, index) => (
                   <li key={item.title}>
                     <div className="border-t border-[rgb(var(--border))] pt-4">

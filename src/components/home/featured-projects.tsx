@@ -3,6 +3,7 @@ import { ArrowLink } from '@/components/ui/arrow-link'
 import { HorizontalRail } from '@/components/ui/horizontal-rail'
 import { SectionShell, SectionHeader, SectionEyebrow } from '@/components/ui/section-shell'
 import { getFeaturedProjects } from '@/lib/db/projects'
+import { classNames } from '@/lib/utils/helpers'
 import type { Project } from '@/types/project'
 
 /**
@@ -71,11 +72,25 @@ export async function FeaturedProjects({ projects }: { projects?: Project[] }) {
             {list.map((project, index) => (
               <li
                 key={project.id}
-                className="w-[78vw] max-w-[21rem] shrink-0 snap-start sm:w-[22rem] lg:w-[24rem] xl:w-[26rem]"
+                className={classNames(
+                  'shrink-0 snap-start',
+                  /*
+                    The lead runs wider than the rest. `FeaturedProjects` used to
+                    hand every card the same width, so the rail opened with six
+                    equal objects and the eye had no place to land. The lead is
+                    30rem on a desktop against 26rem for the cards behind it —
+                    enough that the first card reads as the one you arrived for,
+                    and not so much that it stops looking like a rail.
+                  */
+                  index === 0
+                    ? 'w-[84vw] max-w-[23rem] sm:w-[26rem] lg:w-[28rem] xl:w-[30rem]'
+                    : 'w-[78vw] max-w-[21rem] sm:w-[22rem] lg:w-[24rem] xl:w-[26rem]'
+                )}
               >
                 <ProjectRailCard
                   project={project}
                   className="h-full"
+                  lead={index === 0}
                   /* Only the first card is above the fold on any viewport, so
                      only the first card is worth preloading. */
                   priority={index === 0}
