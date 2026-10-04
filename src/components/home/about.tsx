@@ -30,7 +30,7 @@ import { interests, technologies, projectApproach } from '@/config/site'
  */
 export function About() {
   return (
-    <SectionShell tone="section-tone-experiment" index="02">
+    <SectionShell tone="section-tone-experiment">
       <div className="container-custom">
         <div className="py-16 lg:py-24">
           <SectionEyebrow>What draws me in</SectionEyebrow>
@@ -69,7 +69,7 @@ export function About() {
                       {group.items.map((item) => (
                         <span
                           key={item}
-                          className="border border-[rgb(var(--border))] px-2.5 py-1 font-mono text-[length:var(--text-xs)] text-[rgb(var(--text-dim))]"
+                          className="rounded-full border border-[rgb(var(--border))] px-2.5 py-1 font-mono text-[length:var(--text-xs)] text-[rgb(var(--text-dim))]"
                         >
                           {item}
                         </span>

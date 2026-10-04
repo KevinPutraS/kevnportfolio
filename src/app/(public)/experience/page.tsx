@@ -59,7 +59,7 @@ export default async function ExperiencePage() {
       {/* Same hue as the header above, so the page reads as one section. The
           section owns its own vertical padding, and the list carries the gap
           between cards — the last card must still stand clear of the footer. */}
-      <SectionShell tone="section-tone-design" index="01">
+      <SectionShell tone="section-tone-design">
         <div className="container-custom py-16 lg:py-20">
           {experiences.length === 0 ? (
             <EmptyState

@@ -65,61 +65,20 @@ export function ProjectGallery({ images, title }: { images: string[]; title: str
 
   return (
     <section aria-label={`${title} gallery`}>
-      {/*
-        The first image is the one a visitor will actually look at, and it used to
-        be a 16/9 box one third of the width — a taller-than-wide frame in a narrow
-        column, so `object-cover` was cropping the sides off a screenshot whose
-        whole point is that it is wide. The ratio was applied per-index while the
-        grid was applied per-cell, and the two disagreed.
-
-        It gets two tracks at `md` — not three. `sm:col-span-2` was written as if it
-        meant "the whole row", and at `md` it does not: it is two of three, which
-        leaves the third track for the next screenshot. That turned out to be the
-        better arrangement and it is what ships. The lead lands around 688x387 at
-        1280px with one supporting tile beside it, then the remaining images fill a
-        full three-track row beneath. Letting the lead take all three would make it
-        1032x580 — taller than the fold on a laptop, for an image that is only
-        being glanced at. At `sm`, where the grid is two tracks, spanning two *is*
-        the full row, so the same class gives the wide treatment there. Below `sm`
-        there are no columns to span and the lead is simply the first tile at 4/3
-        like the others, because a 16/9 frame at 286px wide is 161px tall and reads
-        as a letterbox on a screen you are holding.
-
-        A single-image gallery is therefore full width at `sm` and two-thirds at
-        `md`, which is the honest presentation of one image rather than a 16/9
-        letterbox with empty space beside it.
-      */}
-
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
         {images.map((src, index) => (
           <button
             key={`${src}-${index}`}
             type="button"
             onClick={() => setLightboxIndex(index)}
-            className={classNames(
-              'group relative block w-full overflow-hidden rounded-[var(--radius-lg)] border border-[rgb(var(--border))] transition-colors duration-300 hover:border-[rgb(var(--accent)/0.5)]',
-              // Tailwind utilities, not an inline `style={{ aspectRatio }}`.
-              // The style was written as `index === 0 ? '16 / 9' : '4 / 3'` with no
-              // breakpoint, so the lead stayed 16/9 on a phone -- a 286px-wide,
-              // 161px-tall letterbox -- while the comment above it claimed the lead
-              // drops to 4/3 below `sm`. The comment described the intent, the style
-              // did not implement it. `sm:aspect-[16/9]` makes the claim true.
-              index === 0 ? 'aspect-[4/3] sm:aspect-[16/9] sm:col-span-2' : 'aspect-[4/3]'
-            )}
+            className="group relative block w-full overflow-hidden rounded-[var(--radius-lg)] border border-[rgb(var(--border))] transition-colors duration-300 hover:border-[rgb(var(--accent)/0.5)]"
+            style={{ aspectRatio: index === 0 ? '16 / 9' : '4 / 3' }}
           >
             <Image
               src={src}
               alt={`${title} screenshot ${index + 1} of ${images.length}`}
               fill
-              sizes={
-                // The lead spans the whole row from `sm` up, so it needs the full
-                // column width at 640px too -- not only from `md`, which is where
-                // the old 66vw figure started. Reporting 66vw for an image that
-                // occupies ~92vw makes the browser fetch a smaller file than the
-                // slot needs, and a screenshot is exactly the image where that
-                // shows up as softness.
-                index === 0 ? '(min-width: 640px) 92vw, 100vw' : '(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw'
-              }
+              sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
               className="object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,0.61,0.36,1)] group-hover:scale-[1.03]"
               quality={90}
             />

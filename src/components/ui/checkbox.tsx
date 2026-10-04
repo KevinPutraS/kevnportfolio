@@ -39,7 +39,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
           type="checkbox"
           id={checkboxId}
           className={classNames(
-            'mt-0.5 h-4 w-4 shrink-0 cursor-pointer appearance-none rounded-[var(--radius-sm)] border border-[rgb(var(--border))] bg-[rgb(var(--surface))] transition-colors checked:border-[rgb(var(--accent))] checked:bg-[rgb(var(--accent))] hover:not(:disabled):border-[rgb(var(--text-muted))] disabled:cursor-not-allowed disabled:opacity-50',
+            'mt-0.5 h-4 w-4 shrink-0 cursor-pointer appearance-none rounded-sm border border-[rgb(var(--border))] bg-[rgb(var(--surface))] transition-colors checked:border-[rgb(var(--accent))] checked:bg-[rgb(var(--accent))] hover:not(:disabled):border-[rgb(var(--text-muted))] disabled:cursor-not-allowed disabled:opacity-50',
             "checked:bg-[url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%2308090D' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 8.5l3 3 6-6'/%3E%3C/svg%3E\")] checked:bg-center checked:bg-no-repeat",
             className
           )}

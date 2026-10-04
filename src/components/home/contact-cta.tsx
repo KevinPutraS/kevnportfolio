@@ -13,7 +13,7 @@ import { siteConfig, socialLinks } from '@/config/site'
  */
 export function ContactCta() {
   return (
-    <SectionShell tone="section-tone-design" index="04">
+    <SectionShell tone="section-tone-design">
       <div className="container-custom">
         <div className="py-16 lg:py-24">
           <div className="grid gap-x-12 gap-y-10 lg:grid-cols-12 lg:items-end">

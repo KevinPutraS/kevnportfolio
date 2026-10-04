@@ -3,7 +3,6 @@ import { ArrowLink } from '@/components/ui/arrow-link'
 import { HorizontalRail } from '@/components/ui/horizontal-rail'
 import { SectionShell, SectionHeader, SectionEyebrow } from '@/components/ui/section-shell'
 import { getFeaturedProjects } from '@/lib/db/projects'
-import { classNames } from '@/lib/utils/helpers'
 import type { Project } from '@/types/project'
 
 /**
@@ -33,7 +32,7 @@ export async function FeaturedProjects({ projects }: { projects?: Project[] }) {
 
   if (list.length === 0) {
     return (
-      <SectionShell tone="section-tone-web" index="01">
+      <SectionShell tone="section-tone-web">
         <div className="container-custom">
           <div className="py-20 text-center">
             <SectionEyebrow>Projects</SectionEyebrow>
@@ -54,7 +53,7 @@ export async function FeaturedProjects({ projects }: { projects?: Project[] }) {
   }
 
   return (
-    <SectionShell tone="section-tone-web" index="01">
+    <SectionShell tone="section-tone-web">
       <div className="container-custom">
         <div className="py-16 lg:py-24">
           <SectionHeader
@@ -72,25 +71,11 @@ export async function FeaturedProjects({ projects }: { projects?: Project[] }) {
             {list.map((project, index) => (
               <li
                 key={project.id}
-                className={classNames(
-                  'shrink-0 snap-start',
-                  /*
-                    The lead runs wider than the rest. `FeaturedProjects` used to
-                    hand every card the same width, so the rail opened with six
-                    equal objects and the eye had no place to land. The lead is
-                    30rem on a desktop against 26rem for the cards behind it —
-                    enough that the first card reads as the one you arrived for,
-                    and not so much that it stops looking like a rail.
-                  */
-                  index === 0
-                    ? 'w-[84vw] max-w-[23rem] sm:w-[26rem] lg:w-[28rem] xl:w-[30rem]'
-                    : 'w-[78vw] max-w-[21rem] sm:w-[22rem] lg:w-[24rem] xl:w-[26rem]'
-                )}
+                className="w-[78vw] max-w-[21rem] shrink-0 snap-start sm:w-[22rem] lg:w-[24rem] xl:w-[26rem]"
               >
                 <ProjectRailCard
                   project={project}
                   className="h-full"
-                  lead={index === 0}
                   /* Only the first card is above the fold on any viewport, so
                      only the first card is worth preloading. */
                   priority={index === 0}

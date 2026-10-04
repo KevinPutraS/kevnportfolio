@@ -81,7 +81,7 @@ export function ExperienceEntry({
         )}
       />
 
-      <article className="relative ml-8 rounded-[var(--radius-lg)] border border-[rgb(var(--border))] bg-[rgb(var(--bg-elevated))] p-5 transition-colors duration-300 group-hover:border-[rgb(var(--cat)/0.45)] sm:ml-10 sm:p-6">
+      <article className="relative ml-8 rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--bg-elevated))] p-5 transition-colors duration-300 group-hover:border-[rgb(var(--cat)/0.45)] sm:ml-10 sm:p-6">
         {/*
           The entry, boxed again. For a stretch it was type alone hanging off
           the spine; that kept the column quiet but left the logo, header,
@@ -102,31 +102,14 @@ export function ExperienceEntry({
           className="pointer-events-none absolute bottom-4 left-0 top-4 w-[3px] rounded-full bg-[rgb(var(--cat))] opacity-80"
         />
         <div className="relative">
-          {/*
-            The identity row stacks on a phone and only goes side by side from `sm`.
-
-            It was `flex flex-wrap` at every width, which relies on wrapping to
-            rescue a row that does not fit. On a 320px screen it does not rescue it,
-            because the logo is a fixed 56px box and the organisation name beside it
-            is not: the name was measured at 126px wide, so a name as long as
-            "Inspektorat Jendral Kementerian Kelautan dan-Per Husbandan" broke
-            across eight lines next to a logo. `flex-wrap` never wrapped, because
-            nothing was overflowing -- the text was simply being compressed to fit,
-            which is the failure mode wrapping exists to avoid.
-
-            Stacking below `sm` gives the name the card's full inner width (184px)
-            rather than half of it. The row is still a row from `sm` up, where there
-            are hundreds of pixels to divide.
-          */}
-          <div className="flex flex-col items-start gap-x-4 gap-y-3 sm:flex-row sm:flex-wrap sm:gap-x-5">
+          <div className="flex flex-wrap items-start gap-x-4 gap-y-3 sm:gap-x-5">
             {/* 64px on desktop, up from 56px. The logo is the only non-text
                 element in the row and it is what lets a visitor scan the column
-                instead of reading it, so it gets the room. `shrink-0` so a long
-                organisation name can never be the thing that compresses. */}
+                instead of reading it, so it gets the room. */}
             <OrganizationLogo
               src={experience.organization_logo_url}
               name={experience.organization}
-              className="h-14 w-14 shrink-0 sm:h-16 sm:w-16"
+              className="h-14 w-14 sm:h-16 sm:w-16"
             />
 
             <div className="min-w-0 flex-1">

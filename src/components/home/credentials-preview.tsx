@@ -23,7 +23,7 @@ export async function CredentialsPreview() {
   if (experiences.length === 0 && certificates.length === 0) return null
 
   return (
-    <SectionShell tone="section-tone-networking" index="03">
+    <SectionShell tone="section-tone-networking">
       <div className="container-custom py-16 lg:py-24">
         <div className="grid gap-x-10 gap-y-12 lg:grid-cols-12">
           {/*
@@ -31,17 +31,10 @@ export async function CredentialsPreview() {
             courses. Written down so the gaps are visible rather than inferred." —
             two sentences explaining the obvious, immediately above a list that
             already shows exactly that.
-
-            The heading is capped at 11ch so it breaks after "Experience" on a
-            desktop. Set across a 4-column track at the open end of the display
-            scale it otherwise ran to four words a line, which is a shape, not a
-            heading.
           */}
           <div className="lg:col-span-4">
             <SectionEyebrow>Background</SectionEyebrow>
-            <h2 className="heading-2 mt-5 max-w-[11ch] text-balance">
-              Experience and certificates.
-            </h2>
+            <h2 className="heading-2 mt-5 text-balance">Experience and certificates.</h2>
           </div>
 
           <div className="lg:col-span-8">

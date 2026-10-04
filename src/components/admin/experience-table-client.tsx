@@ -47,7 +47,7 @@ export function ExperienceTableClient({ experiences }: { experiences: Experience
         Desktop: a real table. Below `lg` the same markup restyles into stacked
         cards, so nothing is pushed behind a horizontal scroll at 320px.
       */}
-      <div className="overflow-hidden rounded-[var(--radius-lg)] border border-[rgb(var(--border))]">
+      <div className="overflow-hidden rounded-xl border border-[rgb(var(--border))]">
         <table className="w-full border-collapse text-left">
           <caption className="sr-only">
             All experience entries with their type, period, status and available actions

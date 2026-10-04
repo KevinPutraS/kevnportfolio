@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { ArrowUpRight } from 'lucide-react'
 import { categoryLabels, type ProjectCategory } from '@/config/site'
 import { projectStatusLabels } from '@/config/project-status'
-import { formatMonth, classNames } from '@/lib/utils/helpers'
+import { formatMonth } from '@/lib/utils/helpers'
 import type { Project } from '@/types/project'
 import { ProjectThumbnail } from './project-thumbnail'
 
@@ -10,9 +10,9 @@ import { ProjectThumbnail } from './project-thumbnail'
  * The featured-work card, rail only.
  *
  * The shared card used to have four variants (standard, rail, feature, compact)
- * and every one of them shipped the same chrome: a soft 24px radius, a card
- * border, a category-coloured edge, a translate-and-shadow hover and a lifted
- * title. That single object was the template look of the whole site.
+ * and every one of them shipped the same chrome: `rounded-2xl`, a card border, a
+ * category-coloured edge, a translate-and-shadow hover and a lifted title. That
+ * single object was the template look of the whole site.
  *
  * The projects index is now a column of hairlined rows, so the only card left is
  * this one, and a card left alone in a rail should be a frame for its image, not
@@ -23,8 +23,8 @@ import { ProjectThumbnail } from './project-thumbnail'
  *    of the card lifting off the page.
  *  - Category and date sit on one mono line under the title — same as the index
  *    rows — so the two surfaces share one type system.
- *  - The corners are square (`--radius-lg`, which is 0), the border is the site
- *    hairline, and nothing shifts, glows or casts a coloured shadow.
+ *  - The corners are quiet (`rounded-xl)`, the border is the site hairline, and
+ *    nothing shifts, glows or casts a coloured shadow.
  *
  * The focus ring is drawn inside the card. The track is a scroll container, so
  * an outside ring on the first card at scroll position 0 would be clipped by the
@@ -35,29 +35,17 @@ export function ProjectRailCard({
   project,
   className,
   priority,
-  lead = false,
 }: {
   project: Project
   className?: string
   priority?: boolean
-  /**
-   * The first card in the rail.
-   *
-   * The rail used to be six identical cards, which made "featured" mean only that
-   * a project was in the list — the CMS flag bought a slot and no emphasis. So the
-   * lead gets a taller plate and a larger title, and everything after it keeps the
-   * compact card. One card, not six, because the rail is a shelf: the thing you
-   * arrive at should be the thing you see, and the rest should be browsable rather
-   * than competing.
-   */
-  lead?: boolean
 }) {
   const technologies = project.technologies ?? []
   const category = project.category as ProjectCategory
 
   return (
     <article
-      className={`group relative isolate flex h-full flex-col overflow-hidden rounded-[var(--radius-lg)] border border-[rgb(var(--border))] bg-[rgb(var(--bg-elevated))] transition-colors duration-500 focus-within:outline focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-[rgb(var(--text))] ${className ?? ''}`}
+      className={`group relative isolate flex h-full flex-col overflow-hidden rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--bg-elevated))] transition-colors duration-500 focus-within:outline focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-[rgb(var(--text))] ${className ?? ''}`}
     >
       <Link
         href={`/projects/${project.slug}`}
@@ -68,22 +56,9 @@ export function ProjectRailCard({
           <ProjectThumbnail
             src={project.thumbnail_url}
             alt={`${project.title} preview`}
-            /*
-              3/2 on the supporting cards, 16/10 on the lead. The lead plate is both
-              wider and a little shorter, which is the same "more image, less
-              chrome" trade the projects index makes between its tiers — the two
-              surfaces agree on direction even though they are different components.
-            */
-            className={classNames(
-              'w-full transition-transform duration-700 ease-out group-hover:scale-[1.06]',
-              lead ? 'aspect-[16/10]' : 'aspect-[3/2]'
-            )}
+            className="aspect-[3/2] w-full transition-transform duration-700 ease-out group-hover:scale-[1.06]"
             priority={priority}
-            sizes={
-              lead
-                ? '(min-width: 1280px) 30rem, (min-width: 1024px) 27rem, (min-width: 640px) 24rem, 78vw'
-                : '(min-width: 1280px) 26rem, (min-width: 1024px) 24rem, (min-width: 640px) 22rem, 78vw'
-            }
+            sizes="(min-width: 1280px) 26rem, (min-width: 1024px) 24rem, (min-width: 640px) 22rem, 78vw"
             zoom={false}
           />
 
@@ -114,12 +89,7 @@ export function ProjectRailCard({
         </div>
 
         <div className="flex flex-1 flex-col p-5">
-          <h3
-            className={classNames(
-              'text-balance font-display font-bold leading-[1.15] tracking-[-0.03em] text-[rgb(var(--text))] transition-colors duration-300 group-hover:text-[rgb(var(--accent))]',
-              lead ? 'text-xl sm:text-2xl' : 'text-lg'
-            )}
-          >
+          <h3 className="text-balance font-display text-lg font-bold leading-[1.15] tracking-[-0.03em] text-[rgb(var(--text))] transition-colors duration-300 group-hover:text-[rgb(var(--accent))]">
             {/* Stretched link: one tap target for the whole card. */}
             <span className="absolute inset-0" aria-hidden="true" />
             {project.title}
@@ -129,11 +99,6 @@ export function ProjectRailCard({
             {project.short_description}
           </p>
 
-          {/*
-            The lead names four technologies rather than two. It is the one card
-            with room to say what a project is made *of*, and the overflow count
-            keeps a long stack from turning the line into a paragraph.
-          */}
           <p className="meta mt-5 flex items-center gap-x-2 gap-y-0.5">
             <span>{categoryLabels[category] ?? project.category}</span>
             {/* Same position as the index row: category, status, then the stack.
@@ -155,10 +120,8 @@ export function ProjectRailCard({
                   /
                 </span>
                 <span className="text-[rgb(var(--text-muted))]">
-                  {technologies.slice(0, lead ? 4 : 2).join(', ')}
-                  {technologies.length > (lead ? 4 : 2)
-                    ? ` +${technologies.length - (lead ? 4 : 2)}`
-                    : ''}
+                  {technologies.slice(0, 2).join(', ')}
+                  {technologies.length > 2 ? ` +${technologies.length - 2}` : ''}
                 </span>
               </>
             )}

@@ -22,19 +22,7 @@ export async function BackgroundSummary() {
   if (experiences.length === 0 && certificates.length === 0) return null
 
   return (
-    <section>
-      {/* Same break as every other section — hairline plus the running number in
-          the margin — so this room reads as part of the same sequence rather than
-          as the one section that skipped the system. It is a bare `<section>`
-          rather than a `SectionShell` because its tone is not set by a category,
-          and passing a tone it does not have would be a lie the class cannot
-          catch. */}
-      <div className="container-custom">
-        <div aria-hidden="true" className="section-break">
-          <span className="section-index">03</span>
-          <span className="section-rule grow" />
-        </div>
-      </div>
+    <section className="rule-top">
       <div className="container-custom">
         <div className="rhythm-lg grid gap-x-10 gap-y-10 lg:grid-cols-12">
           <div className="lg:col-span-3">

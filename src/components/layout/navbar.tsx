@@ -112,18 +112,10 @@ export function Navbar() {
          * `z-50` stays because the wrapper claims the same value, and the header
          * is positioned within it.
          */
-        'z-50 h-[var(--nav-h)] border-b transition-[background-color,border-color] duration-300',
-        /*
-         * Blur down from `xl`/`md` to `md`/`sm` and the shadow is gone. At 24px
-         * the lifted bar refracted everything that passed under it, which is a
-         * lot of GPU work for a header that only needs to be opaque enough to
-         * read against and hairline enough to disappear. `--border` plus the
-         * background at 0.9 does the separating; the frosted look was decoration
-         * on top of decoration.
-         */
+        'z-50 h-[var(--nav-h)] border-b transition-[background-color,border-color,box-shadow] duration-300',
         lifted
-          ? 'border-[rgb(var(--border))] bg-[rgb(var(--bg)/0.9)] backdrop-blur-md'
-          : 'border-transparent bg-[rgb(var(--bg)/0.6)] backdrop-blur-sm'
+          ? 'border-[rgb(var(--border))] bg-[rgb(var(--bg)/0.85)] shadow-[0_10px_30px_-18px_rgb(0_0_0/0.9)] backdrop-blur-xl'
+          : 'border-transparent bg-[rgb(var(--bg)/0.6)] backdrop-blur-md'
       )}
     >
       {/*

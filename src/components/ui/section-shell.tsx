@@ -3,61 +3,39 @@ import { classNames } from '@/lib/utils/helpers'
 /**
  * Section opening.
  *
- * One component so the sections across the site cannot drift apart. It carries the
- * two signals that mark a distinct part of the page: a hairline aligned to the
- * text column, and — where a section is given an `index` — that section's number
- * hanging in the left margin.
- *
- * Both are borrowings from print. The previous version drew a 2px accent gradient
- * bar across the full viewport width on an accent-tinted wash, and applied it to
- * every section on the site; that is what made the pages read as a stack of
- * panels rather than as one continuous document.
+ * One component so the five homepage sections cannot drift apart. It carries the
+ * three signals that make a section feel like a distinct room rather than
+ * another grey band: a coloured hairline that fades to the right, a tinted
+ * background wash, and an eyebrow in the section's own hue.
  *
  * The parent supplies the tone with `section-tone-*`; everything else is here.
  */
 export function SectionShell({
   tone,
-  index,
   className,
   children,
 }: {
   /** A `section-tone-*` class, e.g. `section-tone-web`. */
   tone: string
-  /**
-   * Zero-padded position in the page's running order, e.g. `"02"`. Rendered
-   * `aria-hidden`: it is print wayfinding, and announcing a bare number ahead of
-   * the section's real content is noise rather than navigation.
-   */
-  index?: string
   className?: string
   children: React.ReactNode
 }) {
   return (
     <section className={classNames('relative isolate', tone, className)}>
-      <div className="container-custom">
-        <div aria-hidden="true" className="section-break">
-          {index ? <span className="section-index">{index}</span> : null}
-          <span className="section-rule grow" />
-        </div>
-      </div>
+      {/* Hairline first, so it sits above the wash and reads as a top edge. */}
+      <div aria-hidden="true" className="section-rule w-full" />
+      <div aria-hidden="true" className="section-wash absolute inset-0 -z-10" />
       {children}
     </section>
   )
 }
 
-/** Eyebrow for the section's kind — mono, uppercase, preceded by a short tick. */
+/** Eyebrow with the section's colour chip in front of it. */
 export function SectionEyebrow({ children }: { children: React.ReactNode }) {
   return <p className="section-eyebrow">{children}</p>
 }
 
-/**
- * Eyebrow and title on the left, action on the right.
- *
- * The title is capped at `--measure-prose` rather than at a fixed `max-w-2xl`: a
- * display heading set across the full 72rem trim wraps into three or four words
- * per line at the top of the scale, and a heading that measures that wide stops
- * being scannable.
- */
+/** Eyebrow on the left, action on the right. Collapses to a stack on mobile. */
 export function SectionHeader({
   eyebrow,
   title,
@@ -70,15 +48,10 @@ export function SectionHeader({
   className?: string
 }) {
   return (
-    <div
-      className={classNames(
-        'flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between sm:gap-8',
-        className
-      )}
-    >
+    <div className={classNames('flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between sm:gap-8', className)}>
       <div className="min-w-0">
         <SectionEyebrow>{eyebrow}</SectionEyebrow>
-        <h2 className="heading-2 mt-5 max-w-[24ch] text-balance">{title}</h2>
+        <h2 className="heading-2 mt-5 max-w-2xl text-balance">{title}</h2>
       </div>
       {action ? <div className="shrink-0">{action}</div> : null}
     </div>

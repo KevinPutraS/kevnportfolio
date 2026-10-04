@@ -25,16 +25,19 @@ export function Footer() {
       data-print="hide"
       className="relative isolate overflow-hidden border-t border-[rgb(var(--border))]"
     >
-      {/* Colophon rule. The `<footer>`'s own top border is this hairline; what sits
-          above it is the masthead row, which is where the accent now lives. The
-          2px accent gradient bar this replaced was the same device every section
-          used, so the page ended on the fifth repetition of it. */}
-      <div className="container-custom">
-        <div aria-hidden="true" className="section-break">
-          <span className="section-index">{'—'}</span>
-          <span className="section-rule grow" />
-        </div>
-      </div>
+      {/* Final rule, same treatment as the sections above, but one accent
+          colour — the three-colour gradient this replaced stopped making sense
+          when the palette collapsed to a single accent. */}
+      <div
+        aria-hidden="true"
+        className="h-[2px] w-full opacity-70"
+        style={{ background: 'linear-gradient(to right, rgb(var(--accent)) 0%, rgb(var(--accent) / 0.25) 55%, transparent 100%)' }}
+      />
+      <div
+        aria-hidden="true"
+        className="section-wash pointer-events-none absolute inset-0 -z-10"
+        style={{ ['--tone' as string]: 'var(--accent)' }}
+      />
 
       {/*
         `env(safe-area-inset-bottom)` on the last thing on the page. The mobile
@@ -68,7 +71,7 @@ export function Footer() {
                   <li key={item.href}>
                     <Link
                       href={item.href}
-                      className="inline-flex min-h-10 items-center rounded-[var(--radius-sm)] px-2 font-display text-[length:var(--text-sm)] font-medium tracking-[-0.01em] text-[rgb(var(--text-dim))] transition-colors duration-200 hover:text-[rgb(var(--accent))] sm:min-h-11 sm:px-0"
+                      className="inline-flex min-h-10 items-center rounded-sm px-2 font-display text-[length:var(--text-sm)] font-medium tracking-[-0.01em] text-[rgb(var(--text-dim))] transition-colors duration-200 hover:text-[rgb(var(--accent))] sm:min-h-11 sm:px-0"
                     >
                       {item.label}
                     </Link>
@@ -86,7 +89,7 @@ export function Footer() {
                       href={link.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="group inline-flex min-h-10 items-center gap-1 rounded-[var(--radius-sm)] px-2 font-display text-[length:var(--text-sm)] font-medium tracking-[-0.01em] text-[rgb(var(--text-muted))] transition-colors duration-200 hover:text-[rgb(var(--accent))] sm:min-h-11 sm:px-0"
+                      className="group inline-flex min-h-10 items-center gap-1 rounded-sm px-2 font-display text-[length:var(--text-sm)] font-medium tracking-[-0.01em] text-[rgb(var(--text-muted))] transition-colors duration-200 hover:text-[rgb(var(--accent))] sm:min-h-11 sm:px-0"
                     >
                       {link.label}
                       <ArrowUpRight
